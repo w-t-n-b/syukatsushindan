@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>就活キャリアタイプ診断</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif; background: #f5f7fa; color: #333; }
+
+  .header { background: #fff; border-bottom: 2px solid #2563eb; padding: 12px 20px; position: sticky; top: 0; z-index: 100; }
+  .header-inner { max-width: 600px; margin: 0 auto; display: flex; align-items: center; gap: 10px; }
+  .logo { font-size: 18px; font-weight: 700; color: #2563eb; }
+  .logo-sub { font-size: 11px; color: #64748b; }
+
+  .container { max-width: 600px; margin: 0 auto; padding: 20px 16px; min-height: calc(100vh - 60px); }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* Top page */
+  .hero { background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); border-radius: 16px; padding: 40px 24px; text-align: center; color: #fff; margin-bottom: 24px; }
+  .hero h1 { font-size: 24px; margin-bottom: 8px; line-height: 1.4; }
+  .hero p { font-size: 14px; opacity: 0.9; line-height: 1.6; }
+  .feature-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+  .feature-item { background: #fff; border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .feature-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .feature-icon.blue { background: #eff6ff; }
+  .feature-icon.green { background: #f0fdf4; }
+  .feature-icon.purple { background: #faf5ff; }
+  .feature-text h3 { font-size: 14px; margin-bottom: 2px; }
+  .feature-text p { font-size: 12px; color: #64748b; }
+
+  .start-btn { display: block; width: 100%; padding: 16px; background: #2563eb; color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+  .start-btn:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
+
+  /* Industry selection */
+  .section-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .section-desc { font-size: 13px; color: #64748b; margin-bottom: 20px; line-height: 1.6; }
+  .industry-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+  .industry-chip { padding: 14px 12px; background: #fff; border: 2px solid #e2e8f0; border-radius: 10px; text-align: center; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .industry-chip:hover { border-color: #2563eb; background: #eff6ff; }
+  .industry-chip.selected { border-color: #2563eb; background: #2563eb; color: #fff; }
+  .next-btn-disabled { opacity: 0.4; pointer-events: none; }
+  .skip-btn { display: block; width: 100%; padding: 14px; margin-top: 10px; background: #fff; border: 2px solid #94a3b8; color: #475569; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+  .skip-btn:hover { background: #f1f5f9; border-color: #64748b; }
+
+  /* Progress bar */
+  .progress-area { margin-bottom: 24px; }
+  .progress-label { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px; color: #64748b; }
+  .progress-bar { height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #2563eb, #3b82f6); border-radius: 3px; transition: width 0.4s ease; }
+
+  /* Back button */
+  .back-btn { display: inline-flex; align-items: center; gap: 4px; background: none; border: none; color: #64748b; font-size: 13px; cursor: pointer; padding: 6px 0; margin-bottom: 8px; transition: color 0.2s; }
+  .back-btn:hover { color: #2563eb; }
+  .back-btn svg { width: 16px; height: 16px; }
+
+  /* Question card */
+  .question-card { background: #fff; border-radius: 16px; padding: 28px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .question-number { font-size: 12px; color: #2563eb; font-weight: 700; margin-bottom: 8px; }
+  .question-axis { display: inline-block; background: #eff6ff; color: #2563eb; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; margin-bottom: 12px; }
+  .question-text { font-size: 16px; font-weight: 600; line-height: 1.6; margin-bottom: 20px; }
+
+  /* Spectrum UI */
+  .spectrum-area { margin-top: 4px; }
+  .spectrum-labels { display: flex; gap: 12px; margin-bottom: 16px; }
+  .spectrum-label { flex: 1; padding: 12px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 13px; line-height: 1.5; text-align: center; color: #475569; }
+  .spectrum-label.left { border-color: #bfdbfe; background: #eff6ff; color: #1e40af; }
+  .spectrum-label.right { border-color: #c4b5fd; background: #f5f3ff; color: #5b21b6; }
+  .spectrum-label-tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-bottom: 6px; }
+  .spectrum-label.left .spectrum-label-tag { background: #2563eb; color: #fff; }
+  .spectrum-label.right .spectrum-label-tag { background: #7c3aed; color: #fff; }
+  .spectrum-track-wrapper { padding: 0 4px; margin-bottom: 8px; }
+  .spectrum-hint { display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; margin-bottom: 10px; }
+  .spectrum-track { display: flex; align-items: center; justify-content: space-between; position: relative; padding: 12px 0; }
+  .spectrum-track::before { content: ''; position: absolute; top: 50%; left: 8%; right: 8%; height: 4px; background: linear-gradient(90deg, #2563eb, #e2e8f0 50%, #7c3aed); border-radius: 2px; transform: translateY(-50%); }
+  .spectrum-dot { position: relative; z-index: 2; width: 40px; height: 40px; border-radius: 50%; border: 3px solid #e2e8f0; background: #fff; cursor: pointer; transition: all 0.25s ease; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #94a3b8; }
+  .spectrum-dot:hover { border-color: #93c5fd; background: #eff6ff; transform: scale(1.1); }
+  .spectrum-dot.selected { border-color: #2563eb; background: #2563eb; color: #fff; transform: scale(1.15); box-shadow: 0 2px 12px rgba(37,99,235,0.35); }
+
+  /* Result page */
+  .result-hero { background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); border-radius: 16px; padding: 32px 24px; text-align: center; color: #fff; margin-bottom: 20px; }
+  .result-type-badge { display: inline-block; background: rgba(255,255,255,0.2); padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 12px; letter-spacing: 1px; }
+  .result-code { font-size: 48px; font-weight: 800; letter-spacing: 4px; margin-bottom: 4px; }
+  .result-name { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .result-tagline { font-size: 13px; opacity: 0.85; margin-bottom: 16px; }
+  .result-keywords { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .result-keyword { background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 12px; font-size: 12px; }
+  .result-desc { font-size: 13px; line-height: 1.7; opacity: 0.9; }
+
+  .result-section { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .result-section h3 { font-size: 15px; font-weight: 700; margin-bottom: 12px; color: #1e293b; display: flex; align-items: center; gap: 8px; }
+  .result-section h3 span { font-size: 18px; }
+
+  .axis-bar { margin-bottom: 16px; }
+  .axis-label { display: flex; justify-content: space-between; font-size: 12px; color: #64748b; margin-bottom: 4px; }
+  .axis-track { height: 10px; background: #e2e8f0; border-radius: 5px; position: relative; overflow: visible; }
+  .axis-track::after { content: ''; position: absolute; top: -2px; left: 50%; width: 2px; height: 14px; background: #cbd5e1; transform: translateX(-50%); border-radius: 1px; z-index: 1; }
+  .axis-marker { position: absolute; top: 50%; width: 18px; height: 18px; border-radius: 50%; border: 3px solid #fff; transform: translate(-50%, -50%); transition: left 0.6s ease; z-index: 2; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+  .axis-marker.blue { background: #2563eb; }
+  .axis-marker.green { background: #16a34a; }
+  .axis-marker.orange { background: #ea580c; }
+  .axis-marker.purple { background: #7c3aed; }
+  .axis-pct { text-align: center; font-size: 11px; font-weight: 700; margin-top: 4px; }
+
+  .job-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .job-tag { background: #eff6ff; color: #2563eb; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+
+  .company-list { display: flex; flex-direction: column; gap: 10px; }
+  .company-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: #f8fafc; border-radius: 10px; }
+  .company-rank { width: 28px; height: 28px; background: #2563eb; color: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .company-info h4 { font-size: 14px; font-weight: 600; }
+  .company-info p { font-size: 11px; color: #64748b; margin-top: 2px; }
+
+  /* Compatibility section */
+  .compat-section { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .compat-item { display: flex; align-items: center; gap: 12px; padding: 10px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px; }
+  .compat-item:last-child { margin-bottom: 0; }
+  .compat-badge { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: #fff; flex-shrink: 0; }
+  .compat-badge.good { background: linear-gradient(135deg, #2563eb, #7c3aed); }
+  .compat-badge.bad { background: #94a3b8; }
+  .compat-info h4 { font-size: 13px; font-weight: 600; }
+  .compat-info p { font-size: 11px; color: #64748b; margin-top: 2px; }
+
+  .share-area { display: flex; gap: 10px; margin-top: 20px; }
+  .share-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; color: #fff; transition: opacity 0.2s; }
+  .share-btn:hover { opacity: 0.85; }
+  .share-btn.x { background: #000; }
+  .share-btn.line { background: #06c755; }
+  .share-btn.copy { background: #64748b; }
+
+  .retry-btn { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #fff; border: 2px solid #2563eb; color: #2563eb; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+  .retry-btn:hover { background: #eff6ff; }
+
+  /* Type grid on top page */
+  .type-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 20px 0; }
+  .type-grid-item { background: #fff; border-radius: 8px; padding: 8px 4px; text-align: center; font-size: 10px; color: #64748b; border: 1px solid #e2e8f0; }
+  .type-grid-item .tg-code { font-size: 14px; font-weight: 800; color: #2563eb; }
+  .type-grid-item .tg-name { margin-top: 2px; font-size: 10px; color: #475569; font-weight: 600; }
+  .type-grid-cat { grid-column: 1 / -1; background: none; border: none; font-size: 12px; font-weight: 700; color: #1e293b; text-align: left; padding: 8px 4px 2px; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-in { animation: fadeIn 0.3s ease forwards; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="logo">CareerType</div>
+    <div class="logo-sub">就活キャリアタイプ診断 - 16Types</div>
+  </div>
+</div>
+
+<div class="container">
+  <div id="screen-top" class="screen active">
+    <div class="hero">
+      <h1>あなたのキャリアタイプを<br>16タイプで診断</h1>
+      <p>20の質問に答えるだけで、4つの軸からあなたの<br>キャリアタイプ（A1〜D4）を診断します</p>
+    </div>
+    <div class="feature-list">
+      <div class="feature-item"><div class="feature-icon blue">📋</div><div class="feature-text"><h3>20問・約3分で完了</h3><p>SPI性格検査をベースにした質問設計</p></div></div>
+      <div class="feature-item"><div class="feature-icon green">💼</div><div class="feature-text"><h3>16タイプで詳細診断</h3><p>4軸×2=16パターンの中からあなたのタイプを特定</p></div></div>
+      <div class="feature-item"><div class="feature-icon purple">🏢</div><div class="feature-text"><h3>おすすめ企業をレコメンド</h3><p>あなたのタイプ×業界別におすすめ企業を表示</p></div></div>
+    </div>
+    <button class="start-btn" onclick="showScreen('screen-industry')">診断スタート（無料）</button>
+
+    <div style="margin-top:32px;">
+      <div class="section-title" style="font-size:15px; margin-bottom:12px;">全16タイプ一覧</div>
+      <div class="type-grid">
+        <div class="type-grid-cat">A : リーダー系（対人×攻め）</div>
+        <div class="type-grid-item"><div class="tg-code">A1</div><div class="tg-name">オンオフのエース</div></div>
+        <div class="type-grid-item"><div class="tg-code">A2</div><div class="tg-name">あったかリーダー</div></div>
+        <div class="type-grid-item"><div class="tg-code">A3</div><div class="tg-name">全力キャプテン</div></div>
+        <div class="type-grid-item"><div class="tg-code">A4</div><div class="tg-name">熱血プレイヤー</div></div>
+        <div class="type-grid-cat">B : サポート系（対人×支え）</div>
+        <div class="type-grid-item"><div class="tg-code">B1</div><div class="tg-name">ナチュラルケアリスト</div></div>
+        <div class="type-grid-item"><div class="tg-code">B2</div><div class="tg-name">ほっこりサポーター</div></div>
+        <div class="type-grid-item"><div class="tg-code">B3</div><div class="tg-name">黒子のプロデューサー</div></div>
+        <div class="type-grid-item"><div class="tg-code">B4</div><div class="tg-name">まっすぐガーディアン</div></div>
+        <div class="type-grid-cat">C : 推進系（対課題×攻め）</div>
+        <div class="type-grid-item"><div class="tg-code">C1</div><div class="tg-name">ひらめきクリエイター</div></div>
+        <div class="type-grid-item"><div class="tg-code">C2</div><div class="tg-name">じっくりクラフター</div></div>
+        <div class="type-grid-item"><div class="tg-code">C3</div><div class="tg-name">突き抜けパイオニア</div></div>
+        <div class="type-grid-item"><div class="tg-code">C4</div><div class="tg-name">のめり込みビルダー</div></div>
+        <div class="type-grid-cat">D : 分析系（対課題×支え）</div>
+        <div class="type-grid-item"><div class="tg-code">D1</div><div class="tg-name">冷静なブレイン</div></div>
+        <div class="type-grid-item"><div class="tg-code">D2</div><div class="tg-name">きっちり参謀</div></div>
+        <div class="type-grid-item"><div class="tg-code">D3</div><div class="tg-name">鉄壁コントローラー</div></div>
+        <div class="type-grid-item"><div class="tg-code">D4</div><div class="tg-name">コツコツマイスター</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-industry" class="screen">
+    <div class="section-title">興味のある業界を選んでください</div>
+    <div class="section-desc">複数選択OK。選んだ業界に合わせておすすめ企業を表示します。</div>
+    <div class="industry-grid">
+      <div class="industry-chip" onclick="toggleIndustry(this)" data-industry="IT / Web">IT / Web</div>
+      <div class="industry-chip" onclick="toggleIndustry(this)" data-industry="広告 / メディア">広告 / メディア</div>
+      <div class="industry-chip" onclick="toggleIndustry(this)" data-industry="金融">金融</div>
+      <div class="industry-chip" onclick="toggleIndustry(this)" data-industry="コンサル">コンサル</div>
+      <div class="industry-chip" onclick="toggleIndustry(this)" data-industry="メーカー">メーカー</div>
+      <div class="industry-chip" onclick="toggleIndustry(this)" data-industry="商社">商社</div>
+    </div>
+    <button class="start-btn next-btn-disabled" id="industry-next-btn" onclick="startQuiz()">次へ進む</button>
+    <button class="skip-btn" onclick="selectedIndustries=[]; startQuiz();">業界を絞らずに診断を始める</button>
+  </div>
+
+  <div id="screen-quiz" class="screen">
+    <div class="progress-area">
+      <div class="progress-label"><span id="progress-text">Q1 / 20</span><span id="axis-text">対人 or 対課題</span></div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:5%"></div></div>
+    </div>
+    <button class="back-btn" id="back-btn" onclick="goBack()" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      前の質問に戻る
+    </button>
+    <div class="question-card fade-in" id="question-card">
+      <div class="question-number" id="q-number">Q1</div>
+      <div class="question-axis" id="q-axis">軸1：対人 or 対課題</div>
+      <div class="question-text" id="q-text"></div>
+      <div class="spectrum-area">
+        <div class="spectrum-labels">
+          <div class="spectrum-label left"><div class="spectrum-label-tag">A</div><br><span id="choice-a-text"></span></div>
+          <div class="spectrum-label right"><div class="spectrum-label-tag">B</div><br><span id="choice-b-text"></span></div>
+        </div>
+        <div class="spectrum-track-wrapper">
+          <div class="spectrum-hint"><span>&larr; Aに近い</span><span>Bに近い &rarr;</span></div>
+          <div class="spectrum-track">
+            <div class="spectrum-dot" data-value="2" onclick="selectSpectrum(this)"></div>
+            <div class="spectrum-dot" data-value="1" onclick="selectSpectrum(this)"></div>
+            <div class="spectrum-dot" data-value="0" onclick="selectSpectrum(this)"></div>
+            <div class="spectrum-dot" data-value="-1" onclick="selectSpectrum(this)"></div>
+            <div class="spectrum-dot" data-value="-2" onclick="selectSpectrum(this)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-result" class="screen"></div>
+</div>
+
+<script>
+const questions = [
+  { axis: 1, axisLabel: "対人 or 対課題", q: "友人の悩み相談を受けたあと、「相談してよかった」と感謝された。あなたがより嬉しいのは？", a: "「話を聞いてもらえて気持ちが楽になった」と言われたとき", b: "「おかげで何をすべきかクリアになった」と言われたとき" },
+  { axis: 1, axisLabel: "対人 or 対課題", q: "グループワークが終わったあと、「自分が一番貢献できたな」と感じるのは？", a: "意見が割れたとき、メンバーの考えを引き出してまとめられた", b: "みんなが納得するデータや根拠を調べて提示できた" },
+  { axis: 1, axisLabel: "対人 or 対課題", q: "休日の過ごし方としてどちらが好き？", a: "友人と集まって過ごす", b: "一人で趣味に没頭する" },
+  { axis: 1, axisLabel: "対人 or 対課題", q: "つい時間を忘れて没頭してしまうのは、どんなとき？", a: "気の合う仲間と議論やブレストをしているとき", b: "一人で資料やデータを作り込んでいるとき" },
+  { axis: 1, axisLabel: "対人 or 対課題", q: "新しいプロジェクトに配属されたとき、最初にワクワクするのは？", a: "どんな人たちと一緒に働けるのか", b: "どんな課題に取り組めるのか" },
+  { axis: 2, axisLabel: "攻め or 支え", q: "チームで目標を達成したとき、振り返って充実感があるのは？", a: "自分が先頭に立って突破口を開いた場面", b: "自分が裏方としてチームの動きを支えた場面" },
+  { axis: 2, axisLabel: "攻め or 支え", q: "文化祭の出し物を決める場面。あなたがやりがいを感じるのは？", a: "「これやろうよ！」と自分のアイデアでクラスを動かすこと", b: "みんなの希望を聞いて、全員が納得できる案に整えること" },
+  { axis: 2, axisLabel: "攻め or 支え", q: "スポーツに例えるなら、自分はどちらに近い？", a: "点を取りに行くフォワード。リスクを取ってでもチャンスを作る", b: "全体を見渡すボランチ。味方が活きるパスを出す" },
+  { axis: 2, axisLabel: "攻め or 支え", q: "大きな仕事を任されたとき、より気持ちが高まるのは？", a: "自分がリーダーとして方向性を決めて引っ張ること", b: "メンバーが動きやすいように段取りや調整をすること" },
+  { axis: 2, axisLabel: "攻め or 支え", q: "上司からの評価コメント、より嬉しいのは？", a: "「推進力がある」「周りを巻き込む力がある」", b: "「気配りが上手い」「チームの潤滑油だ」" },
+  { axis: 3, axisLabel: "WLB志向", q: "1週間を振り返って「いい週だったな」と感じるのは？", a: "仕事を時間内に終えて、自分の時間もしっかり楽しめた週", b: "夢中で仕事に打ち込んで、大きく成果を出せた週" },
+  { axis: 3, axisLabel: "WLB志向", q: "転職先を検討するとき、「ここいいな」と心が動くポイントは？", a: "有休消化率や残業の少なさなど、働きやすさが見えた", b: "挑戦的な仕事内容やスキルアップの機会が豊富だった" },
+  { axis: 3, axisLabel: "WLB志向", q: "「最近忙しそうだね」と友人に言われたとき、心の中で思うのは？", a: "「ちょっとペースを見直さないとな」", b: "「充実してる証拠かもしれないな」" },
+  { axis: 3, axisLabel: "WLB志向", q: "10年後の自分を想像して、より幸せを感じるのは？", a: "仕事もプライベートもバランスよく、穏やかに暮らしている姿", b: "ある分野のプロとして認められ、大きなプロジェクトを動かしている姿" },
+  { axis: 3, axisLabel: "WLB志向", q: "ロールモデルの先輩を思い浮かべたとき、より憧れるのは？", a: "オンオフを切り替えて、趣味も家庭も仕事も楽しんでいる人", b: "仕事に情熱を注ぎ、業界で一目置かれている人" },
+  { axis: 4, axisLabel: "成長環境", q: "新しいスキルを習得したあと、「身についたな」と実感するのは？", a: "自分で試行錯誤して壁を乗り越えたとき", b: "教わった通りにやって、しっかり結果が出たとき" },
+  { axis: 4, axisLabel: "成長環境", q: "入社1年目を振り返って、「成長できた」と感じられるのはどんな環境？", a: "最初から裁量を持たせてもらい、自分で考えて動いた環境", b: "先輩がマンツーマンでついてくれて、基礎から丁寧に教わった環境" },
+  { axis: 4, axisLabel: "成長環境", q: "新しい仕事で早く成果を出せたのは、どちらの環境だと思う？", a: "手探りでも自分で判断して動けた環境", b: "経験豊富な先輩がそばで道筋を示してくれた環境" },
+  { axis: 4, axisLabel: "成長環境", q: "「自由にやっていいよ」と言われたとき、心の中に湧く感情は？", a: "ワクワクする。自分なりのやり方で挑戦したい", b: "少し不安。まずはお手本やガイドラインがあると安心する" },
+  { axis: 4, axisLabel: "成長環境", q: "理想の上司像に近いのは？", a: "「任せるよ」と信じて見守り、要所でだけフィードバックをくれる人", b: "「一緒に考えよう」と定期的に時間を取って伴走してくれる人" },
+];
+
+// 16 types: A1-A4, B1-B4, C1-C4, D1-D4
+// Category: axis1(対人H/対課題D) + axis2(攻めA/支えB) → A,B,C,D
+// Subtype: axis3(WLB L/ワークW) + axis4(自走S/育成G) → 1,2,3,4
+// A(対人+攻め): A1=L+S, A2=L+G, A3=W+S, A4=W+G
+// B(対人+支え): B1=L+S, B2=L+G, B3=W+S, B4=W+G
+// C(対課題+攻め): C1=L+S, C2=L+G, C3=W+S, C4=W+G
+// D(対課題+支え): D1=L+S, D2=L+G, D3=W+S, D4=W+G
+
+const typeData = {
+  A1: {
+    name: "オンオフのエース", icon: "⚡",
+    tagline: "人を巻き込み、自分のペースで成果を出す",
+    keywords: ["切り替え上手", "巻き込み力", "メリハリ"],
+    jobs: ["営業","広告営業","SNSマーケ"],
+    personality: "人と関わることにエネルギーを感じ、自分から周りに働きかけるのが自然にできるタイプ。同時に、プライベートの時間も大事にしたいという軸を持っていて、メリハリのある働き方を好みます。指示を待つより自分で判断して動く方が力を発揮します。",
+    strengths: "切り替えの速さと、人を惹きつけるコミュニケーション力。短時間で成果を出す集中力も強み。",
+    comm: "初対面でも自然に会話をリードできる。ただし、プライベートの境界線はしっかり引くタイプ。",
+    stress: "裁量がなく、細かく管理される環境。プライベートの時間を侵食されること。",
+    growth: "「余裕がある」は強みだが、ときには全力で没頭する経験が視野を広げるかも。",
+    whyJobs: "人との信頼関係を武器にしつつ自分のペースで成果を出せる営業職や、SNSマーケティングのように裁量を持って人と接する仕事にフィットします。",
+    desc: "人との関わりで成果を出しつつ、プライベートも大事に。自分のペースで裁量を持って働くスタイル。",
+    good: ["A2","B1","C1"], goodReason: "A2の温かさが補完し、B1の気配りと自然にシナジー。C1の発想力との協業も新鮮な刺激に。",
+    bad: ["D4","B4"], badReason: "D4のコツコツ型とはペース感が合いにくい。B4の真面目さがメリハリ型には窮屈に映ることも。"
+  },
+  A2: {
+    name: "あったかリーダー", icon: "🌟",
+    tagline: "人望で自然とチームをまとめる安定リーダー",
+    keywords: ["安心感", "傾聴力", "育成型リーダー"],
+    jobs: ["営業","人材紹介","広告営業"],
+    personality: "周囲の人への関心が高く、チームの雰囲気を良くするのが上手なタイプ。前に出ることにも抵抗がなく、人望で自然とリーダーに推されることも。しっかりした研修やサポートがある環境だと安心して力を出せます。",
+    strengths: "人の気持ちを汲み取る力と、安心感のあるリーダーシップ。「この人についていきたい」と思わせる温かさ。",
+    comm: "相手の話をしっかり聞いてから自分の意見を伝える。対立を避けつつ、全員が納得する着地点を見つける。",
+    stress: "チーム内で衝突が起きたとき。自分のサポート体制が整っていない環境。",
+    growth: "「みんなに合わせすぎない」ことを意識すると、リーダーとしてさらに一段上に。",
+    whyJobs: "丁寧な対人スキルと安定志向を活かせる人材紹介や、クライアントとの関係構築が重要な広告営業が向いています。教育体制の整った大手企業との相性も◎。",
+    desc: "人との関わりが好きで、充実した研修のもとでスキルを磨きたい。WLBも確保したい安定志向。",
+    good: ["A1","B2","A4"], goodReason: "A1のスピード感を温かく包み、B2の穏やかさと心地よいハーモニー。A4の熱量をうまく方向づけられる。",
+    bad: ["C3","D3"], badReason: "C3の突き進むスタイルに振り回されがち。D3の冷徹さは温かさ重視のA2にはストレスに。"
+  },
+  A3: {
+    name: "全力キャプテン", icon: "🔥",
+    tagline: "圧倒的な熱量でチームを引っ張る",
+    keywords: ["巻き込み力", "粘り強さ", "フルコミット"],
+    jobs: ["営業","プロデューサー","SNSマーケ"],
+    personality: "人と関わることが好きで、しかも先頭に立ってチームを引っ張るエネルギーがあるタイプ。仕事にのめり込むことに充実感を覚え、成果が出るまでやり切る粘り強さがあります。自分の裁量で動ける環境で最も輝きます。",
+    strengths: "圧倒的な巻き込み力と、成果が出るまでやり切る粘り強さ。チームの士気を上げる天性の力。",
+    comm: "エネルギッシュに場を引っ張る。熱量が高いため、周りを自然と動かしてしまう。",
+    stress: "裁量を与えてもらえず、指示通りにしか動けない環境。チームの温度差が大きいとき。",
+    growth: "全力が強みだからこそ、意図的に「引く」ことを覚えると、巻き込み力がさらに上がる。",
+    whyJobs: "この情熱と巻き込み力は、大きな案件を動かすプロデューサー職や、チームを率いる営業リーダーにぴったり。仕事にフルコミットできる環境で真価を発揮します。",
+    desc: "人との関わりの中で全力で働きたい。裁量を持ってチームを引っ張るリーダーシップ型。",
+    good: ["A4","C3","B3"], goodReason: "A4の素直さと熱量が噛み合い最強タッグに。C3の突破力と組めば大きな成果。B3の裏方力が全力型を支える。",
+    bad: ["D1","D2"], badReason: "D1の冷静さとは温度差が大きい。D2の慎重さがスピード感を重視するA3にはもどかしく映る。"
+  },
+  A4: {
+    name: "熱血プレイヤー", icon: "💪",
+    tagline: "仲間のために全力を尽くすひたむきさ",
+    keywords: ["素直さ", "情の深さ", "努力家"],
+    jobs: ["営業","人材紹介","広告営業"],
+    personality: "仲間のために全力を尽くせる、熱量の高いタイプ。人と深く関わる仕事にやりがいを感じ、仕事に没頭することをいとわない姿勢があります。先輩や上司からしっかり学びたいという素直さも武器。",
+    strengths: "ひたむきな努力と素直さ。「この人のために頑張りたい」と思える情の深さ。",
+    comm: "感情がストレートに出る。熱意が伝わりやすく、クライアントとの信頼関係を築きやすい。",
+    stress: "努力が報われないと感じるとき。一人で抱え込んでしまいがち。",
+    growth: "熱量を保ちつつ、「戦略的に動く」視点を加えると、成果の出方が大きく変わる。",
+    whyJobs: "クライアントに寄り添う営業や人材紹介で、持ち前の熱意と素直さが信頼につながります。教育体制が整った企業でメンターに恵まれると成長スピードが加速します。",
+    desc: "人のために全力で働き、組織的なサポートの中でスキルを磨きたい。丁寧にキャリアを積み上げるタイプ。",
+    good: ["A3","A2","B4"], goodReason: "A3のリーダーシップの下で力を発揮。A2の温かさに安心して成長。B4の真面目さと通じ合う。",
+    bad: ["C1","D1"], badReason: "C1の自由奔放さとはペースが合わない。D1のクールさが感情重視のA4には物足りなく感じる。"
+  },
+  B1: {
+    name: "ナチュラルケアリスト", icon: "🌿",
+    tagline: "さりげなく場を整える自然体の気配り",
+    keywords: ["空気を読む", "自然体", "オンオフ上手"],
+    jobs: ["人事","広報・PR","CS"],
+    personality: "押し付けがましくなく、自然体で人を支えられるタイプ。場の空気を読んで「ちょうどいい距離感」で関わるのが得意です。自分の時間も大切にしていて、オンオフの切り替えが上手。",
+    strengths: "空気を読む力と、さりげないフォロー力。周囲が気づかないところで場を整えている。",
+    comm: "聞き上手で、相手が話しやすい雰囲気を自然に作れる。押しが強くないからこそ信頼される。",
+    stress: "自分のケアが後回しになること。感謝されないまま当たり前にされるとき。",
+    growth: "「自分がやっていることの価値」を言語化して伝える練習をすると、評価が正当についてくる。",
+    whyJobs: "この自然な気配り力は、社員の気持ちに寄り添う人事職や、社外との橋渡し役である広報・PR、顧客対応のCSに向いています。",
+    desc: "自然体で人を支え、プライベートも大事に。自分の裁量で動くスタイル。",
+    good: ["A1","B2","D1"], goodReason: "A1のエネルギーをそっと支え、B2の温かさと心地よく共鳴。D1の冷静さとバランスが取れる。",
+    bad: ["A3","C3"], badReason: "A3の圧倒的熱量に巻き込まれて消耗しがち。C3のスピード感についていけないことも。"
+  },
+  B2: {
+    name: "ほっこりサポーター", icon: "☕",
+    tagline: "温かい雰囲気でチームを支える安定の存在",
+    keywords: ["安心感", "穏やか", "着実"],
+    jobs: ["人事","総務","CS"],
+    personality: "人の役に立つことに喜びを感じ、温かい雰囲気でチームを支えるタイプ。自分が前に出るよりも、誰かが困っているときにそっと手を差し伸べる方が性に合っています。安定した環境で着実に成長したい堅実な面も。",
+    strengths: "安心感を与える存在感。「この人がいるとチームの雰囲気が良くなる」と言われるタイプ。",
+    comm: "穏やかで丁寧。相手のペースに合わせた会話ができる。急かされるのは苦手。",
+    stress: "急な変化が多い環境。自分の意見を強く求められる場面。",
+    growth: "「支える力」に自信を持ちつつ、自分の意見を小さくてもいいから発信する練習を。",
+    whyJobs: "この温かさと堅実さは、社員をケアする人事・総務や、お客様に寄り添うCS職にマッチ。研修が充実した企業で安心してスキルを磨ける環境が最適です。",
+    desc: "人のサポートが好きで、研修が充実した環境で着実に成長したい。WLBも重視する安定志向。",
+    good: ["A2","B1","D2"], goodReason: "A2の温かいリーダーシップの下で安心して力を発揮。B1とは穏やかな共鳴。D2の丁寧さと相性抜群。",
+    bad: ["C3","A3"], badReason: "C3の突き進むスタイルに戸惑いがち。A3の圧倒的熱量はプレッシャーに感じることも。"
+  },
+  B3: {
+    name: "黒子のプロデューサー", icon: "🎭",
+    tagline: "裏から全体を動かす影の実力者",
+    keywords: ["構想力", "没入力", "縁の下の力持ち"],
+    jobs: ["広報・PR","キャリアアドバイザー","CS"],
+    personality: "表に出るよりも裏から人を動かすのが好きなタイプ。仕事にのめり込む集中力があり、チーム全体の成果に貢献することに充実感を覚えます。自分なりの方法論を持っていて、それを黙々と磨き続ける職人気質の一面も。",
+    strengths: "舞台裏から全体を見渡す構想力と、仕事への深い没入力。「気づいたら全部この人が回していた」という存在。",
+    comm: "必要なことを的確に、でも控えめに伝える。目立つことは避けるが、影響力は大きい。",
+    stress: "自分の仕事が可視化されず、他の人が手柄を持っていくとき。表舞台に立つことを強いられるとき。",
+    growth: "裏方の強みを保ちつつ、成果を「見える化」する術を身につけると、キャリアが加速する。",
+    whyJobs: "「裏方力×仕事への没頭」は、戦略的に情報発信を設計する広報・PRや、求職者と企業をつなぐキャリアアドバイザーで力を発揮します。",
+    desc: "仕事にのめり込みつつ、チーム全体の成果に貢献したい。裏から組織を動かす力がある。",
+    good: ["A3","D3","C4"], goodReason: "A3の表舞台を裏で支える最高のコンビ。D3の冷静さと方向性が一致。C4の探究心と深いレベルで協業可能。",
+    bad: ["A1","C1"], badReason: "A1のメリハリ型とは仕事への没入度に差が出やすい。C1の自由な発想が計画的なB3には散漫に映ることも。"
+  },
+  B4: {
+    name: "まっすぐガーディアン", icon: "🛡️",
+    tagline: "誠実さで絶対的な信頼を勝ち取る",
+    keywords: ["誠実", "責任感", "約束を守る"],
+    jobs: ["人事","総務","キャリアアドバイザー"],
+    personality: "真面目で誠実、チームのためにコツコツ努力できるタイプ。人を支えることに強いやりがいを感じ、仕事に全力で向き合います。先輩や上司のもとでしっかり学びたいという向上心があり、言われたことを丁寧にやり切る信頼感が武器。",
+    strengths: "誠実さと責任感。「この人に任せれば間違いない」という絶対的な信頼を勝ち取る力。",
+    comm: "言葉よりも行動で示すタイプ。約束したことは必ず守る。嘘やごまかしが苦手。",
+    stress: "ルールが曖昧な環境。自分の努力の方向性が見えないとき。",
+    growth: "真面目さは最大の武器。あとは「完璧じゃなくてもOK」と自分を許す余裕を持てると楽になる。",
+    whyJobs: "この誠実さと丁寧さは、組織の安定運営を担う人事・総務で高く評価されます。メンター制度が整った企業で着実にキャリアを積むスタイルが◎。",
+    desc: "仕事に全力で向き合い、先輩のもとで丁寧にスキルを磨きながら組織に貢献するタイプ。",
+    good: ["A4","D4","D2"], goodReason: "A4の素直さと信頼で結ばれる。D4のコツコツ型と最高の相性。D2の丁寧さとも通じ合う。",
+    bad: ["A1","C1"], badReason: "A1のメリハリ型は真面目なB4には軽く映ることも。C1の自由奔放さがルール重視のB4にはストレス。"
+  },
+  C1: {
+    name: "ひらめきクリエイター", icon: "💡",
+    tagline: "自由な発想でゼロから形にする",
+    keywords: ["発想力", "自由", "オリジナリティ"],
+    jobs: ["企画","エンジニア","デザイナー"],
+    personality: "アイデアを形にすることが好きで、一人で集中してモノづくりに没頭できるタイプ。人と関わることより、課題や作品そのものに向き合う方がエネルギーが湧きます。自由な環境で創造性を発揮します。",
+    strengths: "発想力と、ゼロから何かを生み出す力。「普通はこうでしょ」に縛られない自由な思考。",
+    comm: "アイデアベースの会話が得意。雑談からでもインスピレーションを得る。ただし長い会議は苦手。",
+    stress: "自由がない環境。ルーティンワークの連続。アイデアを否定され続けるとき。",
+    growth: "ひらめきを「形にして届ける」ところまで完遂する力をつけると、クリエイターとして一段上に。",
+    whyJobs: "この創造力と自律性は、新しい企画を生み出す企画職や、技術で課題を解決するエンジニア、デザイナーにフィット。裁量のある環境でオリジナリティを発揮できます。",
+    desc: "自分のペースでモノづくりに没頭したい。プライベートも大事にしつつ、裁量のある環境で創造性を発揮。",
+    good: ["A1","C2","D1"], goodReason: "A1の巻き込み力がアイデアを広める。C2の丁寧さが発想を形にする。D1の分析力が方向性を補強。",
+    bad: ["B4","A4"], badReason: "B4のルール重視は自由なC1には窮屈。A4の感情ベースの関わりとはリズムが合いにくい。"
+  },
+  C2: {
+    name: "じっくりクラフター", icon: "🔧",
+    tagline: "専門性をコツコツ磨く品質の職人",
+    keywords: ["継続力", "品質", "専門性"],
+    jobs: ["エンジニア","デザイナー","データマーケ"],
+    personality: "専門スキルを腰を据えて磨きたいタイプ。課題に対して丁寧にアプローチし、着実に質を高めていく粘り強さがあります。無理なペースよりも、自分のリズムで確実に成長したい。しっかりした教育環境があると安心して力を出せます。",
+    strengths: "継続する力と、品質へのこだわり。「急がば回れ」を体現するタイプ。",
+    comm: "必要なことを端的に、正確に伝える。無駄な会話は少ないが、技術的な話になると熱くなる。",
+    stress: "スピード重視で質を犠牲にする環境。教わる機会がなく放置されるとき。",
+    growth: "完璧を目指しすぎず「80点でまず出す」を意識すると、成果が目に見えて増える。",
+    whyJobs: "この堅実さと専門性への志向は、技術力を積み上げるエンジニアやデザイナー、データを扱うマーケ職に向いています。研修が充実した大手企業との相性◎。",
+    desc: "専門性をじっくり磨きたい。研修のもとで確実にスキルを積み上げ、安定した働き方をしたい。",
+    good: ["C1","D2","C4"], goodReason: "C1の発想を形に落とし込める。D2の正確さと高め合える。C4の探究心と深い技術トークが可能。",
+    bad: ["A3","A1"], badReason: "A3のスピード感がじっくり派のC2にはプレッシャー。A1のメリハリ型とは仕事のテンポが合いにくい。"
+  },
+  C3: {
+    name: "突き抜けパイオニア", icon: "🚀",
+    tagline: "前例のない課題に立ち向かう突破者",
+    keywords: ["突破力", "行動力", "前例なし上等"],
+    jobs: ["コンサル","事業企画","PM"],
+    personality: "未知の課題に立ち向かうことにワクワクするタイプ。仕事に全力でのめり込み、自分の力で道を切り拓く推進力があります。課題やプロダクトに集中する方が力を発揮。スピード感のある環境で最も輝きます。",
+    strengths: "突破力と行動力。「前例がない」が最大のモチベーションになる稀有なタイプ。",
+    comm: "結論ファーストで端的。議論より行動を重視する。スピード感のない会話にはイライラしがち。",
+    stress: "前例踏襲を求められる環境。意思決定が遅い組織。自分の裁量がないとき。",
+    growth: "突き進む力に「巻き込む力」を加えると、一人では到達できない高みに行ける。",
+    whyJobs: "この突破力と集中力は、難題を解くコンサルタントや、ゼロから事業を立ち上げる事業企画・PMにぴったり。スタートアップ的な環境でも活躍できます。",
+    desc: "技術やプロダクトに全力で向き合う。スタートアップ的なスピード感と裁量で事業を推進するタイプ。",
+    good: ["A3","D3","C4"], goodReason: "A3の巻き込み力と合わされば最強。D3の冷静な制御が暴走を防ぐ。C4の深掘り力が品質を担保。",
+    bad: ["B2","B1"], badReason: "B2の穏やかさとはスピード感が合わない。B1の慎重さがC3にはブレーキに感じる。"
+  },
+  C4: {
+    name: "のめり込みビルダー", icon: "🏗️",
+    tagline: "技術を極める情熱の職人",
+    keywords: ["集中力", "探究心", "師弟関係"],
+    jobs: ["エンジニア","コンサル","データマーケ・CRM"],
+    personality: "ものづくりや課題解決に深くのめり込む職人気質。仕事に情熱を注ぎ、技術やスキルをとことん追求したいタイプです。師匠や先輩から技を学ぶことに抵抗がなく、体系的に教わることで成長が加速します。",
+    strengths: "集中力と技術への探究心。一度ハマると誰よりも深く掘り下げる。",
+    comm: "技術的な話題では饒舌になるが、雑談は苦手な面も。信頼した相手には深く心を開く。",
+    stress: "表面的にしか取り組めない環境。技術を軽視する文化。",
+    growth: "のめり込む力を活かしつつ「全体像を見る」視点を意識すると、リードエンジニアへの道が開ける。",
+    whyJobs: "この技術への情熱と学ぶ姿勢は、大手企業の技術職や研究職、データ系のマーケ職で真価を発揮。メンター制度のある環境で腕を磨くのが最適です。",
+    desc: "ものづくりに情熱を注ぎつつ、組織的なサポートの中で成長。大手の技術職や研究職にも向く。",
+    good: ["C3","B3","C2"], goodReason: "C3の推進力の下で技術を極められる。B3の裏方力と深いレベルで協業。C2の品質志向と切磋琢磨。",
+    bad: ["A1","A3"], badReason: "A1のメリハリ型は深掘り派のC4には表面的に映る。A3の熱量は対人ベースでC4とは方向が違う。"
+  },
+  D1: {
+    name: "冷静なブレイン", icon: "🧊",
+    tagline: "データとロジックで組織を支える頭脳",
+    keywords: ["論理的思考", "俯瞰", "冷静"],
+    jobs: ["経営企画","データアナリスト","社内SE"],
+    personality: "データとロジックで物事を考えるのが得意なタイプ。派手に前に出るより、分析と戦略で組織を支えることに充実感を覚えます。冷静に全体を俯瞰する視点が強み。自分のペースで思考を深められる環境を好みます。",
+    strengths: "論理的思考力と、感情に流されない冷静さ。複雑な問題を構造的に整理する力。",
+    comm: "事実ベースで話す。感情論が飛び交う場では一歩引いて「で、ファクトは？」と問いかけるタイプ。",
+    stress: "感情的な議論に巻き込まれるとき。データなしに意思決定される環境。",
+    growth: "ロジックは最強の武器。ここに「相手の感情を動かす伝え方」が加わると、影響力が飛躍的に増す。",
+    whyJobs: "この分析力と俯瞰力は、経営企画やデータアナリスト、社内SEのように組織の意思決定を裏から支える仕事にフィットします。",
+    desc: "データやロジックで組織を支える。プライベートも大事にしつつ、自分のペースで分析・改善を回す。",
+    good: ["B1","C1","D2"], goodReason: "B1の気配りが冷静さを和らげる。C1の発想力に分析で道筋を。D2の正確さとは最高の分析チーム。",
+    bad: ["A4","A3"], badReason: "A4の感情重視とは価値観が違う。A3の熱量ベースの判断はD1にはノイズに感じる。"
+  },
+  D2: {
+    name: "きっちり参謀", icon: "📐",
+    tagline: "正確さとルールで組織の最後の砦に",
+    keywords: ["精緻", "正確性", "堅実"],
+    jobs: ["経理・財務","データアナリスト","法務"],
+    personality: "正確さと丁寧さが武器のタイプ。数字やルールに強く、曖昧なことをきちんと整理するのが得意です。安定した環境でしっかり教わりながらスキルを高めたいという堅実さがあり、細部へのこだわりが周囲の信頼につながります。",
+    strengths: "ミスを見逃さない精緻さと、ルール・手順を守り切る確実性。「最後の砦」のような存在。",
+    comm: "正確で丁寧な報告が得意。口頭より文書の方が真価を発揮する。曖昧な指示が苦手。",
+    stress: "ルールが曖昧でカオスな環境。大雑把な人と組むとき。",
+    growth: "正確さを保ちつつ「大局観」も身につけると、参謀からリーダーへの道が見えてくる。",
+    whyJobs: "この精緻さと安定志向は、ミスが許されない経理・財務や法務、正確なデータ分析が求められるアナリスト職に最適。研修のしっかりした企業で専門性を磨けます。",
+    desc: "数字やデータに強く、充実した研修のもとで着実に専門性を高めたい。安定した環境を好む。",
+    good: ["D1","B2","B4"], goodReason: "D1とは最強の分析タッグ。B2の温かさに安心して力を発揮。B4の誠実さと深く通じ合う。",
+    bad: ["A3","C3"], badReason: "A3のスピード感は正確性重視のD2にはストレス。C3の「前例なし」が慎重派のD2には不安要素。"
+  },
+  D3: {
+    name: "鉄壁コントローラー", icon: "🏰",
+    tagline: "冷静な判断でプレッシャーに立ち向かう",
+    keywords: ["冷静", "胆力", "制御力"],
+    jobs: ["経営企画","コンサル","社内SE"],
+    personality: "仕事にのめり込み、データとロジックで組織の基盤を固めるタイプ。感情より事実で判断し、冷静に全体を制御する力があります。自分の裁量で意思決定したい志向が強く、責任の大きな仕事ほど燃えます。",
+    strengths: "冷静な判断力と、プレッシャー下でもブレない胆力。組織の根幹を担える器の大きさ。",
+    comm: "端的で論理的。無駄を嫌い、要点だけを伝える。部下には厳しいが、信頼は厚い。",
+    stress: "権限が与えられず、裁量がないとき。非論理的な意思決定が横行する環境。",
+    growth: "制御力に「人を育てる」視点を加えると、経営者としての器がさらに広がる。",
+    whyJobs: "この冷静な制御力と仕事への没頭は、経営の根幹を支える経営企画や、論理で課題を解くコンサルで力を発揮。裁量のあるポジションで真価を発揮します。",
+    desc: "仕事にのめり込み、データとロジックで組織の土台を固める。裁量を持って経営を支えるタイプ。",
+    good: ["C3","B3","D1"], goodReason: "C3の突破力を冷静に制御する最強コンビ。B3の裏方力と戦略が噛み合う。D1とは論理で通じ合う。",
+    bad: ["A2","B2"], badReason: "A2の感情ベースの判断はD3には非効率に映る。B2の穏やかさがスピード感を求めるD3にはもどかしい。"
+  },
+  D4: {
+    name: "コツコツマイスター", icon: "⚙️",
+    tagline: "品質に妥協しない職人の矜持",
+    keywords: ["忍耐力", "品質", "職人魂"],
+    jobs: ["経理・財務","法務","品質管理"],
+    personality: "地道な作業を丁寧にやり抜く粘り強さがあるタイプ。仕事に全力で向き合い、先輩から技を吸収して確実にスキルを高めていきます。派手さよりも正確さ、スピードよりも品質を重視する姿勢が周囲からの信頼を集めます。",
+    strengths: "忍耐力と、品質に妥協しない職人魂。「この人が最終チェックしたなら大丈夫」という信頼。",
+    comm: "寡黙だが、専門分野の話になると頼れるアドバイザーに。言葉少なだが重みがある。",
+    stress: "雑に仕事を進めることを求められるとき。自分のペースを乱されること。",
+    growth: "品質へのこだわりは唯一無二の強み。ここに「速さ」を少しずつ加えると市場価値が急上昇する。",
+    whyJobs: "この緻密さと粘り強さは、正確さが命の経理・財務や法務、品質管理で真価を発揮。師匠のもとで技を磨く職人的なキャリアパスが合っています。",
+    desc: "仕事に全力で向き合い、先輩のもとで丁寧にスキルを磨く。専門職で真価を発揮するタイプ。",
+    good: ["B4","D2","C2"], goodReason: "B4の誠実さと最高の相性。D2の正確さと切磋琢磨。C2の品質志向と深いレベルで通じ合う。",
+    bad: ["A1","C3"], badReason: "A1のメリハリ型はコツコツ派のD4には表面的に映る。C3のスピード重視は品質重視のD4にはストレス。"
+  },
+};
+
+const companyData = {
+  "IT / Web": ["サイバーエージェント","楽天グループ","LINE ヤフー","メルカリ","リクルート"],
+  "広告 / メディア": ["電通","博報堂","サイバーエージェント","ADK","東急エージェンシー"],
+  "金融": ["三菱UFJ銀行","三井住友銀行","野村證券","東京海上日動","第一生命"],
+  "コンサル": ["マッキンゼー","BCG","デロイト トーマツ","アクセンチュア","PwC"],
+  "メーカー": ["トヨタ自動車","ソニーグループ","パナソニック","キーエンス","味の素"],
+  "商社": ["三菱商事","三井物産","伊藤忠商事","住友商事","丸紅"],
+};
+
+let selectedIndustries = [];
+let currentQ = 0;
+let scores = { 1: 0, 2: 0, 3: 0, 4: 0 };
+let answers = [];
+let isTransitioning = false;
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function toggleIndustry(el) {
+  el.classList.toggle('selected');
+  const ind = el.dataset.industry;
+  if (selectedIndustries.includes(ind)) { selectedIndustries = selectedIndustries.filter(i => i !== ind); }
+  else { selectedIndustries.push(ind); }
+  const btn = document.getElementById('industry-next-btn');
+  btn.classList.toggle('next-btn-disabled', selectedIndustries.length === 0);
+}
+
+function startQuiz() { currentQ = 0; scores = {1:0,2:0,3:0,4:0}; answers = []; renderQuestion(); showScreen('screen-quiz'); }
+
+function renderQuestion() {
+  const q = questions[currentQ];
+  document.getElementById('q-number').textContent = `Q${currentQ+1}`;
+  document.getElementById('q-axis').textContent = `軸${q.axis}：${q.axisLabel}`;
+  document.getElementById('q-text').textContent = q.q;
+  document.getElementById('choice-a-text').textContent = q.a;
+  document.getElementById('choice-b-text').textContent = q.b;
+  document.getElementById('progress-text').textContent = `Q${currentQ+1} / 20`;
+  document.getElementById('axis-text').textContent = q.axisLabel;
+  document.getElementById('progress-fill').style.width = `${(currentQ/20)*100}%`;
+  document.querySelectorAll('.spectrum-dot').forEach(d => d.classList.remove('selected'));
+  document.getElementById('back-btn').style.display = currentQ > 0 ? 'inline-flex' : 'none';
+  const card = document.getElementById('question-card');
+  card.classList.remove('fade-in'); void card.offsetWidth; card.classList.add('fade-in');
+}
+
+function selectSpectrum(el) {
+  if (isTransitioning) return;
+  isTransitioning = true;
+  const q = questions[currentQ];
+  const value = parseInt(el.dataset.value);
+  document.querySelectorAll('.spectrum-dot').forEach(d => d.classList.remove('selected'));
+  el.classList.add('selected');
+  scores[q.axis] += value;
+  answers[currentQ] = value;
+  setTimeout(() => {
+    currentQ++;
+    isTransitioning = false;
+    if (currentQ < questions.length) { renderQuestion(); }
+    else { document.getElementById('progress-fill').style.width = '100%'; setTimeout(() => showResult(), 300); }
+  }, 500);
+}
+
+function goBack() {
+  if (currentQ <= 0) return;
+  currentQ--;
+  scores[questions[currentQ].axis] -= answers[currentQ];
+  answers[currentQ] = undefined;
+  renderQuestion();
+}
+
+function getTypeCode() {
+  // Category: axis1(対人>=0 → H, 対課題<0 → D) + axis2(攻め>=0 → A, 支え<0 → B)
+  // H+A → A category, H+B → B category, D+A → C category, D+B → D category
+  const isHuman = scores[1] >= 0;  // 対人
+  const isAttack = scores[2] >= 0; // 攻め
+
+  let cat;
+  if (isHuman && isAttack) cat = 'A';
+  else if (isHuman && !isAttack) cat = 'B';
+  else if (!isHuman && isAttack) cat = 'C';
+  else cat = 'D';
+
+  // Subtype: axis3(WLB>=0 → L, ワーク<0 → W) + axis4(自走>=0 → S, 育成<0 → G)
+  // L+S → 1, L+G → 2, W+S → 3, W+G → 4
+  const isLife = scores[3] >= 0;   // WLB重視
+  const isSelf = scores[4] >= 0;   // 自走型
+
+  let sub;
+  if (isLife && isSelf) sub = 1;
+  else if (isLife && !isSelf) sub = 2;
+  else if (!isLife && isSelf) sub = 3;
+  else sub = 4;
+
+  return cat + String(sub);
+}
+
+function showResult() {
+  const code = getTypeCode();
+  const type = typeData[code];
+  const industries = selectedIndustries.length > 0 ? selectedIndustries : Object.keys(companyData);
+
+  let companiesHTML = '';
+  industries.forEach(ind => {
+    const companies = companyData[ind] || [];
+    companiesHTML += `<div class="result-section"><h3><span>🏢</span> ${ind} のおすすめ企業</h3><div class="company-list">`;
+    companies.forEach((c, i) => { companiesHTML += `<div class="company-item"><div class="company-rank">${i+1}</div><div class="company-info"><h4>${c}</h4><p>${ind}</p></div></div>`; });
+    companiesHTML += '</div></div>';
+  });
+
+  const axisNames = [
+    { label: "対人", labelB: "対課題", score: scores[1], color: "blue" },
+    { label: "攻め", labelB: "支え", score: scores[2], color: "green" },
+    { label: "ライフ重視", labelB: "ワーク重視", score: scores[3], color: "orange" },
+    { label: "自走型", labelB: "育成型", score: scores[4], color: "purple" },
+  ];
+
+  let axisHTML = '';
+  axisNames.forEach(ax => {
+    const displayPct = Math.round(((10 - ax.score) / 20) * 100);
+    const strength = Math.min(100, Math.round((Math.abs(ax.score) / 10) * 100));
+    axisHTML += `<div class="axis-bar"><div class="axis-label"><span>${ax.label}</span><span>${ax.labelB}</span></div><div class="axis-track"><div class="axis-marker ${ax.color}" style="left:${displayPct}%"></div></div><div class="axis-pct" style="color:${ax.score > 0 ? '#2563eb' : ax.score < 0 ? '#7c3aed' : '#64748b'}">${ax.score > 0 ? ax.label : ax.score < 0 ? ax.labelB : 'バランス型'}（${strength}%）</div></div>`;
+  });
+
+  const detailStyle = "font-size:13px;line-height:1.8;color:#374151;";
+  const detailLabel = "display:inline-block;font-size:11px;font-weight:700;padding:2px 10px;border-radius:12px;margin-bottom:6px;";
+
+  // Compatibility section
+  let compatHTML = '';
+  if (type.good && type.good.length > 0) {
+    compatHTML += '<div class="result-section fade-in"><h3><span>💕</span> 相性の良いタイプ</h3>';
+    type.good.forEach(g => {
+      const gt = typeData[g];
+      compatHTML += `<div class="compat-item"><div class="compat-badge good">${g}</div><div class="compat-info"><h4>${gt.icon} ${gt.name}</h4><p>${gt.tagline}</p></div></div>`;
+    });
+    compatHTML += `<p style="${detailStyle}margin-top:12px;">${type.goodReason}</p></div>`;
+  }
+  if (type.bad && type.bad.length > 0) {
+    compatHTML += '<div class="result-section fade-in"><h3><span>⚡</span> 注意が必要なタイプ</h3>';
+    type.bad.forEach(b => {
+      const bt = typeData[b];
+      compatHTML += `<div class="compat-item"><div class="compat-badge bad">${b}</div><div class="compat-info"><h4>${bt.icon} ${bt.name}</h4><p>${bt.tagline}</p></div></div>`;
+    });
+    compatHTML += `<p style="${detailStyle}margin-top:12px;">${type.badReason}</p></div>`;
+  }
+
+  document.getElementById('screen-result').innerHTML = `
+    <div class="result-hero fade-in">
+      <div class="result-type-badge">Career Type</div>
+      <div class="result-code">${code}</div>
+      <div class="result-name">${type.icon} ${type.name}</div>
+      <div class="result-tagline">${type.tagline}</div>
+      <div class="result-keywords">${type.keywords.map(k => `<span class="result-keyword">${k}</span>`).join('')}</div>
+      <div class="result-desc">${type.desc}</div>
+    </div>
+    <div class="result-section fade-in">
+      <h3><span>📊</span> あなたの診断スコア</h3>
+      ${axisHTML}
+    </div>
+    <div class="result-section fade-in">
+      <h3><span>🧠</span> あなたの性格タイプ</h3>
+      <p style="${detailStyle}">${type.personality}</p>
+      <div style="margin-top:16px;">
+        <div style="margin-bottom:14px;"><span style="${detailLabel}background:#DBEAFE;color:#1E40AF;">💪 強み</span><p style="${detailStyle}margin-top:4px;">${type.strengths}</p></div>
+        <div style="margin-bottom:14px;"><span style="${detailLabel}background:#D1FAE5;color:#065F46;">💬 コミュニケーション</span><p style="${detailStyle}margin-top:4px;">${type.comm}</p></div>
+        <div style="margin-bottom:14px;"><span style="${detailLabel}background:#FEE2E2;color:#991B1B;">😣 ストレスを感じる場面</span><p style="${detailStyle}margin-top:4px;">${type.stress}</p></div>
+        <div><span style="${detailLabel}background:#FEF3C7;color:#92400E;">🌱 成長のヒント</span><p style="${detailStyle}margin-top:4px;">${type.growth}</p></div>
+      </div>
+    </div>
+    <div class="result-section fade-in">
+      <h3><span>💼</span> あなたに向いている職種</h3>
+      <div class="job-tags" style="margin-bottom:12px;">${type.jobs.map(j => `<div class="job-tag">${j}</div>`).join('')}</div>
+      <p style="${detailStyle}">${type.whyJobs}</p>
+    </div>
+    ${compatHTML}
+    ${companiesHTML}
+    <div class="share-area">
+      <button class="share-btn x" onclick="shareX()">Xでシェア</button>
+      <button class="share-btn line" onclick="shareLINE()">LINEで送る</button>
+      <button class="share-btn copy" onclick="copyResult()">コピー</button>
+    </div>
+    <button class="retry-btn" onclick="location.reload()">もう一度診断する</button>
+  `;
+  showScreen('screen-result');
+}
+
+function shareX() {
+  const code = getTypeCode(); const type = typeData[code];
+  const text = encodeURIComponent(`私のキャリアタイプは【${code}：${type.icon} ${type.name}】でした！\n${type.tagline}\n向いている職種：${type.jobs.join('、')}\n\n#就活キャリアタイプ診断 #16Types`);
+  window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+}
+function shareLINE() {
+  const code = getTypeCode(); const type = typeData[code];
+  const text = encodeURIComponent(`私のキャリアタイプは【${code}：${type.icon} ${type.name}】でした！向いている職種：${type.jobs.join('、')}`);
+  window.open(`https://line.me/R/msg/text/?${text}`, '_blank');
+}
+function copyResult() {
+  const code = getTypeCode(); const type = typeData[code];
+  navigator.clipboard.writeText(`私のキャリアタイプは【${code}：${type.icon} ${type.name}】でした！\n${type.tagline}\n向いている職種：${type.jobs.join('、')}\n${type.desc}`).then(() => alert('コピーしました！'));
+}
+
+// URL parameter support for sharing results
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const typeParam = params.get('type');
+  if (typeParam && typeData[typeParam]) {
+    // Simulate scores to show this type
+    const cat = typeParam[0];
+    const sub = parseInt(typeParam[1]);
+    scores[1] = (cat === 'A' || cat === 'B') ? 5 : -5;
+    scores[2] = (cat === 'A' || cat === 'C') ? 5 : -5;
+    scores[3] = (sub === 1 || sub === 2) ? 5 : -5;
+    scores[4] = (sub === 1 || sub === 3) ? 5 : -5;
+    showResult();
+  }
+})();
+</script>
+</body>
+</html>
