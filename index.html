@@ -132,12 +132,48 @@
   .retry-btn { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #fff; border: 2px solid #2563eb; color: #2563eb; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
   .retry-btn:hover { background: #eff6ff; }
 
-  /* Type grid on top page */
-  .type-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 20px 0; }
-  .type-grid-item { background: #fff; border-radius: 8px; padding: 8px 4px; text-align: center; font-size: 10px; color: #64748b; border: 1px solid #e2e8f0; }
-  .type-grid-item .tg-code { font-size: 14px; font-weight: 800; color: #2563eb; }
-  .type-grid-item .tg-name { margin-top: 2px; font-size: 10px; color: #475569; font-weight: 600; }
-  .type-grid-cat { grid-column: 1 / -1; background: none; border: none; font-size: 12px; font-weight: 700; color: #1e293b; text-align: left; padding: 8px 4px 2px; }
+  /* Type showcase on top page */
+  .type-showcase { margin: 24px 0 8px; }
+  .type-showcase-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .type-showcase-title { font-size: 16px; font-weight: 800; color: #1e293b; }
+  .type-showcase-badge { background: linear-gradient(135deg,#2563eb,#7c3aed); color:#fff; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; }
+  .type-showcase-sub { font-size:12px; color:#64748b; margin-bottom:16px; }
+
+  .type-category { margin-bottom: 16px; }
+  .type-cat-label { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .type-cat-badge { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; color: #fff; flex-shrink: 0; }
+  .type-cat-badge.cat-a { background: #2563eb; }
+  .type-cat-badge.cat-b { background: #16a34a; }
+  .type-cat-badge.cat-c { background: #ea580c; }
+  .type-cat-badge.cat-d { background: #7c3aed; }
+  .type-cat-name { font-size: 13px; font-weight: 700; }
+  .type-cat-name.cat-a { color: #1d4ed8; }
+  .type-cat-name.cat-b { color: #15803d; }
+  .type-cat-name.cat-c { color: #c2410c; }
+  .type-cat-name.cat-d { color: #6d28d9; }
+  .type-cat-desc { font-size: 11px; color: #94a3b8; }
+
+  .type-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .type-card { border-radius: 12px; padding: 12px; cursor: default; transition: all 0.2s; position: relative; overflow: hidden; }
+  .type-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+  .type-card.tc-a { background: linear-gradient(135deg,#eff6ff,#dbeafe); border: 1.5px solid #bfdbfe; }
+  .type-card.tc-b { background: linear-gradient(135deg,#f0fdf4,#dcfce7); border: 1.5px solid #bbf7d0; }
+  .type-card.tc-c { background: linear-gradient(135deg,#fff7ed,#ffedd5); border: 1.5px solid #fed7aa; }
+  .type-card.tc-d { background: linear-gradient(135deg,#f5f3ff,#ede9fe); border: 1.5px solid #ddd6fe; }
+  .tc-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .tc-icon { font-size: 22px; line-height: 1; }
+  .tc-code { font-size: 16px; font-weight: 900; }
+  .tc-code.cat-a { color: #1d4ed8; }
+  .tc-code.cat-b { color: #15803d; }
+  .tc-code.cat-c { color: #c2410c; }
+  .tc-code.cat-d { color: #6d28d9; }
+  .tc-name { font-size: 12px; font-weight: 700; color: #1e293b; margin-bottom: 3px; }
+  .tc-tagline { font-size: 10px; color: #64748b; line-height: 1.5; }
+
+  /* Character image box in result */
+  .char-img-box { width: 120px; height: 120px; border-radius: 16px; background: rgba(255,255,255,0.15); border: 2.5px dashed rgba(255,255,255,0.5); margin: 0 auto 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+  .char-img-box .char-img-icon { font-size: 32px; opacity: 0.7; }
+  .char-img-box .char-img-label { font-size: 10px; color: rgba(255,255,255,0.7); font-weight: 600; letter-spacing: 0.5px; }
 
   @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   .fade-in { animation: fadeIn 0.3s ease forwards; }
@@ -165,29 +201,143 @@
     </div>
     <button class="start-btn" onclick="showScreen('screen-industry')">診断スタート（無料）</button>
 
-    <div style="margin-top:32px;">
-      <div class="section-title" style="font-size:15px; margin-bottom:12px;">全16タイプ一覧</div>
-      <div class="type-grid">
-        <div class="type-grid-cat">A : リーダー系（対人×攻め）</div>
-        <div class="type-grid-item"><div class="tg-code">A1</div><div class="tg-name">オンオフのエース</div></div>
-        <div class="type-grid-item"><div class="tg-code">A2</div><div class="tg-name">あったかリーダー</div></div>
-        <div class="type-grid-item"><div class="tg-code">A3</div><div class="tg-name">全力キャプテン</div></div>
-        <div class="type-grid-item"><div class="tg-code">A4</div><div class="tg-name">熱血プレイヤー</div></div>
-        <div class="type-grid-cat">B : サポート系（対人×支え）</div>
-        <div class="type-grid-item"><div class="tg-code">B1</div><div class="tg-name">ナチュラルケアリスト</div></div>
-        <div class="type-grid-item"><div class="tg-code">B2</div><div class="tg-name">ほっこりサポーター</div></div>
-        <div class="type-grid-item"><div class="tg-code">B3</div><div class="tg-name">黒子のプロデューサー</div></div>
-        <div class="type-grid-item"><div class="tg-code">B4</div><div class="tg-name">まっすぐガーディアン</div></div>
-        <div class="type-grid-cat">C : 推進系（対課題×攻め）</div>
-        <div class="type-grid-item"><div class="tg-code">C1</div><div class="tg-name">ひらめきクリエイター</div></div>
-        <div class="type-grid-item"><div class="tg-code">C2</div><div class="tg-name">じっくりクラフター</div></div>
-        <div class="type-grid-item"><div class="tg-code">C3</div><div class="tg-name">突き抜けパイオニア</div></div>
-        <div class="type-grid-item"><div class="tg-code">C4</div><div class="tg-name">のめり込みビルダー</div></div>
-        <div class="type-grid-cat">D : 分析系（対課題×支え）</div>
-        <div class="type-grid-item"><div class="tg-code">D1</div><div class="tg-name">冷静なブレイン</div></div>
-        <div class="type-grid-item"><div class="tg-code">D2</div><div class="tg-name">きっちり参謀</div></div>
-        <div class="type-grid-item"><div class="tg-code">D3</div><div class="tg-name">鉄壁コントローラー</div></div>
-        <div class="type-grid-item"><div class="tg-code">D4</div><div class="tg-name">コツコツマイスター</div></div>
+    <div class="type-showcase">
+      <div class="type-showcase-header">
+        <div class="type-showcase-title">全16キャラ一覧</div>
+        <div class="type-showcase-badge">あなたはどれ？</div>
+      </div>
+      <div class="type-showcase-sub">診断で判明する16タイプ。4軸の組み合わせで個性が決まる。</div>
+
+      <!-- A系 -->
+      <div class="type-category">
+        <div class="type-cat-label">
+          <div class="type-cat-badge cat-a">A</div>
+          <div>
+            <div class="type-cat-name cat-a">リーダー系</div>
+            <div class="type-cat-desc">対人 × 攻め</div>
+          </div>
+        </div>
+        <div class="type-cards">
+          <div class="type-card tc-a">
+            <div class="tc-top"><span class="tc-icon">⚡</span><span class="tc-code cat-a">A1</span></div>
+            <div class="tc-name">オンオフのエース</div>
+            <div class="tc-tagline">人を巻き込み、自分のペースで成果を出す</div>
+          </div>
+          <div class="type-card tc-a">
+            <div class="tc-top"><span class="tc-icon">🌟</span><span class="tc-code cat-a">A2</span></div>
+            <div class="tc-name">あったかリーダー</div>
+            <div class="tc-tagline">人望で自然とチームをまとめる安定リーダー</div>
+          </div>
+          <div class="type-card tc-a">
+            <div class="tc-top"><span class="tc-icon">🔥</span><span class="tc-code cat-a">A3</span></div>
+            <div class="tc-name">全力キャプテン</div>
+            <div class="tc-tagline">圧倒的な熱量でチームを引っ張る</div>
+          </div>
+          <div class="type-card tc-a">
+            <div class="tc-top"><span class="tc-icon">💪</span><span class="tc-code cat-a">A4</span></div>
+            <div class="tc-name">熱血プレイヤー</div>
+            <div class="tc-tagline">仲間のために全力を尽くすひたむきさ</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- B系 -->
+      <div class="type-category">
+        <div class="type-cat-label">
+          <div class="type-cat-badge cat-b">B</div>
+          <div>
+            <div class="type-cat-name cat-b">サポート系</div>
+            <div class="type-cat-desc">対人 × 支え</div>
+          </div>
+        </div>
+        <div class="type-cards">
+          <div class="type-card tc-b">
+            <div class="tc-top"><span class="tc-icon">🌿</span><span class="tc-code cat-b">B1</span></div>
+            <div class="tc-name">ナチュラルケアリスト</div>
+            <div class="tc-tagline">さりげなく場を整える自然体の気配り</div>
+          </div>
+          <div class="type-card tc-b">
+            <div class="tc-top"><span class="tc-icon">☕</span><span class="tc-code cat-b">B2</span></div>
+            <div class="tc-name">ほっこりサポーター</div>
+            <div class="tc-tagline">温かい雰囲気でチームを支える安定の存在</div>
+          </div>
+          <div class="type-card tc-b">
+            <div class="tc-top"><span class="tc-icon">🎭</span><span class="tc-code cat-b">B3</span></div>
+            <div class="tc-name">黒子のプロデューサー</div>
+            <div class="tc-tagline">裏から全体を動かす影の実力者</div>
+          </div>
+          <div class="type-card tc-b">
+            <div class="tc-top"><span class="tc-icon">🛡️</span><span class="tc-code cat-b">B4</span></div>
+            <div class="tc-name">まっすぐガーディアン</div>
+            <div class="tc-tagline">誠実さで絶対的な信頼を勝ち取る</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- C系 -->
+      <div class="type-category">
+        <div class="type-cat-label">
+          <div class="type-cat-badge cat-c">C</div>
+          <div>
+            <div class="type-cat-name cat-c">推進系</div>
+            <div class="type-cat-desc">対課題 × 攻め</div>
+          </div>
+        </div>
+        <div class="type-cards">
+          <div class="type-card tc-c">
+            <div class="tc-top"><span class="tc-icon">💡</span><span class="tc-code cat-c">C1</span></div>
+            <div class="tc-name">ひらめきクリエイター</div>
+            <div class="tc-tagline">自由な発想でゼロから形にする</div>
+          </div>
+          <div class="type-card tc-c">
+            <div class="tc-top"><span class="tc-icon">🔧</span><span class="tc-code cat-c">C2</span></div>
+            <div class="tc-name">じっくりクラフター</div>
+            <div class="tc-tagline">専門性をコツコツ磨く品質の職人</div>
+          </div>
+          <div class="type-card tc-c">
+            <div class="tc-top"><span class="tc-icon">🚀</span><span class="tc-code cat-c">C3</span></div>
+            <div class="tc-name">突き抜けパイオニア</div>
+            <div class="tc-tagline">前例のない課題に立ち向かう突破者</div>
+          </div>
+          <div class="type-card tc-c">
+            <div class="tc-top"><span class="tc-icon">🏗️</span><span class="tc-code cat-c">C4</span></div>
+            <div class="tc-name">のめり込みビルダー</div>
+            <div class="tc-tagline">技術を極める情熱の職人</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- D系 -->
+      <div class="type-category">
+        <div class="type-cat-label">
+          <div class="type-cat-badge cat-d">D</div>
+          <div>
+            <div class="type-cat-name cat-d">分析系</div>
+            <div class="type-cat-desc">対課題 × 支え</div>
+          </div>
+        </div>
+        <div class="type-cards">
+          <div class="type-card tc-d">
+            <div class="tc-top"><span class="tc-icon">🧊</span><span class="tc-code cat-d">D1</span></div>
+            <div class="tc-name">冷静なブレイン</div>
+            <div class="tc-tagline">データとロジックで組織を支える頭脳</div>
+          </div>
+          <div class="type-card tc-d">
+            <div class="tc-top"><span class="tc-icon">📐</span><span class="tc-code cat-d">D2</span></div>
+            <div class="tc-name">きっちり参謀</div>
+            <div class="tc-tagline">正確さとルールで組織の最後の砦に</div>
+          </div>
+          <div class="type-card tc-d">
+            <div class="tc-top"><span class="tc-icon">🏰</span><span class="tc-code cat-d">D3</span></div>
+            <div class="tc-name">鉄壁コントローラー</div>
+            <div class="tc-tagline">冷静な判断でプレッシャーに立ち向かう</div>
+          </div>
+          <div class="type-card tc-d">
+            <div class="tc-top"><span class="tc-icon">⚙️</span><span class="tc-code cat-d">D4</span></div>
+            <div class="tc-name">コツコツマイスター</div>
+            <div class="tc-tagline">品質に妥協しない職人の矜持</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -668,8 +818,12 @@ function showResult() {
   document.getElementById('screen-result').innerHTML = `
     <div class="result-hero fade-in">
       <div class="result-type-badge">Career Type</div>
+      <div class="char-img-box">
+        <div class="char-img-icon">${type.icon}</div>
+        <div class="char-img-label">CHARACTER</div>
+      </div>
       <div class="result-code">${code}</div>
-      <div class="result-name">${type.icon} ${type.name}</div>
+      <div class="result-name">${type.name}</div>
       <div class="result-tagline">${type.tagline}</div>
       <div class="result-keywords">${type.keywords.map(k => `<span class="result-keyword">${k}</span>`).join('')}</div>
       <div class="result-desc">${type.desc}</div>
