@@ -3,890 +3,1081 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>就活キャリアタイプ診断</title>
+<title>就活キャリアタイプ診断 | 16Types</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700;900&display=swap" rel="stylesheet">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif; background: #f5f7fa; color: #333; }
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --w:#fff;--off:#f7f9ff;--blue:#1a56db;--blue2:#2563eb;--blue3:#3b82f6;
+  --blue-l:#eff6ff;--blue-m:#dbeafe;--navy:#0f172a;--ink:#1e293b;
+  --mid:#64748b;--light:#94a3b8;--border:#e2e8f0;--border2:#cbd5e1;
+  --shadow:rgba(37,99,235,.12);--shadow2:rgba(15,23,42,.08);
+  --green:#16a34a;--red:#dc2626;--purple:#7c3aed;
+}
+html,body{background:var(--w);color:var(--ink);font-family:'Noto Sans JP','Hiragino Sans',sans-serif;min-height:100vh;overflow-x:hidden;scroll-behavior:smooth;}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-thumb{background:var(--blue3);border-radius:2px;}
+.screen{display:none;min-height:100vh;}.screen.active{display:block;}
+.page-in{animation:pageIn .38s cubic-bezier(.4,0,.2,1) forwards;}
+@keyframes pageIn{from{opacity:0;transform:translateX(28px);}to{opacity:1;transform:translateX(0);}}
+.wrap{max-width:480px;margin:0 auto;padding:0 16px 100px;}
+.rpl{position:relative;overflow:hidden;}
+.rpl-dot{position:absolute;border-radius:50%;background:rgba(255,255,255,.32);transform:scale(0);animation:rplA .55s linear;pointer-events:none;}
+@keyframes rplA{to{transform:scale(4);opacity:0;}}
 
-  .header { background: #fff; border-bottom: 2px solid #2563eb; padding: 12px 20px; position: sticky; top: 0; z-index: 100; }
-  .header-inner { max-width: 600px; margin: 0 auto; display: flex; align-items: center; gap: 10px; }
-  .logo { font-size: 18px; font-weight: 700; color: #2563eb; }
-  .logo-sub { font-size: 11px; color: #64748b; }
+/* HEADER */
+.hdr{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(255,255,255,.94);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;transition:box-shadow .3s;}
+.hdr.sc{box-shadow:0 4px 24px var(--shadow);}
+.hdr-logo{font-size:15px;font-weight:900;letter-spacing:3px;color:var(--navy);display:flex;align-items:center;gap:8px;cursor:pointer;}
+.hdr-dot{width:8px;height:8px;border-radius:50%;background:var(--blue2);animation:dp 2s ease-in-out infinite;}
+@keyframes dp{0%,100%{transform:scale(1);}50%{transform:scale(1.5);}}
+.hdr-logo span{color:var(--blue2);}
+.ham{width:44px;height:44px;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:8px;border-radius:8px;transition:background .2s;}
+.ham:hover{background:var(--blue-l);}
+.ham-l{width:22px;height:2px;background:var(--navy);border-radius:2px;transition:all .35s cubic-bezier(.4,0,.2,1);}
+.ham.open .ham-l:nth-child(1){transform:translateY(7px) rotate(45deg);}
+.ham.open .ham-l:nth-child(2){opacity:0;transform:scaleX(0);}
+.ham.open .ham-l:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
 
-  .container { max-width: 600px; margin: 0 auto; padding: 20px 16px; min-height: calc(100vh - 60px); }
-  .screen { display: none; }
-  .screen.active { display: block; }
+/* DRAWER */
+.drawer{position:fixed;top:60px;left:0;right:0;z-index:999;background:rgba(255,255,255,.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);transform:translateY(-110%);transition:transform .4s cubic-bezier(.4,0,.2,1);padding:20px 24px 28px;box-shadow:0 20px 60px var(--shadow);}
+.drawer.open{transform:translateY(0);}
+.d-title{font-size:9px;font-weight:900;letter-spacing:4px;color:var(--light);text-transform:uppercase;margin-bottom:14px;}
+.d-link{padding:12px 16px;font-size:.88rem;font-weight:700;color:var(--navy);border-radius:10px;transition:all .2s;display:flex;align-items:center;gap:10px;background:transparent;border:none;cursor:pointer;font-family:inherit;width:100%;text-align:left;}
+.d-link:hover{background:var(--blue-l);color:var(--blue2);}
+.d-icon{width:32px;height:32px;border-radius:8px;background:var(--blue-l);display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;}
+.d-div{height:1px;background:var(--border);margin:10px 0;}
+.d-cta{display:block;width:100%;padding:15px;background:var(--blue2);color:#fff;border:none;font-family:inherit;font-size:.9rem;font-weight:900;letter-spacing:2px;cursor:pointer;text-align:center;border-radius:12px;transition:all .25s;margin-top:8px;}
+.d-cta:hover{background:var(--blue);transform:translateY(-1px);box-shadow:0 8px 20px rgba(37,99,235,.35);}
 
-  /* Top page */
-  .hero { background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); border-radius: 16px; padding: 40px 24px; text-align: center; color: #fff; margin-bottom: 24px; }
-  .hero h1 { font-size: 24px; margin-bottom: 8px; line-height: 1.4; }
-  .hero p { font-size: 14px; opacity: 0.9; line-height: 1.6; }
-  .feature-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
-  .feature-item { background: #fff; border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-  .feature-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-  .feature-icon.blue { background: #eff6ff; }
-  .feature-icon.green { background: #f0fdf4; }
-  .feature-icon.purple { background: #faf5ff; }
-  .feature-text h3 { font-size: 14px; margin-bottom: 2px; }
-  .feature-text p { font-size: 12px; color: #64748b; }
+/* CONFETTI */
+.conf-wrap{position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden;}
+.conf{position:absolute;opacity:0;animation:confA 2s ease-out forwards;}
+@keyframes confA{0%{opacity:1;transform:translateY(-10px) rotate(0deg);}100%{opacity:0;transform:translateY(100vh) rotate(720deg);}}
 
-  .start-btn { display: block; width: 100%; padding: 16px; background: #2563eb; color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-  .start-btn:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
+/* HERO */
+.hero{min-height:100svh;background:linear-gradient(160deg,#f0f7ff 0%,#e8f0fe 30%,#dbeafe 60%,#eff6ff 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 16px 60px;position:relative;overflow:hidden;}
+.hero-orb{position:absolute;border-radius:50%;filter:blur(60px);opacity:.4;pointer-events:none;}
+.o1{width:420px;height:420px;background:radial-gradient(circle,#3b82f6,transparent 70%);top:-120px;right:-80px;animation:o1a 8s ease-in-out infinite;}
+.o2{width:300px;height:300px;background:radial-gradient(circle,#a5b4fc,transparent 70%);bottom:-60px;left:-60px;animation:o2a 10s ease-in-out infinite;}
+.o3{width:200px;height:200px;background:radial-gradient(circle,#93c5fd,transparent 70%);top:40%;left:8%;animation:o3a 7s ease-in-out infinite;}
+@keyframes o1a{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(-30px,30px) scale(1.1);}}
+@keyframes o2a{0%,100%{transform:translate(0,0);}50%{transform:translate(20px,-20px) scale(1.08);}}
+@keyframes o3a{0%,100%{transform:translate(0,0);}50%{transform:translate(15px,25px);}}
+.hero::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(37,99,235,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,.06) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;}
+.hero-sil{position:absolute;bottom:0;right:-20px;width:220px;opacity:.06;pointer-events:none;animation:silF 6s ease-in-out infinite;}
+@keyframes silF{0%,100%{transform:translateY(0);}50%{transform:translateY(-20px);}}
+.hero-inner{position:relative;z-index:1;width:100%;}
 
-  /* Industry selection */
-  .section-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-  .section-desc { font-size: 13px; color: #64748b; margin-bottom: 20px; line-height: 1.6; }
-  .industry-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
-  .industry-chip { padding: 14px 12px; background: #fff; border: 2px solid #e2e8f0; border-radius: 10px; text-align: center; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-  .industry-chip:hover { border-color: #2563eb; background: #eff6ff; }
-  .industry-chip.selected { border-color: #2563eb; background: #2563eb; color: #fff; }
-  .next-btn-disabled { opacity: 0.4; pointer-events: none; }
-  .skip-btn { display: block; width: 100%; padding: 14px; margin-top: 10px; background: #fff; border: 2px solid #94a3b8; color: #475569; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-  .skip-btn:hover { background: #f1f5f9; border-color: #64748b; }
+/* Stats */
+.hero-stats{display:flex;justify-content:center;margin-bottom:22px;background:rgba(255,255,255,.72);border:1px solid var(--blue-m);border-radius:14px;padding:12px 0;backdrop-filter:blur(8px);max-width:340px;margin-left:auto;margin-right:auto;}
+.hstat{flex:1;text-align:center;padding:0 12px;}
+.hstat-num{font-size:1.1rem;font-weight:900;color:var(--blue2);display:block;line-height:1;}
+.hstat-lbl{font-size:8px;color:var(--mid);font-weight:700;letter-spacing:1px;margin-top:3px;display:block;}
+.hstat-div{width:1px;background:var(--border2);}
 
-  /* Progress bar */
-  .progress-area { margin-bottom: 24px; }
-  .progress-label { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px; color: #64748b; }
-  .progress-bar { height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
-  .progress-fill { height: 100%; background: linear-gradient(90deg, #2563eb, #3b82f6); border-radius: 3px; transition: width 0.4s ease; }
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.8);border:1px solid var(--blue-m);color:var(--blue2);font-size:.72rem;font-weight:900;letter-spacing:3px;padding:6px 16px;border-radius:100px;margin-bottom:20px;text-transform:uppercase;backdrop-filter:blur(8px);box-shadow:0 2px 8px var(--shadow);}
+.hero-badge::before{content:'●';font-size:.4rem;animation:dp 2s infinite;}
+.hero-title{font-size:clamp(1.8rem,6.5vw,2.8rem);font-weight:900;line-height:1.2;color:var(--navy);margin-bottom:12px;letter-spacing:-1px;}
+.hero-title em{display:block;background:linear-gradient(135deg,var(--blue2),#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-style:normal;}
+.hero-sub{font-size:.86rem;color:var(--mid);line-height:1.8;max-width:340px;margin:0 auto 24px;}
 
-  /* Back button */
-  .back-btn { display: inline-flex; align-items: center; gap: 4px; background: none; border: none; color: #64748b; font-size: 13px; cursor: pointer; padding: 6px 0; margin-bottom: 8px; transition: color 0.2s; }
-  .back-btn:hover { color: #2563eb; }
-  .back-btn svg { width: 16px; height: 16px; }
+/* Continue banner */
+.cont-banner{background:rgba(255,255,255,.9);border:1.5px solid var(--blue-m);border-radius:14px;padding:14px 16px;margin-bottom:18px;backdrop-filter:blur(8px);display:flex;align-items:center;gap:12px;max-width:340px;margin-left:auto;margin-right:auto;cursor:pointer;transition:all .2s;box-shadow:0 4px 12px var(--shadow);}
+.cont-banner:hover{transform:translateY(-2px);box-shadow:0 8px 20px var(--shadow);}
+.cont-icon{font-size:1.4rem;flex-shrink:0;}
+.cont-body{flex:1;text-align:left;}
+.cont-title{font-size:.82rem;font-weight:900;color:var(--blue2);display:block;}
+.cont-sub{font-size:.7rem;color:var(--mid);margin-top:2px;display:block;}
+.cont-arrow{color:var(--blue2);font-weight:900;}
 
-  /* Question card */
-  .question-card { background: #fff; border-radius: 16px; padding: 28px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-  .question-number { font-size: 12px; color: #2563eb; font-weight: 700; margin-bottom: 8px; }
-  .question-axis { display: inline-block; background: #eff6ff; color: #2563eb; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; margin-bottom: 12px; }
-  .question-text { font-size: 16px; font-weight: 600; line-height: 1.6; margin-bottom: 20px; }
+/* CHAR SCROLL STRIP */
+.char-strip-outer{
+  width:100%;overflow:hidden;margin-bottom:28px;
+  position:relative;
+}
+.char-strip-outer::before,.char-strip-outer::after{
+  content:'';position:absolute;top:0;bottom:0;width:70px;z-index:2;pointer-events:none;
+}
+.char-strip-outer::before{left:0;background:linear-gradient(90deg,rgba(237,246,255,1) 0%,transparent 100%);}
+.char-strip-outer::after{right:0;background:linear-gradient(270deg,rgba(235,243,255,1) 0%,transparent 100%);}
+.char-strip-track{
+  display:flex;gap:14px;
+  width:max-content;
+  animation:csScroll 28s linear infinite;
+}
+.char-strip-track:hover{animation-play-state:paused;}
+@keyframes csScroll{
+  0%{transform:translateX(0);}
+  100%{transform:translateX(-50%);}
+}
+.cc{
+  flex-shrink:0;
+  background:rgba(255,255,255,.9);
+  border:1px solid rgba(219,234,254,.8);
+  border-radius:18px;padding:14px 10px 10px;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  box-shadow:0 4px 16px rgba(37,99,235,.1),0 1px 3px rgba(0,0,0,.06);
+  width:92px;cursor:pointer;
+  transition:transform .25s,box-shadow .25s;
+  backdrop-filter:blur(8px);
+}
+.cc:hover{transform:translateY(-6px) scale(1.03);box-shadow:0 12px 28px rgba(37,99,235,.2);}
+.cc img{width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 4px 10px rgba(37,99,235,.18));}
+.cc-code{font-size:10px;font-weight:900;color:var(--blue2);letter-spacing:1px;margin-top:2px;}
+.cc-name{font-size:6.5px;color:var(--mid);text-align:center;line-height:1.5;font-weight:700;}
 
-  /* Spectrum UI */
-  .spectrum-area { margin-top: 4px; }
-  .spectrum-labels { display: flex; gap: 12px; margin-bottom: 16px; }
-  .spectrum-label { flex: 1; padding: 12px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 13px; line-height: 1.5; text-align: center; color: #475569; }
-  .spectrum-label.left { border-color: #bfdbfe; background: #eff6ff; color: #1e40af; }
-  .spectrum-label.right { border-color: #c4b5fd; background: #f5f3ff; color: #5b21b6; }
-  .spectrum-label-tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-bottom: 6px; }
-  .spectrum-label.left .spectrum-label-tag { background: #2563eb; color: #fff; }
-  .spectrum-label.right .spectrum-label-tag { background: #7c3aed; color: #fff; }
-  .spectrum-track-wrapper { padding: 0 4px; margin-bottom: 8px; }
-  .spectrum-hint { display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; margin-bottom: 10px; }
-  .spectrum-track { display: flex; align-items: center; justify-content: space-between; position: relative; padding: 12px 0; }
-  .spectrum-track::before { content: ''; position: absolute; top: 50%; left: 8%; right: 8%; height: 4px; background: linear-gradient(90deg, #2563eb, #e2e8f0 50%, #7c3aed); border-radius: 2px; transform: translateY(-50%); }
-  .spectrum-dot { position: relative; z-index: 2; width: 40px; height: 40px; border-radius: 50%; border: 3px solid #e2e8f0; background: #fff; cursor: pointer; transition: all 0.25s ease; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #94a3b8; }
-  .spectrum-dot:hover { border-color: #93c5fd; background: #eff6ff; transform: scale(1.1); }
-  .spectrum-dot.selected { border-color: #2563eb; background: #2563eb; color: #fff; transform: scale(1.15); box-shadow: 0 2px 12px rgba(37,99,235,0.35); }
+/* BUTTONS */
+.btn{display:block;width:100%;padding:18px 24px;background:var(--blue2);color:#fff;border:none;font-family:'Noto Sans JP',sans-serif;font-size:1rem;font-weight:900;letter-spacing:2px;cursor:pointer;text-align:center;border-radius:14px;box-shadow:0 8px 24px rgba(37,99,235,.4);transition:all .3s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;}
+.btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent 60%);pointer-events:none;}
+.btn:hover{transform:translateY(-3px);box-shadow:0 16px 36px rgba(37,99,235,.45);background:var(--blue);}
+.btn:active{transform:translateY(0);}
+.btn-ghost{background:transparent;border:1.5px solid var(--border2);color:var(--mid);font-family:inherit;font-size:.82rem;font-weight:700;padding:12px 20px;border-radius:10px;cursor:pointer;transition:all .25s;letter-spacing:1px;width:100%;display:block;margin-top:10px;}
+.btn-ghost:hover{border-color:var(--blue3);color:var(--blue2);background:var(--blue-l);}
+.btn-wrap{display:flex;flex-direction:column;gap:0;width:100%;max-width:320px;margin:0 auto;}
 
-  /* Result page */
-  .result-hero { background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); border-radius: 16px; padding: 32px 24px; text-align: center; color: #fff; margin-bottom: 20px; }
-  .result-type-badge { display: inline-block; background: rgba(255,255,255,0.2); padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; margin-bottom: 12px; letter-spacing: 1px; }
-  .result-code { font-size: 48px; font-weight: 800; letter-spacing: 4px; margin-bottom: 4px; }
-  .result-name { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
-  .result-tagline { font-size: 13px; opacity: 0.85; margin-bottom: 16px; }
-  .result-keywords { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-  .result-keyword { background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 12px; font-size: 12px; }
-  .result-desc { font-size: 13px; line-height: 1.7; opacity: 0.9; }
+/* STEPS */
+.steps{display:flex;align-items:flex-start;position:relative;margin-bottom:0;}
+.steps::before{content:'';position:absolute;top:22px;left:calc(16.6% + 10px);right:calc(16.6% + 10px);height:2px;background:linear-gradient(90deg,var(--blue-m),var(--blue2),var(--blue-m));z-index:0;}
+.step{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;z-index:1;}
+.step-n{width:44px;height:44px;border-radius:50%;background:var(--blue2);color:#fff;font-size:.9rem;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(37,99,235,.4);border:3px solid var(--w);}
+.step-lbl{font-size:9px;font-weight:900;color:var(--mid);letter-spacing:1px;text-align:center;line-height:1.5;}
+.step-desc{font-size:8px;color:var(--light);text-align:center;}
 
-  .result-section { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-  .result-section h3 { font-size: 15px; font-weight: 700; margin-bottom: 12px; color: #1e293b; display: flex; align-items: center; gap: 8px; }
-  .result-section h3 span { font-size: 18px; }
+/* TYPE GRID */
+.type-cat-hd{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.tc-pill{font-size:9px;font-weight:900;letter-spacing:2px;padding:5px 14px;border-radius:100px;text-transform:uppercase;white-space:nowrap;}
+.pa{background:var(--blue2);color:#fff;}.pb{background:#7c3aed;color:#fff;}.pc{background:#0f766e;color:#fff;}.pd{background:#334155;color:#fff;}
+.tc-line{flex:1;height:1px;background:var(--border);}
+.type-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.tc{background:var(--w);border:1px solid var(--border);border-radius:16px;padding:10px 6px 12px;text-align:center;cursor:pointer;transition:all .3s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 6px var(--shadow2);position:relative;overflow:hidden;}
+.tc-sil{position:absolute;inset:0;background-size:85%;background-position:center bottom;background-repeat:no-repeat;opacity:.07;transition:opacity .3s;pointer-events:none;}
+.tc:hover .tc-sil{opacity:.14;}
+.tc:hover{transform:translateY(-4px) scale(1.02);box-shadow:0 12px 24px var(--shadow);border-color:var(--blue3);}
+.tc img{width:58px;height:58px;object-fit:contain;display:block;margin:0 auto 6px;filter:drop-shadow(0 3px 6px rgba(0,0,0,.12));transition:transform .3s;position:relative;z-index:1;}
+.tc:hover img{transform:scale(1.1);}
+.tc-code{font-size:11px;font-weight:900;letter-spacing:1px;position:relative;z-index:1;}
+.tc-name{font-size:10px;color:var(--mid);margin-top:3px;line-height:1.4;font-weight:700;position:relative;z-index:1;}
 
-  .axis-bar { margin-bottom: 16px; }
-  .axis-label { display: flex; justify-content: space-between; font-size: 12px; color: #64748b; margin-bottom: 4px; }
-  .axis-track { height: 10px; background: #e2e8f0; border-radius: 5px; position: relative; overflow: visible; }
-  .axis-track::after { content: ''; position: absolute; top: -2px; left: 50%; width: 2px; height: 14px; background: #cbd5e1; transform: translateX(-50%); border-radius: 1px; z-index: 1; }
-  .axis-marker { position: absolute; top: 50%; width: 18px; height: 18px; border-radius: 50%; border: 3px solid #fff; transform: translate(-50%, -50%); transition: left 0.6s ease; z-index: 2; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
-  .axis-marker.blue { background: #2563eb; }
-  .axis-marker.green { background: #16a34a; }
-  .axis-marker.orange { background: #ea580c; }
-  .axis-marker.purple { background: #7c3aed; }
-  .axis-pct { text-align: center; font-size: 11px; font-weight: 700; margin-top: 4px; }
+/* QUIZ */
+.quiz-bg{min-height:100svh;padding:60px 0 0;transition:background .6s;}
+.prog-area{background:var(--w);padding:14px 20px 16px;border-bottom:1px solid var(--border);position:sticky;top:60px;z-index:50;}
+.ax-bars{display:flex;gap:4px;margin-bottom:8px;}
+.ax-bar{flex:1;height:3px;border-radius:2px;opacity:.3;transition:all .4s;}
+.ax-bar.done{opacity:1;}
+.dot-prog{display:flex;gap:3px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
+.dp{flex-shrink:0;width:9px;height:9px;border-radius:50%;background:var(--border2);transition:all .4s cubic-bezier(.4,0,.2,1);}
+.dp.done{background:var(--blue2);box-shadow:0 0 6px rgba(37,99,235,.5);}
+.dp.cur{background:var(--blue3);transform:scale(1.4);box-shadow:0 0 10px rgba(59,130,246,.8);}
+.prog-meta{display:flex;justify-content:space-between;align-items:center;}
+.prog-num{font-size:10px;font-weight:900;color:var(--blue2);letter-spacing:2px;}
+.prog-msg{font-size:10px;font-weight:700;color:var(--mid);}
+.back-btn{display:flex;align-items:center;gap:8px;background:var(--w);border:2px solid var(--border2);color:var(--mid);font-family:inherit;font-size:.85rem;font-weight:700;padding:12px 20px;border-radius:12px;cursor:pointer;transition:all .2s;margin-bottom:14px;width:100%;box-shadow:0 2px 6px var(--shadow2);}
+.back-btn:hover{border-color:var(--blue2);color:var(--blue2);background:var(--blue-l);transform:translateY(-1px);}
+.bin-banner{background:linear-gradient(135deg,#fef9ec,#fef3c7);border:1.5px solid #fcd34d;border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all .2s;}
+.bin-banner:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(251,191,36,.25);}
+.bin-icon{font-size:1.2rem;flex-shrink:0;}
+.bin-body{flex:1;}
+.bin-title{font-size:.8rem;font-weight:900;color:#92400e;display:block;}
+.bin-sub{font-size:.68rem;color:#b45309;margin-top:1px;display:block;}
+.bin-tog{font-size:.7rem;font-weight:900;padding:4px 10px;border-radius:100px;border:none;cursor:pointer;font-family:inherit;}
+.bin-tog.off{background:#fcd34d;color:#92400e;}.bin-tog.on{background:#f59e0b;color:#fff;}
+.q-card{border-radius:20px;overflow:hidden;box-shadow:0 8px 32px var(--shadow2);margin-bottom:14px;}
+.q-card.qin{animation:qIn .35s cubic-bezier(.4,0,.2,1) forwards;}
+@keyframes qIn{from{opacity:0;transform:translateY(16px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+.q-top{padding:18px 20px;position:relative;overflow:hidden;}
+.q-top::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.12),transparent);pointer-events:none;}
+.q-num-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.q-badge{background:rgba(255,255,255,.22);color:#fff;font-size:.7rem;font-weight:900;padding:3px 10px;border-radius:100px;letter-spacing:2px;}
+.q-ax{font-size:.65rem;color:rgba(255,255,255,.8);font-weight:700;letter-spacing:1px;}
+.q-text{font-size:.97rem;font-weight:700;color:#fff;line-height:1.8;text-shadow:0 1px 3px rgba(0,0,0,.2);}
+.q-body{padding:22px 20px 20px;background:var(--w);}
+.choice-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.choice-box{padding:14px 12px;border-radius:12px;font-size:.73rem;line-height:1.6;font-weight:500;border:1.5px solid var(--border);}
+.cb-l{border-left:4px solid var(--blue2);background:var(--blue-l);color:var(--blue);}
+.cb-r{border-right:4px solid var(--purple);background:#faf5ff;color:var(--purple);}
+.spec-labels{display:flex;justify-content:space-between;margin-bottom:12px;}
+.sl-a{font-size:.75rem;font-weight:900;color:var(--blue2);background:var(--blue-l);padding:4px 10px;border-radius:100px;}
+.sl-b{font-size:.75rem;font-weight:900;color:var(--purple);background:#f5f3ff;padding:4px 10px;border-radius:100px;}
+.spec-track{display:flex;align-items:center;justify-content:space-around;padding:8px 0;margin-bottom:10px;position:relative;}
+.spec-track::before{content:'';position:absolute;left:32px;right:32px;top:50%;height:2px;background:linear-gradient(90deg,var(--blue3),#818cf8);opacity:.2;border-radius:2px;transform:translateY(-50%);}
+.sdw{display:flex;align-items:center;justify-content:center;padding:14px;cursor:pointer;position:relative;z-index:1;}
+.sd{border-radius:50%;border:2px solid var(--border2);background:var(--w);transition:all .25s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 6px var(--shadow2);pointer-events:none;}
+.sdw:nth-child(1) .sd,.sdw:nth-child(5) .sd{width:48px;height:48px;}
+.sdw:nth-child(2) .sd,.sdw:nth-child(4) .sd{width:40px;height:40px;}
+.sdw:nth-child(3) .sd{width:32px;height:32px;}
+.sdw:hover .sd{border-color:var(--blue2);transform:scale(1.22);box-shadow:0 6px 18px rgba(37,99,235,.35);background:var(--blue-l);}
+.sdw.sel .sd{background:linear-gradient(135deg,var(--blue2),#4f46e5);border-color:var(--blue2);transform:scale(1.3);box-shadow:0 8px 22px rgba(37,99,235,.55);}
+.sdw.sel .sd::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.78rem;font-weight:900;}
+.sdw ~ .sdw.sel .sd{box-shadow:0 8px 22px rgba(124,58,237,.45);background:linear-gradient(135deg,#4f46e5,var(--purple));}
+.spec-hint{display:flex;justify-content:space-between;font-size:10px;color:var(--light);font-weight:700;letter-spacing:1px;}
+.binary-on .sdw[data-v="0"]{opacity:.3;pointer-events:none;}
 
-  .job-tags { display: flex; flex-wrap: wrap; gap: 8px; }
-  .job-tag { background: #eff6ff; color: #2563eb; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+/* LOADING */
+.loading-wrap{min-height:100svh;background:linear-gradient(160deg,#f0f7ff,#dbeafe);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 20px;}
+.l-philosophy{margin-bottom:32px;max-width:320px;}
+.l-phi-item{font-size:1.05rem;font-weight:700;color:var(--navy);line-height:2;opacity:0;transform:translateY(12px);animation:phiIn 3.2s ease forwards;}
+.l-phi-item:nth-child(2){animation-delay:1s;}.l-phi-item:nth-child(3){animation-delay:2s;}
+@keyframes phiIn{0%{opacity:0;transform:translateY(12px);}20%{opacity:1;transform:translateY(0);}80%{opacity:1;}100%{opacity:.6;}}
+.l-bar-wrap{width:240px;height:6px;background:var(--border);border-radius:100px;overflow:hidden;margin-bottom:16px;}
+.l-bar{height:100%;background:linear-gradient(90deg,var(--blue2),#818cf8);border-radius:100px;animation:lbA 3.2s cubic-bezier(.4,0,.6,1) forwards;}
+@keyframes lbA{0%{width:0;}50%{width:70%;}80%{width:90%;}100%{width:100%;}}
+.l-dots{display:flex;gap:6px;justify-content:center;}
+.ldot{width:6px;height:6px;border-radius:50%;background:var(--blue3);animation:ldA 1.2s ease-in-out infinite;}
+.ldot:nth-child(2){animation-delay:.2s;}.ldot:nth-child(3){animation-delay:.4s;}
+@keyframes ldA{0%,100%{opacity:.3;transform:scale(.8);}50%{opacity:1;transform:scale(1.3);}}
 
-  .company-list { display: flex; flex-direction: column; gap: 10px; }
-  .company-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: #f8fafc; border-radius: 10px; }
-  .company-rank { width: 28px; height: 28px; background: #2563eb; color: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
-  .company-info h4 { font-size: 14px; font-weight: 600; }
-  .company-info p { font-size: 11px; color: #64748b; margin-top: 2px; }
-
-  /* Compatibility section */
-  .compat-section { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-  .compat-item { display: flex; align-items: center; gap: 12px; padding: 10px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px; }
-  .compat-item:last-child { margin-bottom: 0; }
-  .compat-badge { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: #fff; flex-shrink: 0; }
-  .compat-badge.good { background: linear-gradient(135deg, #2563eb, #7c3aed); }
-  .compat-badge.bad { background: #94a3b8; }
-  .compat-info h4 { font-size: 13px; font-weight: 600; }
-  .compat-info p { font-size: 11px; color: #64748b; margin-top: 2px; }
-
-  .share-area { display: flex; gap: 10px; margin-top: 20px; }
-  .share-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; color: #fff; transition: opacity 0.2s; }
-  .share-btn:hover { opacity: 0.85; }
-  .share-btn.x { background: #000; }
-  .share-btn.line { background: #06c755; }
-  .share-btn.copy { background: #64748b; }
-
-  .retry-btn { display: block; width: 100%; padding: 14px; margin-top: 16px; background: #fff; border: 2px solid #2563eb; color: #2563eb; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-  .retry-btn:hover { background: #eff6ff; }
-
-  /* Type showcase on top page */
-  .type-showcase { margin: 24px 0 8px; }
-  .type-showcase-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-  .type-showcase-title { font-size: 16px; font-weight: 800; color: #1e293b; }
-  .type-showcase-badge { background: linear-gradient(135deg,#2563eb,#7c3aed); color:#fff; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; }
-  .type-showcase-sub { font-size:12px; color:#64748b; margin-bottom:16px; }
-
-  .type-category { margin-bottom: 16px; }
-  .type-cat-label { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-  .type-cat-badge { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; color: #fff; flex-shrink: 0; }
-  .type-cat-badge.cat-a { background: #2563eb; }
-  .type-cat-badge.cat-b { background: #16a34a; }
-  .type-cat-badge.cat-c { background: #ea580c; }
-  .type-cat-badge.cat-d { background: #7c3aed; }
-  .type-cat-name { font-size: 13px; font-weight: 700; }
-  .type-cat-name.cat-a { color: #1d4ed8; }
-  .type-cat-name.cat-b { color: #15803d; }
-  .type-cat-name.cat-c { color: #c2410c; }
-  .type-cat-name.cat-d { color: #6d28d9; }
-  .type-cat-desc { font-size: 11px; color: #94a3b8; }
-
-  .type-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-  .type-card { border-radius: 12px; padding: 12px; cursor: default; transition: all 0.2s; position: relative; overflow: hidden; }
-  .type-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
-  .type-card.tc-a { background: linear-gradient(135deg,#eff6ff,#dbeafe); border: 1.5px solid #bfdbfe; }
-  .type-card.tc-b { background: linear-gradient(135deg,#f0fdf4,#dcfce7); border: 1.5px solid #bbf7d0; }
-  .type-card.tc-c { background: linear-gradient(135deg,#fff7ed,#ffedd5); border: 1.5px solid #fed7aa; }
-  .type-card.tc-d { background: linear-gradient(135deg,#f5f3ff,#ede9fe); border: 1.5px solid #ddd6fe; }
-  .tc-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-  .tc-icon { font-size: 22px; line-height: 1; }
-  .tc-code { font-size: 16px; font-weight: 900; }
-  .tc-code.cat-a { color: #1d4ed8; }
-  .tc-code.cat-b { color: #15803d; }
-  .tc-code.cat-c { color: #c2410c; }
-  .tc-code.cat-d { color: #6d28d9; }
-  .tc-name { font-size: 12px; font-weight: 700; color: #1e293b; margin-bottom: 3px; }
-  .tc-tagline { font-size: 10px; color: #64748b; line-height: 1.5; }
-
-  /* Character image box in result */
-  .char-img-box { width: 120px; height: 120px; border-radius: 16px; background: rgba(255,255,255,0.15); border: 2.5px dashed rgba(255,255,255,0.5); margin: 0 auto 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
-  .char-img-box .char-img-icon { font-size: 32px; opacity: 0.7; }
-  .char-img-box .char-img-label { font-size: 10px; color: rgba(255,255,255,0.7); font-weight: 600; letter-spacing: 0.5px; }
-
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-  .fade-in { animation: fadeIn 0.3s ease forwards; }
+/* RESULT */
+.result-wrap{min-height:100svh;background:var(--off);}
+.result-hero{background:linear-gradient(160deg,#eef5ff 0%,#e0ecff 40%,#ddd6fe 100%);padding:80px 20px 40px;text-align:center;position:relative;overflow:hidden;}
+.result-hero::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(37,99,235,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,.06) 1px,transparent 1px);background-size:36px 36px;}
+.ro{position:absolute;border-radius:50%;filter:blur(50px);pointer-events:none;opacity:.5;}
+.ro1{width:280px;height:280px;background:radial-gradient(circle,#93c5fd,transparent 70%);top:-60px;right:-60px;animation:o1a 7s ease-in-out infinite;}
+.ro2{width:220px;height:220px;background:radial-gradient(circle,#c4b5fd,transparent 70%);bottom:-40px;left:-40px;animation:o2a 9s ease-in-out infinite;}
+.result-sil{position:absolute;left:-30px;bottom:0;width:200px;opacity:.05;pointer-events:none;animation:silF 8s ease-in-out infinite;}
+.result-inner{position:relative;z-index:1;}
+.res-announce{font-size:9px;font-weight:900;letter-spacing:6px;color:var(--blue2);text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:10px;}
+.res-announce::before,.res-announce::after{content:'';width:30px;height:1px;background:var(--blue2);}
+.char-frame{width:230px;height:230px;border-radius:50%;background:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 32px rgba(37,99,235,.2),0 0 0 8px rgba(255,255,255,.4);position:relative;animation:cfIn .8s cubic-bezier(.4,0,.2,1) forwards;}
+@keyframes cfIn{from{opacity:0;transform:translateY(30px) scale(.8);}to{opacity:1;transform:translateY(0) scale(1);}}
+.char-frame::before{content:'';position:absolute;inset:-4px;border-radius:50%;background:conic-gradient(var(--blue2),#818cf8,var(--blue2));z-index:-1;animation:cfSpin 8s linear infinite;}
+@keyframes cfSpin{to{transform:rotate(360deg);}}
+.res-char{width:200px;height:200px;object-fit:contain;filter:drop-shadow(0 8px 20px rgba(37,99,235,.2));animation:rcF 3s ease-in-out infinite;}
+@keyframes rcF{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+.res-code{font-size:4rem;font-weight:900;letter-spacing:8px;line-height:1;margin-bottom:10px;color:var(--navy);text-shadow:3px 3px 0 rgba(37,99,235,.25),6px 6px 0 rgba(37,99,235,.12),9px 9px 20px rgba(37,99,235,.2);}
+.res-type-name{font-size:1.3rem;font-weight:900;background:linear-gradient(135deg,var(--blue2),#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px;}
+.res-tagline{font-size:.85rem;color:var(--mid);line-height:1.7;margin-bottom:12px;}
+.rarity-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.rar-badge{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#fef9ec,#fef3c7);border:1.5px solid #fcd34d;color:#92400e;font-size:.7rem;font-weight:900;padding:5px 12px;border-radius:100px;}
+.pct-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.8);border:1px solid var(--blue-m);color:var(--blue2);font-size:.7rem;font-weight:900;padding:5px 12px;border-radius:100px;backdrop-filter:blur(4px);}
+.res-kws{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-bottom:18px;}
+.res-kw{font-size:.68rem;font-weight:900;padding:5px 14px;background:rgba(255,255,255,.8);border:1.5px solid var(--blue-m);color:var(--blue2);border-radius:100px;backdrop-filter:blur(4px);}
+.famous-box{background:rgba(255,255,255,.75);border:1px solid var(--blue-m);border-radius:12px;padding:12px 16px;margin-bottom:16px;backdrop-filter:blur(8px);display:flex;align-items:center;gap:10px;}
+.famous-icon{font-size:1.4rem;flex-shrink:0;}
+.famous-text{font-size:.78rem;font-weight:700;color:var(--navy);line-height:1.5;text-align:left;}
+.famous-text span{color:var(--blue2);}
+.share-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.sh{padding:13px 8px;font-family:inherit;font-size:.75rem;font-weight:900;cursor:pointer;border:none;letter-spacing:1px;transition:all .25s;border-radius:10px;position:relative;overflow:hidden;}
+.sh:hover{transform:translateY(-2px);}
+.sh-x{background:#000;color:#fff;}.sh-ln{background:#06c755;color:#fff;}.sh-cp{background:var(--blue-l);color:var(--blue2);border:1px solid var(--blue-m);}
+.friend-card{margin-top:10px;padding:14px 16px;background:rgba(255,255,255,.7);border:1px solid var(--blue-m);border-radius:12px;backdrop-filter:blur(8px);}
+.friend-text{font-size:.78rem;color:var(--mid);margin-bottom:8px;}
+.friend-btn{display:inline-flex;align-items:center;gap:6px;background:var(--blue2);color:#fff;border:none;font-family:inherit;font-size:.8rem;font-weight:900;padding:10px 18px;border-radius:10px;cursor:pointer;transition:all .25s;}
+.friend-btn:hover{background:var(--blue);transform:translateY(-1px);}
+.r-panel{background:var(--w);border:1px solid var(--border);border-radius:18px;margin-bottom:12px;overflow:hidden;box-shadow:0 4px 14px var(--shadow2);transition:box-shadow .3s;}
+.r-panel:hover{box-shadow:0 8px 24px var(--shadow);}
+.r-ph{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;}
+.r-pi{width:32px;height:32px;border-radius:8px;background:var(--blue-l);display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;}
+.r-pt{font-size:.8rem;font-weight:900;color:var(--navy);letter-spacing:1px;flex:1;}
+.r-tog{font-size:.75rem;color:var(--light);transition:transform .3s;flex-shrink:0;}
+.r-ph.aopen .r-tog{transform:rotate(180deg);}
+.r-pb{padding:18px 20px;display:none;}
+.r-pb.aopen{display:block;animation:qIn .3s ease forwards;}
+.r-pb.always{display:block;}
+.body-txt{font-size:.84rem;line-height:1.95;color:var(--mid);}
+.reason-box{background:linear-gradient(135deg,#eff6ff,#f5f3ff);border:1px solid var(--blue-m);border-radius:14px;padding:16px 18px;margin-bottom:12px;}
+.rb-title{font-size:9px;font-weight:900;letter-spacing:3px;color:var(--blue2);text-transform:uppercase;margin-bottom:8px;}
+.rb-text{font-size:.84rem;line-height:1.8;color:var(--navy);font-weight:500;}
+.rb-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.rbt{font-size:.68rem;font-weight:900;padding:3px 10px;border-radius:100px;}
+.rbt1{background:#dbeafe;color:#1d4ed8;}.rbt2{background:#fef3c7;color:#92400e;}.rbt3{background:#d1fae5;color:#065f46;}.rbt4{background:#ede9fe;color:#5b21b6;}
+.d-sec{margin-bottom:14px;}
+.d-lbl{display:inline-block;font-size:.65rem;font-weight:900;letter-spacing:2px;padding:3px 10px;border-radius:6px;text-transform:uppercase;margin-bottom:8px;}
+.ls{background:#dbeafe;color:var(--blue2);}.lc{background:#ede9fe;color:#6d28d9;}.lt{background:#fee2e2;color:#dc2626;}.lg{background:#d1fae5;color:#065f46;}
+.axis-viz{padding:4px 0 8px;}
+.av-row{margin-bottom:18px;}
+.av-labels{display:flex;justify-content:space-between;margin-bottom:6px;}
+.av-l{font-size:.72rem;font-weight:900;letter-spacing:1px;}
+.av-track{height:10px;background:var(--border);border-radius:100px;position:relative;overflow:visible;display:flex;}
+.av-fill-l{height:100%;border-radius:100px 0 0 100px;transition:width .6s;}
+.av-fill-r{height:100%;border-radius:0 100px 100px 0;transition:width .6s;}
+.av-center{position:absolute;top:-2px;bottom:-2px;left:50%;width:2px;background:var(--border2);border-radius:2px;z-index:1;}
+.av-marker{position:absolute;top:50%;width:18px;height:18px;border-radius:50%;border:2.5px solid;transform:translate(-50%,-50%);transition:left .6s;z-index:2;}
+.av-result{font-size:.68rem;text-align:right;font-weight:900;letter-spacing:1px;margin-top:5px;}
+.stat-row{margin-bottom:18px;}
+.stat-pair{display:flex;justify-content:space-between;margin-bottom:6px;}
+.stat-lbl{font-size:.68rem;font-weight:900;letter-spacing:1px;color:var(--mid);}
+.stat-track{height:8px;background:var(--border);border-radius:100px;position:relative;margin-bottom:4px;overflow:visible;}
+.stat-center{position:absolute;top:-2px;bottom:-2px;left:50%;width:2px;background:var(--border2);border-radius:2px;}
+.stat-marker{position:absolute;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:50%;border:2.5px solid;box-shadow:0 2px 8px rgba(0,0,0,.15);}
+.stat-result{font-size:.65rem;text-align:right;font-weight:900;letter-spacing:1px;}
+.subtype-card{background:linear-gradient(135deg,#f8f9ff,#f0f4ff);border:1.5px solid var(--blue-m);border-radius:14px;padding:14px 16px;}
+.sub-head{font-size:9px;font-weight:900;letter-spacing:3px;color:var(--blue2);text-transform:uppercase;margin-bottom:10px;}
+.sub-inner{display:flex;align-items:center;gap:14px;}
+.sub-img{width:60px;height:60px;object-fit:contain;border-radius:12px;background:rgba(255,255,255,.8);padding:4px;filter:drop-shadow(0 3px 8px rgba(0,0,0,.12));}
+.sub-code{font-size:1.4rem;font-weight:900;color:var(--blue2);letter-spacing:4px;}
+.sub-name{font-size:.82rem;font-weight:700;color:var(--navy);margin-top:2px;}
+.sub-tag{font-size:.7rem;color:var(--mid);margin-top:3px;}
+.sub-pct{font-size:.68rem;font-weight:900;background:var(--blue-l);color:var(--blue2);padding:3px 10px;border-radius:100px;display:inline-block;margin-top:6px;}
+.job-tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px;}
+.job-tag{font-size:.74rem;font-weight:700;padding:6px 14px;background:var(--blue-l);color:var(--blue2);border-radius:100px;border:1px solid var(--blue-m);}
+.compat-item{padding:14px 0;border-bottom:1px solid var(--border);}
+.compat-item:last-of-type{border-bottom:none;}
+.compat-chars{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.compat-cbox{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.compat-cbox img{width:54px;height:54px;object-fit:contain;border-radius:12px;background:var(--off);padding:2px;filter:drop-shadow(0 3px 6px rgba(0,0,0,.12));cursor:pointer;transition:transform .2s;}
+.compat-cbox img:hover{transform:scale(1.1);}
+.compat-cbox .code{font-size:9px;font-weight:900;letter-spacing:1px;}
+.compat-vs{font-size:1.1rem;flex:0 0 auto;color:var(--light);}
+.compat-info{flex:1;}
+.cm-badge{font-size:.62rem;font-weight:900;padding:3px 10px;border-radius:100px;display:inline-block;margin-bottom:4px;}
+.cm-good{background:#dcfce7;color:#15803d;}.cm-bad{background:#fee2e2;color:#dc2626;}
+.compat-name{font-size:.86rem;font-weight:700;color:var(--navy);}
+.compat-tag{font-size:.7rem;color:var(--light);}
+.compat-angles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;}
+.ca{background:var(--off);border:1px solid var(--border);border-radius:10px;padding:9px 8px;text-align:center;}
+.ca-icon{font-size:.9rem;margin-bottom:3px;}
+.ca-lbl{font-size:10px;font-weight:900;color:var(--blue2);letter-spacing:1px;margin-bottom:4px;text-transform:uppercase;display:block;}
+.ca-txt{font-size:.68rem;color:var(--mid);line-height:1.5;}
+.co-item{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);}
+.co-item:last-child{border-bottom:none;}
+.co-rank{width:28px;height:28px;border-radius:8px;background:var(--blue-l);color:var(--blue2);font-size:.8rem;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.co-info{flex:1;}
+.co-info h4{font-size:.88rem;font-weight:700;color:var(--navy);}
+.co-info p{font-size:.68rem;color:var(--light);}
+.co-job{font-size:.65rem;font-weight:900;padding:2px 8px;background:var(--blue-l);color:var(--blue2);border-radius:100px;white-space:nowrap;flex-shrink:0;}
+.ind-grid-sm{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.ind-sm{padding:13px 8px;background:var(--w);border:1.5px solid var(--border);border-radius:10px;text-align:center;font-family:inherit;font-size:.78rem;font-weight:700;color:var(--ink);cursor:pointer;transition:all .2s;box-shadow:0 2px 6px var(--shadow2);}
+.ind-sm:hover{border-color:var(--blue3);transform:translateY(-2px);}
+.ind-sm.sel{background:var(--blue-l);border-color:var(--blue2);color:var(--blue2);}
+.retry-btn{display:block;width:100%;padding:20px;background:linear-gradient(135deg,var(--blue2),#4f46e5);color:#fff;border:none;font-family:inherit;font-size:1rem;font-weight:900;letter-spacing:2px;cursor:pointer;text-align:center;border-radius:14px;box-shadow:0 8px 24px rgba(37,99,235,.4);transition:all .3s;margin-top:14px;position:relative;overflow:hidden;}
+.retry-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);pointer-events:none;}
+.retry-btn:hover{transform:translateY(-3px);box-shadow:0 16px 36px rgba(37,99,235,.45);}
+.narration{background:var(--blue-l);border:1px solid var(--blue-m);border-radius:12px;padding:14px 16px;font-size:.84rem;line-height:1.95;color:var(--mid);margin-bottom:14px;}
+.sec-lbl{font-size:9px;font-weight:900;letter-spacing:5px;color:var(--blue2);text-transform:uppercase;margin-bottom:8px;}
+.sec-title{font-size:1.4rem;font-weight:900;color:var(--navy);margin-bottom:4px;}
+.sec-sub{font-size:.8rem;color:var(--mid);margin-bottom:24px;line-height:1.7;}
+.fade-in{animation:qIn .4s cubic-bezier(.4,0,.2,1) forwards;}
+.disabled{opacity:.4;pointer-events:none;}
+@media(max-width:360px){.sdw:nth-child(1) .sd,.sdw:nth-child(5) .sd{width:40px;height:40px;}.sdw:nth-child(2) .sd,.sdw:nth-child(4) .sd{width:33px;height:33px;}.sdw:nth-child(3) .sd{width:26px;height:26px;}}
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="header-inner">
-    <div class="logo">CareerType</div>
-    <div class="logo-sub">就活キャリアタイプ診断 - 16Types</div>
+<header class="hdr" id="hdr">
+  <div class="hdr-logo" onclick="gotoTop()"><div class="hdr-dot"></div>Career<span>Type</span></div>
+  <button class="ham" id="ham" onclick="toggleDrawer()"><div class="ham-l"></div><div class="ham-l"></div><div class="ham-l"></div></button>
+</header>
+
+<nav class="drawer" id="drawer">
+  <div class="d-title">Navigation</div>
+  <button class="d-link" onclick="gotoTop();closeDrawer()"><div class="d-icon">🏠</div>トップ</button>
+  <button class="d-link" onclick="startFresh();closeDrawer()"><div class="d-icon">⚡</div>診断をはじめる</button>
+  <div class="d-div"></div>
+  <div class="d-title" style="margin-top:4px;">16 Types</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 4px;">
+    <button class="d-link" style="padding:10px 12px;" onclick="closeDrawer()"><div class="d-icon" style="font-size:.7rem;font-weight:900;color:var(--blue2);">HA系</div>リーダー</button>
+    <button class="d-link" style="padding:10px 12px;" onclick="closeDrawer()"><div class="d-icon" style="font-size:.7rem;font-weight:900;color:#7c3aed;background:#ede9fe;">HB系</div>サポート</button>
+    <button class="d-link" style="padding:10px 12px;" onclick="closeDrawer()"><div class="d-icon" style="font-size:.7rem;font-weight:900;color:#0f766e;background:#ccfbf1;">DA系</div>推進</button>
+    <button class="d-link" style="padding:10px 12px;" onclick="closeDrawer()"><div class="d-icon" style="font-size:.7rem;font-weight:900;color:#334155;background:var(--off);">DB系</div>分析</button>
+  </div>
+  <button class="d-cta" onclick="startFresh();closeDrawer()">▶ 診断をはじめる</button>
+</nav>
+
+<div class="conf-wrap" id="conf-wrap"></div>
+
+<!-- TITLE -->
+<div id="screen-title" class="screen active">
+  <div class="hero">
+    <div class="hero-orb o1"></div><div class="hero-orb o2"></div><div class="hero-orb o3"></div>
+    <img class="hero-sil" src="images/chars/a3.png" alt="" aria-hidden="true">
+    <div class="hero-inner">
+      <div class="hero-stats">
+        <div class="hstat"><span class="hstat-num" id="stat-count">0</span><span class="hstat-lbl">診断者数</span></div>
+        <div class="hstat-div"></div>
+        <div class="hstat"><span class="hstat-num">16</span><span class="hstat-lbl">タイプ数</span></div>
+        <div class="hstat-div"></div>
+        <div class="hstat"><span class="hstat-num">3分</span><span class="hstat-lbl">所要時間</span></div>
+      </div>
+      <div class="hero-badge">就活キャリア診断</div>
+      <h1 class="hero-title">あなたの仕事タイプ、<em>16Typesで判明。</em></h1>
+      <p class="hero-sub">20問・約3分でわかる本格キャリアタイプ診断。<br>あなたに向いている仕事と企業が見つかる。</p>
+      <div class="cont-banner" id="cont-banner" style="display:none;" onclick="continueDiag()">
+        <div class="cont-icon">💾</div>
+        <div class="cont-body"><span class="cont-title">前回の途中から続ける</span><span class="cont-sub" id="cont-sub">Q?まで回答済み</span></div>
+        <span class="cont-arrow">→</span>
+      </div>
+
+      <!-- CHAR STRIP with ORIGINAL type names -->
+      <div class="char-strip-outer">
+        <div class="char-strip-track" id="char-strip-track">
+          <div class="cc"><img src="images/chars/a1.png" alt="HALS"><div class="cc-code">HALS</div><div class="cc-name">オンオフのエース</div></div>
+          <div class="cc"><img src="images/chars/a2.png" alt="HALG"><div class="cc-code">HALG</div><div class="cc-name">あったかリーダー</div></div>
+          <div class="cc"><img src="images/chars/a3.png" alt="HAWS"><div class="cc-code">HAWS</div><div class="cc-name">全力キャプテン</div></div>
+          <div class="cc"><img src="images/chars/a4.png" alt="HAWG"><div class="cc-code">HAWG</div><div class="cc-name">熱血プレイヤー</div></div>
+          <div class="cc"><img src="images/chars/b1.png" alt="HBLS"><div class="cc-code">HBLS</div><div class="cc-name">ナチュラルケアリスト</div></div>
+          <div class="cc"><img src="images/chars/b2.png" alt="HBLG"><div class="cc-code">HBLG</div><div class="cc-name">ほっこりサポーター</div></div>
+          <div class="cc"><img src="images/chars/b3.png" alt="HBWS"><div class="cc-code">HBWS</div><div class="cc-name">黒子のプロデューサー</div></div>
+          <div class="cc"><img src="images/chars/b4.png" alt="HBWG"><div class="cc-code">HBWG</div><div class="cc-name">まっすぐガーディアン</div></div>
+          <div class="cc"><img src="images/chars/c1.png" alt="DALS"><div class="cc-code">DALS</div><div class="cc-name">ひらめきクリエイター</div></div>
+          <div class="cc"><img src="images/chars/c2.png" alt="DALG"><div class="cc-code">DALG</div><div class="cc-name">じっくりクラフター</div></div>
+          <div class="cc"><img src="images/chars/c3.png" alt="DAWS"><div class="cc-code">DAWS</div><div class="cc-name">突き抜けパイオニア</div></div>
+          <div class="cc"><img src="images/chars/c4.png" alt="DAWG"><div class="cc-code">DAWG</div><div class="cc-name">のめり込みビルダー</div></div>
+          <div class="cc"><img src="images/chars/d1.png" alt="DBLS"><div class="cc-code">DBLS</div><div class="cc-name">冷静なブレイン</div></div>
+          <div class="cc"><img src="images/chars/d2.png" alt="DBLG"><div class="cc-code">DBLG</div><div class="cc-name">きっちり参謀</div></div>
+          <div class="cc"><img src="images/chars/d3.png" alt="DBWS"><div class="cc-code">DBWS</div><div class="cc-name">鉄壁コントローラー</div></div>
+          <div class="cc"><img src="images/chars/d4.png" alt="DBWG"><div class="cc-code">DBWG</div><div class="cc-name">コツコツマイスター</div></div>
+          <!-- 2周目 (シームレスループ用) -->
+          <div class="cc"><img src="images/chars/a1.png" alt="HALS"><div class="cc-code">HALS</div><div class="cc-name">オンオフのエース</div></div>
+          <div class="cc"><img src="images/chars/a2.png" alt="HALG"><div class="cc-code">HALG</div><div class="cc-name">あったかリーダー</div></div>
+          <div class="cc"><img src="images/chars/a3.png" alt="HAWS"><div class="cc-code">HAWS</div><div class="cc-name">全力キャプテン</div></div>
+          <div class="cc"><img src="images/chars/a4.png" alt="HAWG"><div class="cc-code">HAWG</div><div class="cc-name">熱血プレイヤー</div></div>
+          <div class="cc"><img src="images/chars/b1.png" alt="HBLS"><div class="cc-code">HBLS</div><div class="cc-name">ナチュラルケアリスト</div></div>
+          <div class="cc"><img src="images/chars/b2.png" alt="HBLG"><div class="cc-code">HBLG</div><div class="cc-name">ほっこりサポーター</div></div>
+          <div class="cc"><img src="images/chars/b3.png" alt="HBWS"><div class="cc-code">HBWS</div><div class="cc-name">黒子のプロデューサー</div></div>
+          <div class="cc"><img src="images/chars/b4.png" alt="HBWG"><div class="cc-code">HBWG</div><div class="cc-name">まっすぐガーディアン</div></div>
+          <div class="cc"><img src="images/chars/c1.png" alt="DALS"><div class="cc-code">DALS</div><div class="cc-name">ひらめきクリエイター</div></div>
+          <div class="cc"><img src="images/chars/c2.png" alt="DALG"><div class="cc-code">DALG</div><div class="cc-name">じっくりクラフター</div></div>
+          <div class="cc"><img src="images/chars/c3.png" alt="DAWS"><div class="cc-code">DAWS</div><div class="cc-name">突き抜けパイオニア</div></div>
+          <div class="cc"><img src="images/chars/c4.png" alt="DAWG"><div class="cc-code">DAWG</div><div class="cc-name">のめり込みビルダー</div></div>
+          <div class="cc"><img src="images/chars/d1.png" alt="DBLS"><div class="cc-code">DBLS</div><div class="cc-name">冷静なブレイン</div></div>
+          <div class="cc"><img src="images/chars/d2.png" alt="DBLG"><div class="cc-code">DBLG</div><div class="cc-name">きっちり参謀</div></div>
+          <div class="cc"><img src="images/chars/d3.png" alt="DBWS"><div class="cc-code">DBWS</div><div class="cc-name">鉄壁コントローラー</div></div>
+          <div class="cc"><img src="images/chars/d4.png" alt="DBWG"><div class="cc-code">DBWG</div><div class="cc-name">コツコツマイスター</div></div>
+        </div>
+      </div>
+
+      <div class="btn-wrap">
+        <button class="btn rpl" onclick="addRipple(event,this);startFresh()">診断をはじめる →</button>
+        <button class="btn-ghost" onclick="startFresh()">まず診断だけ受けてみる</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:var(--w);padding:40px 0;">
+    <div class="wrap">
+      <div class="sec-lbl">How it works</div>
+      <div class="sec-title">3ステップで完了</div>
+      <p class="sec-sub">SPI性格検査をベースにした4軸・16タイプ診断。</p>
+      <div class="steps">
+        <div class="step"><div class="step-n">1</div><div class="step-lbl">20問<br>回答</div><div class="step-desc">約3分</div></div>
+        <div class="step"><div class="step-n">2</div><div class="step-lbl">タイプ<br>判明</div><div class="step-desc">即時</div></div>
+        <div class="step"><div class="step-n">3</div><div class="step-lbl">企業<br>レコメンド</div><div class="step-desc">業界別</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:var(--off);padding:40px 0;">
+    <div class="wrap">
+      <div class="sec-lbl">All Types</div><div class="sec-title">全16タイプ一覧</div><p class="sec-sub">あなたはどれ？</p>
+      <div id="type-overview"></div>
+      <div style="margin-top:28px;"><button class="btn rpl" onclick="addRipple(event,this);startFresh()">診断をはじめる →</button></div>
+    </div>
   </div>
 </div>
 
-<div class="container">
-  <div id="screen-top" class="screen active">
-    <div class="hero">
-      <h1>あなたのキャリアタイプを<br>16タイプで診断</h1>
-      <p>20の質問に答えるだけで、4つの軸からあなたの<br>キャリアタイプ（A1〜D4）を診断します</p>
+<!-- QUIZ -->
+<div id="screen-quiz" class="screen">
+  <div class="quiz-bg" id="quiz-bg">
+    <div class="prog-area">
+      <div class="ax-bars" id="ax-bars">
+        <div class="ax-bar" style="background:#2563eb;"></div>
+        <div class="ax-bar" style="background:#ea580c;"></div>
+        <div class="ax-bar" style="background:#0891b2;"></div>
+        <div class="ax-bar" style="background:#d97706;"></div>
+      </div>
+      <div class="dot-prog" id="dot-prog"></div>
+      <div class="prog-meta">
+        <div class="prog-num" id="prog-text">Q1 / 20</div>
+        <div class="prog-msg" id="prog-msg">さあはじめよう！</div>
+      </div>
     </div>
-    <div class="feature-list">
-      <div class="feature-item"><div class="feature-icon blue">📋</div><div class="feature-text"><h3>20問・約3分で完了</h3><p>SPI性格検査をベースにした質問設計</p></div></div>
-      <div class="feature-item"><div class="feature-icon green">💼</div><div class="feature-text"><h3>16タイプで詳細診断</h3><p>4軸×2=16パターンの中からあなたのタイプを特定</p></div></div>
-      <div class="feature-item"><div class="feature-icon purple">🏢</div><div class="feature-text"><h3>おすすめ企業をレコメンド</h3><p>あなたのタイプ×業界別におすすめ企業を表示</p></div></div>
-    </div>
-    <button class="start-btn" onclick="showScreen('screen-industry')">診断スタート（無料）</button>
-
-    <div class="type-showcase">
-      <div class="type-showcase-header">
-        <div class="type-showcase-title">全16キャラ一覧</div>
-        <div class="type-showcase-badge">あなたはどれ？</div>
+    <div style="padding:20px 16px;max-width:480px;margin:0 auto;">
+      <div class="bin-banner" id="bin-banner" onclick="toggleBinary()">
+        <div class="bin-icon">🎯</div>
+        <div class="bin-body"><span class="bin-title">強制二択モード</span><span class="bin-sub">「どちらでもない」を使わず精度UP</span></div>
+        <button class="bin-tog off" id="bin-tog">OFF</button>
       </div>
-      <div class="type-showcase-sub">診断で判明する16タイプ。4軸の組み合わせで個性が決まる。</div>
-
-      <!-- A系 -->
-      <div class="type-category">
-        <div class="type-cat-label">
-          <div class="type-cat-badge cat-a">A</div>
-          <div>
-            <div class="type-cat-name cat-a">リーダー系</div>
-            <div class="type-cat-desc">対人 × 攻め</div>
-          </div>
+      <button class="back-btn" id="back-btn" onclick="goBack()" style="display:none;">← 前の質問に戻る</button>
+      <div class="q-card qin" id="q-card">
+        <div class="q-top" id="q-top">
+          <div class="q-num-row"><div class="q-badge" id="q-num">Q1</div><div class="q-ax" id="q-axis"></div></div>
+          <div class="q-text" id="q-text"></div>
         </div>
-        <div class="type-cards">
-          <div class="type-card tc-a">
-            <div class="tc-top"><span class="tc-icon">⚡</span><span class="tc-code cat-a">A1</span></div>
-            <div class="tc-name">オンオフのエース</div>
-            <div class="tc-tagline">人を巻き込み、自分のペースで成果を出す</div>
+        <div class="q-body">
+          <div class="choice-row"><div class="choice-box cb-l" id="q-a"></div><div class="choice-box cb-r" id="q-b"></div></div>
+          <div class="spec-labels"><span class="sl-a" id="sl-a">← A寄り</span><span class="sl-b" id="sl-b">B寄り →</span></div>
+          <div class="spec-track" id="spec-track">
+            <div class="sdw" data-v="2"  onclick="pick(this)"><div class="sd"></div></div>
+            <div class="sdw" data-v="1"  onclick="pick(this)"><div class="sd"></div></div>
+            <div class="sdw" data-v="0"  onclick="pick(this)"><div class="sd"></div></div>
+            <div class="sdw" data-v="-1" onclick="pick(this)"><div class="sd"></div></div>
+            <div class="sdw" data-v="-2" onclick="pick(this)"><div class="sd"></div></div>
           </div>
-          <div class="type-card tc-a">
-            <div class="tc-top"><span class="tc-icon">🌟</span><span class="tc-code cat-a">A2</span></div>
-            <div class="tc-name">あったかリーダー</div>
-            <div class="tc-tagline">人望で自然とチームをまとめる安定リーダー</div>
-          </div>
-          <div class="type-card tc-a">
-            <div class="tc-top"><span class="tc-icon">🔥</span><span class="tc-code cat-a">A3</span></div>
-            <div class="tc-name">全力キャプテン</div>
-            <div class="tc-tagline">圧倒的な熱量でチームを引っ張る</div>
-          </div>
-          <div class="type-card tc-a">
-            <div class="tc-top"><span class="tc-icon">💪</span><span class="tc-code cat-a">A4</span></div>
-            <div class="tc-name">熱血プレイヤー</div>
-            <div class="tc-tagline">仲間のために全力を尽くすひたむきさ</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- B系 -->
-      <div class="type-category">
-        <div class="type-cat-label">
-          <div class="type-cat-badge cat-b">B</div>
-          <div>
-            <div class="type-cat-name cat-b">サポート系</div>
-            <div class="type-cat-desc">対人 × 支え</div>
-          </div>
-        </div>
-        <div class="type-cards">
-          <div class="type-card tc-b">
-            <div class="tc-top"><span class="tc-icon">🌿</span><span class="tc-code cat-b">B1</span></div>
-            <div class="tc-name">ナチュラルケアリスト</div>
-            <div class="tc-tagline">さりげなく場を整える自然体の気配り</div>
-          </div>
-          <div class="type-card tc-b">
-            <div class="tc-top"><span class="tc-icon">☕</span><span class="tc-code cat-b">B2</span></div>
-            <div class="tc-name">ほっこりサポーター</div>
-            <div class="tc-tagline">温かい雰囲気でチームを支える安定の存在</div>
-          </div>
-          <div class="type-card tc-b">
-            <div class="tc-top"><span class="tc-icon">🎭</span><span class="tc-code cat-b">B3</span></div>
-            <div class="tc-name">黒子のプロデューサー</div>
-            <div class="tc-tagline">裏から全体を動かす影の実力者</div>
-          </div>
-          <div class="type-card tc-b">
-            <div class="tc-top"><span class="tc-icon">🛡️</span><span class="tc-code cat-b">B4</span></div>
-            <div class="tc-name">まっすぐガーディアン</div>
-            <div class="tc-tagline">誠実さで絶対的な信頼を勝ち取る</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- C系 -->
-      <div class="type-category">
-        <div class="type-cat-label">
-          <div class="type-cat-badge cat-c">C</div>
-          <div>
-            <div class="type-cat-name cat-c">推進系</div>
-            <div class="type-cat-desc">対課題 × 攻め</div>
-          </div>
-        </div>
-        <div class="type-cards">
-          <div class="type-card tc-c">
-            <div class="tc-top"><span class="tc-icon">💡</span><span class="tc-code cat-c">C1</span></div>
-            <div class="tc-name">ひらめきクリエイター</div>
-            <div class="tc-tagline">自由な発想でゼロから形にする</div>
-          </div>
-          <div class="type-card tc-c">
-            <div class="tc-top"><span class="tc-icon">🔧</span><span class="tc-code cat-c">C2</span></div>
-            <div class="tc-name">じっくりクラフター</div>
-            <div class="tc-tagline">専門性をコツコツ磨く品質の職人</div>
-          </div>
-          <div class="type-card tc-c">
-            <div class="tc-top"><span class="tc-icon">🚀</span><span class="tc-code cat-c">C3</span></div>
-            <div class="tc-name">突き抜けパイオニア</div>
-            <div class="tc-tagline">前例のない課題に立ち向かう突破者</div>
-          </div>
-          <div class="type-card tc-c">
-            <div class="tc-top"><span class="tc-icon">🏗️</span><span class="tc-code cat-c">C4</span></div>
-            <div class="tc-name">のめり込みビルダー</div>
-            <div class="tc-tagline">技術を極める情熱の職人</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- D系 -->
-      <div class="type-category">
-        <div class="type-cat-label">
-          <div class="type-cat-badge cat-d">D</div>
-          <div>
-            <div class="type-cat-name cat-d">分析系</div>
-            <div class="type-cat-desc">対課題 × 支え</div>
-          </div>
-        </div>
-        <div class="type-cards">
-          <div class="type-card tc-d">
-            <div class="tc-top"><span class="tc-icon">🧊</span><span class="tc-code cat-d">D1</span></div>
-            <div class="tc-name">冷静なブレイン</div>
-            <div class="tc-tagline">データとロジックで組織を支える頭脳</div>
-          </div>
-          <div class="type-card tc-d">
-            <div class="tc-top"><span class="tc-icon">📐</span><span class="tc-code cat-d">D2</span></div>
-            <div class="tc-name">きっちり参謀</div>
-            <div class="tc-tagline">正確さとルールで組織の最後の砦に</div>
-          </div>
-          <div class="type-card tc-d">
-            <div class="tc-top"><span class="tc-icon">🏰</span><span class="tc-code cat-d">D3</span></div>
-            <div class="tc-name">鉄壁コントローラー</div>
-            <div class="tc-tagline">冷静な判断でプレッシャーに立ち向かう</div>
-          </div>
-          <div class="type-card tc-d">
-            <div class="tc-top"><span class="tc-icon">⚙️</span><span class="tc-code cat-d">D4</span></div>
-            <div class="tc-name">コツコツマイスター</div>
-            <div class="tc-tagline">品質に妥協しない職人の矜持</div>
-          </div>
+          <div class="spec-hint"><span>← Aに近い</span><span>どちらでもない</span><span>Bに近い →</span></div>
         </div>
       </div>
     </div>
   </div>
-
-  <div id="screen-industry" class="screen">
-    <div class="section-title">興味のある業界を選んでください</div>
-    <div class="section-desc">複数選択OK。選んだ業界に合わせておすすめ企業を表示します。</div>
-    <div class="industry-grid">
-      <div class="industry-chip" onclick="toggleIndustry(this)" data-industry="IT / Web">IT / Web</div>
-      <div class="industry-chip" onclick="toggleIndustry(this)" data-industry="広告 / メディア">広告 / メディア</div>
-      <div class="industry-chip" onclick="toggleIndustry(this)" data-industry="金融">金融</div>
-      <div class="industry-chip" onclick="toggleIndustry(this)" data-industry="コンサル">コンサル</div>
-      <div class="industry-chip" onclick="toggleIndustry(this)" data-industry="メーカー">メーカー</div>
-      <div class="industry-chip" onclick="toggleIndustry(this)" data-industry="商社">商社</div>
-    </div>
-    <button class="start-btn next-btn-disabled" id="industry-next-btn" onclick="startQuiz()">次へ進む</button>
-    <button class="skip-btn" onclick="selectedIndustries=[]; startQuiz();">業界を絞らずに診断を始める</button>
-  </div>
-
-  <div id="screen-quiz" class="screen">
-    <div class="progress-area">
-      <div class="progress-label"><span id="progress-text">Q1 / 20</span><span id="axis-text">対人 or 対課題</span></div>
-      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:5%"></div></div>
-    </div>
-    <button class="back-btn" id="back-btn" onclick="goBack()" style="display:none;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
-      前の質問に戻る
-    </button>
-    <div class="question-card fade-in" id="question-card">
-      <div class="question-number" id="q-number">Q1</div>
-      <div class="question-axis" id="q-axis">軸1：対人 or 対課題</div>
-      <div class="question-text" id="q-text"></div>
-      <div class="spectrum-area">
-        <div class="spectrum-labels">
-          <div class="spectrum-label left"><div class="spectrum-label-tag">A</div><br><span id="choice-a-text"></span></div>
-          <div class="spectrum-label right"><div class="spectrum-label-tag">B</div><br><span id="choice-b-text"></span></div>
-        </div>
-        <div class="spectrum-track-wrapper">
-          <div class="spectrum-hint"><span>&larr; Aに近い</span><span>Bに近い &rarr;</span></div>
-          <div class="spectrum-track">
-            <div class="spectrum-dot" data-value="2" onclick="selectSpectrum(this)"></div>
-            <div class="spectrum-dot" data-value="1" onclick="selectSpectrum(this)"></div>
-            <div class="spectrum-dot" data-value="0" onclick="selectSpectrum(this)"></div>
-            <div class="spectrum-dot" data-value="-1" onclick="selectSpectrum(this)"></div>
-            <div class="spectrum-dot" data-value="-2" onclick="selectSpectrum(this)"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="screen-result" class="screen"></div>
 </div>
 
+<!-- LOADING -->
+<div id="screen-loading" class="screen">
+  <div class="loading-wrap">
+    <div class="l-philosophy">
+      <div class="l-phi-item" style="animation-delay:0s;">「向いている仕事」に正解はない。</div>
+      <div class="l-phi-item" style="animation-delay:1s;">大切なのは、自分の傾向を知ること。</div>
+      <div class="l-phi-item" style="animation-delay:2s;">あなたらしい選択を、ここから。</div>
+    </div>
+    <div class="l-bar-wrap"><div class="l-bar" id="l-bar"></div></div>
+    <div class="l-dots"><div class="ldot"></div><div class="ldot"></div><div class="ldot"></div></div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="screen-result" class="screen"></div>
 <script>
-const questions = [
-  { axis: 1, axisLabel: "対人 or 対課題", q: "友人の悩み相談を受けたあと、「相談してよかった」と感謝された。あなたがより嬉しいのは？", a: "「話を聞いてもらえて気持ちが楽になった」と言われたとき", b: "「おかげで何をすべきかクリアになった」と言われたとき" },
-  { axis: 1, axisLabel: "対人 or 対課題", q: "グループワークが終わったあと、「自分が一番貢献できたな」と感じるのは？", a: "意見が割れたとき、メンバーの考えを引き出してまとめられた", b: "みんなが納得するデータや根拠を調べて提示できた" },
-  { axis: 1, axisLabel: "対人 or 対課題", q: "休日の過ごし方としてどちらが好き？", a: "友人と集まって過ごす", b: "一人で趣味に没頭する" },
-  { axis: 1, axisLabel: "対人 or 対課題", q: "つい時間を忘れて没頭してしまうのは、どんなとき？", a: "気の合う仲間と議論やブレストをしているとき", b: "一人で資料やデータを作り込んでいるとき" },
-  { axis: 1, axisLabel: "対人 or 対課題", q: "新しいプロジェクトに配属されたとき、最初にワクワクするのは？", a: "どんな人たちと一緒に働けるのか", b: "どんな課題に取り組めるのか" },
-  { axis: 2, axisLabel: "攻め or 支え", q: "チームで目標を達成したとき、振り返って充実感があるのは？", a: "自分が先頭に立って突破口を開いた場面", b: "自分が裏方としてチームの動きを支えた場面" },
-  { axis: 2, axisLabel: "攻め or 支え", q: "文化祭の出し物を決める場面。あなたがやりがいを感じるのは？", a: "「これやろうよ！」と自分のアイデアでクラスを動かすこと", b: "みんなの希望を聞いて、全員が納得できる案に整えること" },
-  { axis: 2, axisLabel: "攻め or 支え", q: "スポーツに例えるなら、自分はどちらに近い？", a: "点を取りに行くフォワード。リスクを取ってでもチャンスを作る", b: "全体を見渡すボランチ。味方が活きるパスを出す" },
-  { axis: 2, axisLabel: "攻め or 支え", q: "大きな仕事を任されたとき、より気持ちが高まるのは？", a: "自分がリーダーとして方向性を決めて引っ張ること", b: "メンバーが動きやすいように段取りや調整をすること" },
-  { axis: 2, axisLabel: "攻め or 支え", q: "上司からの評価コメント、より嬉しいのは？", a: "「推進力がある」「周りを巻き込む力がある」", b: "「気配りが上手い」「チームの潤滑油だ」" },
-  { axis: 3, axisLabel: "WLB志向", q: "1週間を振り返って「いい週だったな」と感じるのは？", a: "仕事を時間内に終えて、自分の時間もしっかり楽しめた週", b: "夢中で仕事に打ち込んで、大きく成果を出せた週" },
-  { axis: 3, axisLabel: "WLB志向", q: "転職先を検討するとき、「ここいいな」と心が動くポイントは？", a: "有休消化率や残業の少なさなど、働きやすさが見えた", b: "挑戦的な仕事内容やスキルアップの機会が豊富だった" },
-  { axis: 3, axisLabel: "WLB志向", q: "「最近忙しそうだね」と友人に言われたとき、心の中で思うのは？", a: "「ちょっとペースを見直さないとな」", b: "「充実してる証拠かもしれないな」" },
-  { axis: 3, axisLabel: "WLB志向", q: "10年後の自分を想像して、より幸せを感じるのは？", a: "仕事もプライベートもバランスよく、穏やかに暮らしている姿", b: "ある分野のプロとして認められ、大きなプロジェクトを動かしている姿" },
-  { axis: 3, axisLabel: "WLB志向", q: "ロールモデルの先輩を思い浮かべたとき、より憧れるのは？", a: "オンオフを切り替えて、趣味も家庭も仕事も楽しんでいる人", b: "仕事に情熱を注ぎ、業界で一目置かれている人" },
-  { axis: 4, axisLabel: "成長環境", q: "新しいスキルを習得したあと、「身についたな」と実感するのは？", a: "自分で試行錯誤して壁を乗り越えたとき", b: "教わった通りにやって、しっかり結果が出たとき" },
-  { axis: 4, axisLabel: "成長環境", q: "入社1年目を振り返って、「成長できた」と感じられるのはどんな環境？", a: "最初から裁量を持たせてもらい、自分で考えて動いた環境", b: "先輩がマンツーマンでついてくれて、基礎から丁寧に教わった環境" },
-  { axis: 4, axisLabel: "成長環境", q: "新しい仕事で早く成果を出せたのは、どちらの環境だと思う？", a: "手探りでも自分で判断して動けた環境", b: "経験豊富な先輩がそばで道筋を示してくれた環境" },
-  { axis: 4, axisLabel: "成長環境", q: "「自由にやっていいよ」と言われたとき、心の中に湧く感情は？", a: "ワクワクする。自分なりのやり方で挑戦したい", b: "少し不安。まずはお手本やガイドラインがあると安心する" },
-  { axis: 4, axisLabel: "成長環境", q: "理想の上司像に近いのは？", a: "「任せるよ」と信じて見守り、要所でだけフィードバックをくれる人", b: "「一緒に考えよう」と定期的に時間を取って伴走してくれる人" },
+/* ===== AXIS DEFINITIONS (from new UI) ===== */
+const AX=[null,
+  {l:"対人",r:"対課題",ca:"#2563eb",cb:"#7c3aed",bg:["#eef5ff","#f0f4ff"]},
+  {l:"攻め",r:"支え",ca:"#ea580c",cb:"#16a34a",bg:["#fff7ed","#f0fdf4"]},
+  {l:"ライフ重視",r:"ワーク重視",ca:"#0891b2",cb:"#dc2626",bg:["#ecfeff","#fef2f2"]},
+  {l:"自走型",r:"育成型",ca:"#d97706",cb:"#7c3aed",bg:["#fffbeb","#f5f3ff"]}
 ];
 
-// 16 types: A1-A4, B1-B4, C1-C4, D1-D4
-// Category: axis1(対人H/対課題D) + axis2(攻めA/支えB) → A,B,C,D
-// Subtype: axis3(WLB L/ワークW) + axis4(自走S/育成G) → 1,2,3,4
-// A(対人+攻め): A1=L+S, A2=L+G, A3=W+S, A4=W+G
-// B(対人+支え): B1=L+S, B2=L+G, B3=W+S, B4=W+G
-// C(対課題+攻め): C1=L+S, C2=L+G, C3=W+S, C4=W+G
-// D(対課題+支え): D1=L+S, D2=L+G, D3=W+S, D4=W+G
+/* ===== QUESTIONS (from ORIGINAL, field names adapted) ===== */
+const Qs=[
+  {ax:1,t:"友人の悩み相談を受けたあと、「相談してよかった」と感謝された。あなたがより嬉しいのは？",a:"「話を聞いてもらえて気持ちが楽になった」と言われたとき",b:"「おかげで何をすべきかクリアになった」と言われたとき"},
+  {ax:1,t:"グループワークが終わったあと、「自分が一番貢献できたな」と感じるのは？",a:"意見が割れたとき、メンバーの考えを引き出してまとめられた",b:"みんなが納得するデータや根拠を調べて提示できた"},
+  {ax:1,t:"休日の過ごし方としてどちらが好き？",a:"友人と集まって過ごす",b:"一人で趣味に没頭する"},
+  {ax:1,t:"つい時間を忘れて没頭してしまうのは、どんなとき？",a:"気の合う仲間と議論やブレストをしているとき",b:"一人で資料やデータを作り込んでいるとき"},
+  {ax:1,t:"新しいプロジェクトに配属されたとき、最初にワクワクするのは？",a:"どんな人たちと一緒に働けるのか",b:"どんな課題に取り組めるのか"},
+  {ax:2,t:"チームで目標を達成したとき、振り返って充実感があるのは？",a:"自分が先頭に立って突破口を開いた場面",b:"自分が裏方としてチームの動きを支えた場面"},
+  {ax:2,t:"文化祭の出し物を決める場面。あなたがやりがいを感じるのは？",a:"「これやろうよ！」と自分のアイデアでクラスを動かすこと",b:"みんなの希望を聞いて、全員が納得できる案に整えること"},
+  {ax:2,t:"スポーツに例えるなら、自分はどちらに近い？",a:"点を取りに行くフォワード。リスクを取ってでもチャンスを作る",b:"全体を見渡すボランチ。味方が活きるパスを出す"},
+  {ax:2,t:"大きな仕事を任されたとき、より気持ちが高まるのは？",a:"自分がリーダーとして方向性を決めて引っ張ること",b:"メンバーが動きやすいように段取りや調整をすること"},
+  {ax:2,t:"上司からの評価コメント、より嬉しいのは？",a:"「推進力がある」「周りを巻き込む力がある」",b:"「気配りが上手い」「チームの潤滑油だ」"},
+  {ax:3,t:"1週間を振り返って「いい週だったな」と感じるのは？",a:"仕事を時間内に終えて、自分の時間もしっかり楽しめた週",b:"夢中で仕事に打ち込んで、大きく成果を出せた週"},
+  {ax:3,t:"転職先を検討するとき、「ここいいな」と心が動くポイントは？",a:"有休消化率や残業の少なさなど、働きやすさが見えた",b:"挑戦的な仕事内容やスキルアップの機会が豊富だった"},
+  {ax:3,t:"「最近忙しそうだね」と友人に言われたとき、心の中で思うのは？",a:"「ちょっとペースを見直さないとな」",b:"「充実してる証拠かもしれないな」"},
+  {ax:3,t:"10年後の自分を想像して、より幸せを感じるのは？",a:"仕事もプライベートもバランスよく、穏やかに暮らしている姿",b:"ある分野のプロとして認められ、大きなプロジェクトを動かしている姿"},
+  {ax:3,t:"ロールモデルの先輩を思い浮かべたとき、より憧れるのは？",a:"オンオフを切り替えて、趣味も家庭も仕事も楽しんでいる人",b:"仕事に情熱を注ぎ、業界で一目置かれている人"},
+  {ax:4,t:"新しいスキルを習得したあと、「身についたな」と実感するのは？",a:"自分で試行錯誤して壁を乗り越えたとき",b:"教わった通りにやって、しっかり結果が出たとき"},
+  {ax:4,t:"入社1年目を振り返って、「成長できた」と感じられるのはどんな環境？",a:"最初から裁量を持たせてもらい、自分で考えて動いた環境",b:"先輩がマンツーマンでついてくれて、基礎から丁寧に教わった環境"},
+  {ax:4,t:"新しい仕事で早く成果を出せたのは、どちらの環境だと思う？",a:"手探りでも自分で判断して動けた環境",b:"経験豊富な先輩がそばで道筋を示してくれた環境"},
+  {ax:4,t:"「自由にやっていいよ」と言われたとき、心の中に湧く感情は？",a:"ワクワクする。自分なりのやり方で挑戦したい",b:"少し不安。まずはお手本やガイドラインがあると安心する"},
+  {ax:4,t:"理想の上司像に近いのは？",a:"「任せるよ」と信じて見守り、要所でだけフィードバックをくれる人",b:"「一緒に考えよう」と定期的に時間を取って伴走してくれる人"}
+];
 
-const typeData = {
-  A1: {
-    name: "オンオフのエース", icon: "⚡",
-    tagline: "人を巻き込み、自分のペースで成果を出す",
-    keywords: ["切り替え上手", "巻き込み力", "メリハリ"],
-    jobs: ["営業","広告営業","SNSマーケ"],
-    personality: "人と関わることにエネルギーを感じ、自分から周りに働きかけるのが自然にできるタイプ。同時に、プライベートの時間も大事にしたいという軸を持っていて、メリハリのある働き方を好みます。指示を待つより自分で判断して動く方が力を発揮します。",
-    strengths: "切り替えの速さと、人を惹きつけるコミュニケーション力。短時間で成果を出す集中力も強み。",
-    comm: "初対面でも自然に会話をリードできる。ただし、プライベートの境界線はしっかり引くタイプ。",
-    stress: "裁量がなく、細かく管理される環境。プライベートの時間を侵食されること。",
-    growth: "「余裕がある」は強みだが、ときには全力で没頭する経験が視野を広げるかも。",
-    whyJobs: "人との信頼関係を武器にしつつ自分のペースで成果を出せる営業職や、SNSマーケティングのように裁量を持って人と接する仕事にフィットします。",
-    desc: "人との関わりで成果を出しつつ、プライベートも大事に。自分のペースで裁量を持って働くスタイル。",
-    good: ["A2","B1","C1"], goodReason: "A2の温かさが補完し、B1の気配りと自然にシナジー。C1の発想力との協業も新鮮な刺激に。",
-    bad: ["D4","B4"], badReason: "D4のコツコツ型とはペース感が合いにくい。B4の真面目さがメリハリ型には窮屈に映ることも。"
-  },
-  A2: {
-    name: "あったかリーダー", icon: "🌟",
-    tagline: "人望で自然とチームをまとめる安定リーダー",
-    keywords: ["安心感", "傾聴力", "育成型リーダー"],
-    jobs: ["営業","人材紹介","広告営業"],
-    personality: "周囲の人への関心が高く、チームの雰囲気を良くするのが上手なタイプ。前に出ることにも抵抗がなく、人望で自然とリーダーに推されることも。しっかりした研修やサポートがある環境だと安心して力を出せます。",
-    strengths: "人の気持ちを汲み取る力と、安心感のあるリーダーシップ。「この人についていきたい」と思わせる温かさ。",
-    comm: "相手の話をしっかり聞いてから自分の意見を伝える。対立を避けつつ、全員が納得する着地点を見つける。",
-    stress: "チーム内で衝突が起きたとき。自分のサポート体制が整っていない環境。",
-    growth: "「みんなに合わせすぎない」ことを意識すると、リーダーとしてさらに一段上に。",
-    whyJobs: "丁寧な対人スキルと安定志向を活かせる人材紹介や、クライアントとの関係構築が重要な広告営業が向いています。教育体制の整った大手企業との相性も◎。",
-    desc: "人との関わりが好きで、充実した研修のもとでスキルを磨きたい。WLBも確保したい安定志向。",
-    good: ["A1","B2","A4"], goodReason: "A1のスピード感を温かく包み、B2の穏やかさと心地よいハーモニー。A4の熱量をうまく方向づけられる。",
-    bad: ["C3","D3"], badReason: "C3の突き進むスタイルに振り回されがち。D3の冷徹さは温かさ重視のA2にはストレスに。"
-  },
-  A3: {
-    name: "全力キャプテン", icon: "🔥",
-    tagline: "圧倒的な熱量でチームを引っ張る",
-    keywords: ["巻き込み力", "粘り強さ", "フルコミット"],
-    jobs: ["営業","プロデューサー","SNSマーケ"],
-    personality: "人と関わることが好きで、しかも先頭に立ってチームを引っ張るエネルギーがあるタイプ。仕事にのめり込むことに充実感を覚え、成果が出るまでやり切る粘り強さがあります。自分の裁量で動ける環境で最も輝きます。",
-    strengths: "圧倒的な巻き込み力と、成果が出るまでやり切る粘り強さ。チームの士気を上げる天性の力。",
-    comm: "エネルギッシュに場を引っ張る。熱量が高いため、周りを自然と動かしてしまう。",
-    stress: "裁量を与えてもらえず、指示通りにしか動けない環境。チームの温度差が大きいとき。",
-    growth: "全力が強みだからこそ、意図的に「引く」ことを覚えると、巻き込み力がさらに上がる。",
-    whyJobs: "この情熱と巻き込み力は、大きな案件を動かすプロデューサー職や、チームを率いる営業リーダーにぴったり。仕事にフルコミットできる環境で真価を発揮します。",
-    desc: "人との関わりの中で全力で働きたい。裁量を持ってチームを引っ張るリーダーシップ型。",
-    good: ["A4","C3","B3"], goodReason: "A4の素直さと熱量が噛み合い最強タッグに。C3の突破力と組めば大きな成果。B3の裏方力が全力型を支える。",
-    bad: ["D1","D2"], badReason: "D1の冷静さとは温度差が大きい。D2の慎重さがスピード感を重視するA3にはもどかしく映る。"
-  },
-  A4: {
-    name: "熱血プレイヤー", icon: "💪",
-    tagline: "仲間のために全力を尽くすひたむきさ",
-    keywords: ["素直さ", "情の深さ", "努力家"],
-    jobs: ["営業","人材紹介","広告営業"],
-    personality: "仲間のために全力を尽くせる、熱量の高いタイプ。人と深く関わる仕事にやりがいを感じ、仕事に没頭することをいとわない姿勢があります。先輩や上司からしっかり学びたいという素直さも武器。",
-    strengths: "ひたむきな努力と素直さ。「この人のために頑張りたい」と思える情の深さ。",
-    comm: "感情がストレートに出る。熱意が伝わりやすく、クライアントとの信頼関係を築きやすい。",
-    stress: "努力が報われないと感じるとき。一人で抱え込んでしまいがち。",
-    growth: "熱量を保ちつつ、「戦略的に動く」視点を加えると、成果の出方が大きく変わる。",
-    whyJobs: "クライアントに寄り添う営業や人材紹介で、持ち前の熱意と素直さが信頼につながります。教育体制が整った企業でメンターに恵まれると成長スピードが加速します。",
-    desc: "人のために全力で働き、組織的なサポートの中でスキルを磨きたい。丁寧にキャリアを積み上げるタイプ。",
-    good: ["A3","A2","B4"], goodReason: "A3のリーダーシップの下で力を発揮。A2の温かさに安心して成長。B4の真面目さと通じ合う。",
-    bad: ["C1","D1"], badReason: "C1の自由奔放さとはペースが合わない。D1のクールさが感情重視のA4には物足りなく感じる。"
-  },
-  B1: {
-    name: "ナチュラルケアリスト", icon: "🌿",
-    tagline: "さりげなく場を整える自然体の気配り",
-    keywords: ["空気を読む", "自然体", "オンオフ上手"],
-    jobs: ["人事","広報・PR","CS"],
-    personality: "押し付けがましくなく、自然体で人を支えられるタイプ。場の空気を読んで「ちょうどいい距離感」で関わるのが得意です。自分の時間も大切にしていて、オンオフの切り替えが上手。",
-    strengths: "空気を読む力と、さりげないフォロー力。周囲が気づかないところで場を整えている。",
-    comm: "聞き上手で、相手が話しやすい雰囲気を自然に作れる。押しが強くないからこそ信頼される。",
-    stress: "自分のケアが後回しになること。感謝されないまま当たり前にされるとき。",
-    growth: "「自分がやっていることの価値」を言語化して伝える練習をすると、評価が正当についてくる。",
-    whyJobs: "この自然な気配り力は、社員の気持ちに寄り添う人事職や、社外との橋渡し役である広報・PR、顧客対応のCSに向いています。",
-    desc: "自然体で人を支え、プライベートも大事に。自分の裁量で動くスタイル。",
-    good: ["A1","B2","D1"], goodReason: "A1のエネルギーをそっと支え、B2の温かさと心地よく共鳴。D1の冷静さとバランスが取れる。",
-    bad: ["A3","C3"], badReason: "A3の圧倒的熱量に巻き込まれて消耗しがち。C3のスピード感についていけないことも。"
-  },
-  B2: {
-    name: "ほっこりサポーター", icon: "☕",
-    tagline: "温かい雰囲気でチームを支える安定の存在",
-    keywords: ["安心感", "穏やか", "着実"],
-    jobs: ["人事","総務","CS"],
-    personality: "人の役に立つことに喜びを感じ、温かい雰囲気でチームを支えるタイプ。自分が前に出るよりも、誰かが困っているときにそっと手を差し伸べる方が性に合っています。安定した環境で着実に成長したい堅実な面も。",
-    strengths: "安心感を与える存在感。「この人がいるとチームの雰囲気が良くなる」と言われるタイプ。",
-    comm: "穏やかで丁寧。相手のペースに合わせた会話ができる。急かされるのは苦手。",
-    stress: "急な変化が多い環境。自分の意見を強く求められる場面。",
-    growth: "「支える力」に自信を持ちつつ、自分の意見を小さくてもいいから発信する練習を。",
-    whyJobs: "この温かさと堅実さは、社員をケアする人事・総務や、お客様に寄り添うCS職にマッチ。研修が充実した企業で安心してスキルを磨ける環境が最適です。",
-    desc: "人のサポートが好きで、研修が充実した環境で着実に成長したい。WLBも重視する安定志向。",
-    good: ["A2","B1","D2"], goodReason: "A2の温かいリーダーシップの下で安心して力を発揮。B1とは穏やかな共鳴。D2の丁寧さと相性抜群。",
-    bad: ["C3","A3"], badReason: "C3の突き進むスタイルに戸惑いがち。A3の圧倒的熱量はプレッシャーに感じることも。"
-  },
-  B3: {
-    name: "黒子のプロデューサー", icon: "🎭",
-    tagline: "裏から全体を動かす影の実力者",
-    keywords: ["構想力", "没入力", "縁の下の力持ち"],
-    jobs: ["広報・PR","キャリアアドバイザー","CS"],
-    personality: "表に出るよりも裏から人を動かすのが好きなタイプ。仕事にのめり込む集中力があり、チーム全体の成果に貢献することに充実感を覚えます。自分なりの方法論を持っていて、それを黙々と磨き続ける職人気質の一面も。",
-    strengths: "舞台裏から全体を見渡す構想力と、仕事への深い没入力。「気づいたら全部この人が回していた」という存在。",
-    comm: "必要なことを的確に、でも控えめに伝える。目立つことは避けるが、影響力は大きい。",
-    stress: "自分の仕事が可視化されず、他の人が手柄を持っていくとき。表舞台に立つことを強いられるとき。",
-    growth: "裏方の強みを保ちつつ、成果を「見える化」する術を身につけると、キャリアが加速する。",
-    whyJobs: "「裏方力×仕事への没頭」は、戦略的に情報発信を設計する広報・PRや、求職者と企業をつなぐキャリアアドバイザーで力を発揮します。",
-    desc: "仕事にのめり込みつつ、チーム全体の成果に貢献したい。裏から組織を動かす力がある。",
-    good: ["A3","D3","C4"], goodReason: "A3の表舞台を裏で支える最高のコンビ。D3の冷静さと方向性が一致。C4の探究心と深いレベルで協業可能。",
-    bad: ["A1","C1"], badReason: "A1のメリハリ型とは仕事への没入度に差が出やすい。C1の自由な発想が計画的なB3には散漫に映ることも。"
-  },
-  B4: {
-    name: "まっすぐガーディアン", icon: "🛡️",
-    tagline: "誠実さで絶対的な信頼を勝ち取る",
-    keywords: ["誠実", "責任感", "約束を守る"],
-    jobs: ["人事","総務","キャリアアドバイザー"],
-    personality: "真面目で誠実、チームのためにコツコツ努力できるタイプ。人を支えることに強いやりがいを感じ、仕事に全力で向き合います。先輩や上司のもとでしっかり学びたいという向上心があり、言われたことを丁寧にやり切る信頼感が武器。",
-    strengths: "誠実さと責任感。「この人に任せれば間違いない」という絶対的な信頼を勝ち取る力。",
-    comm: "言葉よりも行動で示すタイプ。約束したことは必ず守る。嘘やごまかしが苦手。",
-    stress: "ルールが曖昧な環境。自分の努力の方向性が見えないとき。",
-    growth: "真面目さは最大の武器。あとは「完璧じゃなくてもOK」と自分を許す余裕を持てると楽になる。",
-    whyJobs: "この誠実さと丁寧さは、組織の安定運営を担う人事・総務で高く評価されます。メンター制度が整った企業で着実にキャリアを積むスタイルが◎。",
-    desc: "仕事に全力で向き合い、先輩のもとで丁寧にスキルを磨きながら組織に貢献するタイプ。",
-    good: ["A4","D4","D2"], goodReason: "A4の素直さと信頼で結ばれる。D4のコツコツ型と最高の相性。D2の丁寧さとも通じ合う。",
-    bad: ["A1","C1"], badReason: "A1のメリハリ型は真面目なB4には軽く映ることも。C1の自由奔放さがルール重視のB4にはストレス。"
-  },
-  C1: {
-    name: "ひらめきクリエイター", icon: "💡",
-    tagline: "自由な発想でゼロから形にする",
-    keywords: ["発想力", "自由", "オリジナリティ"],
-    jobs: ["企画","エンジニア","デザイナー"],
-    personality: "アイデアを形にすることが好きで、一人で集中してモノづくりに没頭できるタイプ。人と関わることより、課題や作品そのものに向き合う方がエネルギーが湧きます。自由な環境で創造性を発揮します。",
-    strengths: "発想力と、ゼロから何かを生み出す力。「普通はこうでしょ」に縛られない自由な思考。",
-    comm: "アイデアベースの会話が得意。雑談からでもインスピレーションを得る。ただし長い会議は苦手。",
-    stress: "自由がない環境。ルーティンワークの連続。アイデアを否定され続けるとき。",
-    growth: "ひらめきを「形にして届ける」ところまで完遂する力をつけると、クリエイターとして一段上に。",
-    whyJobs: "この創造力と自律性は、新しい企画を生み出す企画職や、技術で課題を解決するエンジニア、デザイナーにフィット。裁量のある環境でオリジナリティを発揮できます。",
-    desc: "自分のペースでモノづくりに没頭したい。プライベートも大事にしつつ、裁量のある環境で創造性を発揮。",
-    good: ["A1","C2","D1"], goodReason: "A1の巻き込み力がアイデアを広める。C2の丁寧さが発想を形にする。D1の分析力が方向性を補強。",
-    bad: ["B4","A4"], badReason: "B4のルール重視は自由なC1には窮屈。A4の感情ベースの関わりとはリズムが合いにくい。"
-  },
-  C2: {
-    name: "じっくりクラフター", icon: "🔧",
-    tagline: "専門性をコツコツ磨く品質の職人",
-    keywords: ["継続力", "品質", "専門性"],
-    jobs: ["エンジニア","デザイナー","データマーケ"],
-    personality: "専門スキルを腰を据えて磨きたいタイプ。課題に対して丁寧にアプローチし、着実に質を高めていく粘り強さがあります。無理なペースよりも、自分のリズムで確実に成長したい。しっかりした教育環境があると安心して力を出せます。",
-    strengths: "継続する力と、品質へのこだわり。「急がば回れ」を体現するタイプ。",
-    comm: "必要なことを端的に、正確に伝える。無駄な会話は少ないが、技術的な話になると熱くなる。",
-    stress: "スピード重視で質を犠牲にする環境。教わる機会がなく放置されるとき。",
-    growth: "完璧を目指しすぎず「80点でまず出す」を意識すると、成果が目に見えて増える。",
-    whyJobs: "この堅実さと専門性への志向は、技術力を積み上げるエンジニアやデザイナー、データを扱うマーケ職に向いています。研修が充実した大手企業との相性◎。",
-    desc: "専門性をじっくり磨きたい。研修のもとで確実にスキルを積み上げ、安定した働き方をしたい。",
-    good: ["C1","D2","C4"], goodReason: "C1の発想を形に落とし込める。D2の正確さと高め合える。C4の探究心と深い技術トークが可能。",
-    bad: ["A3","A1"], badReason: "A3のスピード感がじっくり派のC2にはプレッシャー。A1のメリハリ型とは仕事のテンポが合いにくい。"
-  },
-  C3: {
-    name: "突き抜けパイオニア", icon: "🚀",
-    tagline: "前例のない課題に立ち向かう突破者",
-    keywords: ["突破力", "行動力", "前例なし上等"],
-    jobs: ["コンサル","事業企画","PM"],
-    personality: "未知の課題に立ち向かうことにワクワクするタイプ。仕事に全力でのめり込み、自分の力で道を切り拓く推進力があります。課題やプロダクトに集中する方が力を発揮。スピード感のある環境で最も輝きます。",
-    strengths: "突破力と行動力。「前例がない」が最大のモチベーションになる稀有なタイプ。",
-    comm: "結論ファーストで端的。議論より行動を重視する。スピード感のない会話にはイライラしがち。",
-    stress: "前例踏襲を求められる環境。意思決定が遅い組織。自分の裁量がないとき。",
-    growth: "突き進む力に「巻き込む力」を加えると、一人では到達できない高みに行ける。",
-    whyJobs: "この突破力と集中力は、難題を解くコンサルタントや、ゼロから事業を立ち上げる事業企画・PMにぴったり。スタートアップ的な環境でも活躍できます。",
-    desc: "技術やプロダクトに全力で向き合う。スタートアップ的なスピード感と裁量で事業を推進するタイプ。",
-    good: ["A3","D3","C4"], goodReason: "A3の巻き込み力と合わされば最強。D3の冷静な制御が暴走を防ぐ。C4の深掘り力が品質を担保。",
-    bad: ["B2","B1"], badReason: "B2の穏やかさとはスピード感が合わない。B1の慎重さがC3にはブレーキに感じる。"
-  },
-  C4: {
-    name: "のめり込みビルダー", icon: "🏗️",
-    tagline: "技術を極める情熱の職人",
-    keywords: ["集中力", "探究心", "師弟関係"],
-    jobs: ["エンジニア","コンサル","データマーケ・CRM"],
-    personality: "ものづくりや課題解決に深くのめり込む職人気質。仕事に情熱を注ぎ、技術やスキルをとことん追求したいタイプです。師匠や先輩から技を学ぶことに抵抗がなく、体系的に教わることで成長が加速します。",
-    strengths: "集中力と技術への探究心。一度ハマると誰よりも深く掘り下げる。",
-    comm: "技術的な話題では饒舌になるが、雑談は苦手な面も。信頼した相手には深く心を開く。",
-    stress: "表面的にしか取り組めない環境。技術を軽視する文化。",
-    growth: "のめり込む力を活かしつつ「全体像を見る」視点を意識すると、リードエンジニアへの道が開ける。",
-    whyJobs: "この技術への情熱と学ぶ姿勢は、大手企業の技術職や研究職、データ系のマーケ職で真価を発揮。メンター制度のある環境で腕を磨くのが最適です。",
-    desc: "ものづくりに情熱を注ぎつつ、組織的なサポートの中で成長。大手の技術職や研究職にも向く。",
-    good: ["C3","B3","C2"], goodReason: "C3の推進力の下で技術を極められる。B3の裏方力と深いレベルで協業。C2の品質志向と切磋琢磨。",
-    bad: ["A1","A3"], badReason: "A1のメリハリ型は深掘り派のC4には表面的に映る。A3の熱量は対人ベースでC4とは方向が違う。"
-  },
-  D1: {
-    name: "冷静なブレイン", icon: "🧊",
-    tagline: "データとロジックで組織を支える頭脳",
-    keywords: ["論理的思考", "俯瞰", "冷静"],
-    jobs: ["経営企画","データアナリスト","社内SE"],
-    personality: "データとロジックで物事を考えるのが得意なタイプ。派手に前に出るより、分析と戦略で組織を支えることに充実感を覚えます。冷静に全体を俯瞰する視点が強み。自分のペースで思考を深められる環境を好みます。",
-    strengths: "論理的思考力と、感情に流されない冷静さ。複雑な問題を構造的に整理する力。",
-    comm: "事実ベースで話す。感情論が飛び交う場では一歩引いて「で、ファクトは？」と問いかけるタイプ。",
-    stress: "感情的な議論に巻き込まれるとき。データなしに意思決定される環境。",
-    growth: "ロジックは最強の武器。ここに「相手の感情を動かす伝え方」が加わると、影響力が飛躍的に増す。",
-    whyJobs: "この分析力と俯瞰力は、経営企画やデータアナリスト、社内SEのように組織の意思決定を裏から支える仕事にフィットします。",
-    desc: "データやロジックで組織を支える。プライベートも大事にしつつ、自分のペースで分析・改善を回す。",
-    good: ["B1","C1","D2"], goodReason: "B1の気配りが冷静さを和らげる。C1の発想力に分析で道筋を。D2の正確さとは最高の分析チーム。",
-    bad: ["A4","A3"], badReason: "A4の感情重視とは価値観が違う。A3の熱量ベースの判断はD1にはノイズに感じる。"
-  },
-  D2: {
-    name: "きっちり参謀", icon: "📐",
-    tagline: "正確さとルールで組織の最後の砦に",
-    keywords: ["精緻", "正確性", "堅実"],
-    jobs: ["経理・財務","データアナリスト","法務"],
-    personality: "正確さと丁寧さが武器のタイプ。数字やルールに強く、曖昧なことをきちんと整理するのが得意です。安定した環境でしっかり教わりながらスキルを高めたいという堅実さがあり、細部へのこだわりが周囲の信頼につながります。",
-    strengths: "ミスを見逃さない精緻さと、ルール・手順を守り切る確実性。「最後の砦」のような存在。",
-    comm: "正確で丁寧な報告が得意。口頭より文書の方が真価を発揮する。曖昧な指示が苦手。",
-    stress: "ルールが曖昧でカオスな環境。大雑把な人と組むとき。",
-    growth: "正確さを保ちつつ「大局観」も身につけると、参謀からリーダーへの道が見えてくる。",
-    whyJobs: "この精緻さと安定志向は、ミスが許されない経理・財務や法務、正確なデータ分析が求められるアナリスト職に最適。研修のしっかりした企業で専門性を磨けます。",
-    desc: "数字やデータに強く、充実した研修のもとで着実に専門性を高めたい。安定した環境を好む。",
-    good: ["D1","B2","B4"], goodReason: "D1とは最強の分析タッグ。B2の温かさに安心して力を発揮。B4の誠実さと深く通じ合う。",
-    bad: ["A3","C3"], badReason: "A3のスピード感は正確性重視のD2にはストレス。C3の「前例なし」が慎重派のD2には不安要素。"
-  },
-  D3: {
-    name: "鉄壁コントローラー", icon: "🏰",
-    tagline: "冷静な判断でプレッシャーに立ち向かう",
-    keywords: ["冷静", "胆力", "制御力"],
-    jobs: ["経営企画","コンサル","社内SE"],
-    personality: "仕事にのめり込み、データとロジックで組織の基盤を固めるタイプ。感情より事実で判断し、冷静に全体を制御する力があります。自分の裁量で意思決定したい志向が強く、責任の大きな仕事ほど燃えます。",
-    strengths: "冷静な判断力と、プレッシャー下でもブレない胆力。組織の根幹を担える器の大きさ。",
-    comm: "端的で論理的。無駄を嫌い、要点だけを伝える。部下には厳しいが、信頼は厚い。",
-    stress: "権限が与えられず、裁量がないとき。非論理的な意思決定が横行する環境。",
-    growth: "制御力に「人を育てる」視点を加えると、経営者としての器がさらに広がる。",
-    whyJobs: "この冷静な制御力と仕事への没頭は、経営の根幹を支える経営企画や、論理で課題を解くコンサルで力を発揮。裁量のあるポジションで真価を発揮します。",
-    desc: "仕事にのめり込み、データとロジックで組織の土台を固める。裁量を持って経営を支えるタイプ。",
-    good: ["C3","B3","D1"], goodReason: "C3の突破力を冷静に制御する最強コンビ。B3の裏方力と戦略が噛み合う。D1とは論理で通じ合う。",
-    bad: ["A2","B2"], badReason: "A2の感情ベースの判断はD3には非効率に映る。B2の穏やかさがスピード感を求めるD3にはもどかしい。"
-  },
-  D4: {
-    name: "コツコツマイスター", icon: "⚙️",
-    tagline: "品質に妥協しない職人の矜持",
-    keywords: ["忍耐力", "品質", "職人魂"],
-    jobs: ["経理・財務","法務","品質管理"],
-    personality: "地道な作業を丁寧にやり抜く粘り強さがあるタイプ。仕事に全力で向き合い、先輩から技を吸収して確実にスキルを高めていきます。派手さよりも正確さ、スピードよりも品質を重視する姿勢が周囲からの信頼を集めます。",
-    strengths: "忍耐力と、品質に妥協しない職人魂。「この人が最終チェックしたなら大丈夫」という信頼。",
-    comm: "寡黙だが、専門分野の話になると頼れるアドバイザーに。言葉少なだが重みがある。",
-    stress: "雑に仕事を進めることを求められるとき。自分のペースを乱されること。",
-    growth: "品質へのこだわりは唯一無二の強み。ここに「速さ」を少しずつ加えると市場価値が急上昇する。",
-    whyJobs: "この緻密さと粘り強さは、正確さが命の経理・財務や法務、品質管理で真価を発揮。師匠のもとで技を磨く職人的なキャリアパスが合っています。",
-    desc: "仕事に全力で向き合い、先輩のもとで丁寧にスキルを磨く。専門職で真価を発揮するタイプ。",
-    good: ["B4","D2","C2"], goodReason: "B4の誠実さと最高の相性。D2の正確さと切磋琢磨。C2の品質志向と深いレベルで通じ合う。",
-    bad: ["A1","C3"], badReason: "A1のメリハリ型はコツコツ派のD4には表面的に映る。C3のスピード重視は品質重視のD4にはストレス。"
-  },
+/* ===== NEW UI FEATURES ===== */
+const REASON={HA:{h:"対人スコアが高く、人と関わる中で力を発揮するタイプ。",a:"攻めスコアも高く、自ら前に出てリードするスタイル。"},HB:{h:"対人スコアが高く、人との関係を大切にするタイプ。",a:"支えスコアが高く、縁の下でチームを支えるスタイル。"},DA:{h:"課題解決スコアが高く、問題に向き合うことに燃えるタイプ。",a:"攻めスコアが高く、新しいことに自ら挑戦するスタイル。"},DB:{h:"課題解決スコアが高く、データやロジックで考えるタイプ。",a:"支えスコアが高く、正確さと安定で組織を支えるスタイル。"}};
+const REASON_L={LS:"ライフ重視×自走型で、プライベートを大切にしながら自分のペースで動くスタイル。",LG:"ライフ重視×育成型で、安定した環境で先輩から学びながら着実に成長するスタイル。",WS:"ワーク重視×自走型で、仕事に没頭し自分の裁量で突き進むスタイル。",WG:"ワーク重視×育成型で、仕事に全力で向き合いつつ先輩から技を吸収するスタイル。"};
+const TYPE_PCT={HALS:"8.2",HALG:"6.5",HAWS:"7.1",HAWG:"6.8",HBLS:"7.4",HBLG:"6.2",HBWS:"5.9",HBWG:"6.1",DALS:"7.8",DALG:"5.4",DAWS:"6.9",DAWG:"5.2",DBLS:"6.6",DBLG:"5.8",DBWS:"6.0",DBWG:"5.1"};
+const TYPE_FAMOUS={HALS:"孫正義（ソフトバンク）タイプ",HALG:"松下幸之助（パナソニック）タイプ",HAWS:"稲盛和夫（京セラ）タイプ",HAWG:"本田宗一郎（Honda）タイプ",HBLS:"柳井正（ユニクロ）タイプ",HBLG:"三木谷浩史（楽天）タイプ",HBWS:"永守重信（日本電産）タイプ",HBWG:"張富士夫（トヨタ）タイプ",DALS:"前澤友作（ZOZO）タイプ",DALG:"出澤剛（LINE）タイプ",DAWS:"堀江貴文（ライブドア）タイプ",DAWG:"川上量生（ドワンゴ）タイプ",DBLS:"柳川隆之（マッキンゼー）タイプ",DBLG:"新浪剛史（サントリー）タイプ",DBWS:"冨山和彦（IGPIグループ）タイプ",DBWG:"土光敏夫（東芝）タイプ"};
+const AX_GRAD=[null,['135deg','#1e40af','#4f46e5'],['135deg','#c2410c','#15803d'],['135deg','#0e7490','#b91c1c'],['135deg','#b45309','#6d28d9']];
+const PROG_MSGS=["さあはじめよう！","いい感じです！","順調です！","折り返し！","半分超えた！","もうすぐ！","ラストスパート！","あと少し！","もう少し！","完了まであと1問！"];
+
+/* ===== TYPE DATA (from ORIGINAL, field names adapted for new UI) ===== */
+const TD={
+  HALS:{name:"オンオフのエース",icon:"⚡",tag:"人を巻き込み、自分のペースで成果を出す",kw:["切り替え上手","巻き込み力","メリハリ"],jobs:["営業","広告営業","SNSマーケ"],
+    per:"人と関わることにエネルギーを感じ、自分から周りに働きかけるのが自然にできるタイプ。同時に、プライベートの時間も大事にしたいという軸を持っていて、メリハリのある働き方を好みます。指示を待つより自分で判断して動く方が力を発揮します。",
+    str:"切り替えの速さと、人を惹きつけるコミュニケーション力。短時間で成果を出す集中力も強み。",
+    com:"初対面でも自然に会話をリードできる。ただし、プライベートの境界線はしっかり引くタイプ。",
+    sts:"裁量がなく、細かく管理される環境。プライベートの時間を侵食されること。",
+    grw:"「余裕がある」は強みだが、ときには全力で没頭する経験が視野を広げるかも。",
+    why:"人との信頼関係を武器にしつつ自分のペースで成果を出せる営業職や、SNSマーケティングのように裁量を持って人と接する仕事にフィットします。",
+    desc:"人との関わりで成果を出しつつ、プライベートも大事に。自分のペースで裁量を持って働くスタイル。",
+    good:["HALG","HBLS","DALS"],gR:{team:"HALGがまとめ役、HBLSが気配り役として補完し合う最強布陣。",senpai:"HBLSの温かさで安心して動きやすい環境に。",friend:"DALSの発想力と合わさると、互いに刺激し合える就活仲間に。"},
+    bad:["DBWG","HBWG"],bR:{team:"DBWGのコツコツ型とはペースが合わず、連携にストレスが出やすい。",senpai:"HBWGの真面目さが、メリハリ型には少し窮屈に映ることも。",friend:"方向性の違いを認識した上で付き合うと学びになる。"}},
+  HALG:{name:"あったかリーダー",icon:"🌟",tag:"人望で自然とチームをまとめる安定リーダー",kw:["安心感","傾聴力","育成型リーダー"],jobs:["営業","人材紹介","広告営業"],
+    per:"周囲の人への関心が高く、チームの雰囲気を良くするのが上手なタイプ。前に出ることにも抵抗がなく、人望で自然とリーダーに推されることも。しっかりした研修やサポートがある環境だと安心して力を出せます。",
+    str:"人の気持ちを汲み取る力と、安心感のあるリーダーシップ。「この人についていきたい」と思わせる温かさ。",
+    com:"相手の話をしっかり聞いてから自分の意見を伝える。対立を避けつつ、全員が納得する着地点を見つける。",
+    sts:"チーム内で衝突が起きたとき。自分のサポート体制が整っていない環境。",
+    grw:"「みんなに合わせすぎない」ことを意識すると、リーダーとしてさらに一段上に。",
+    why:"丁寧な対人スキルと安定志向を活かせる人材紹介や、クライアントとの関係構築が重要な広告営業が向いています。教育体制の整った大手企業との相性も◎。",
+    desc:"人との関わりが好きで、充実した研修のもとでスキルを磨きたい。WLBも確保したい安定志向。",
+    good:["HALS","HBLG","HAWG"],gR:{team:"HALSのスピード感を温かく包み、HBLGの穏やかさと心地よいハーモニー。",senpai:"HBLGの穏やかさに包まれると安心して実力が出せる。",friend:"HAWGの熱量をうまく方向づけられる、刺激的な就活仲間に。"},
+    bad:["DAWS","DBWS"],bR:{team:"DAWSの突き進むスタイルに振り回されがち。",senpai:"DBWSの冷徹さは温かさ重視のHALGにはストレスに。",friend:"真逆タイプなので距離を置きつつ刺激をもらう関係が良い。"}},
+  HAWS:{name:"全力キャプテン",icon:"🔥",tag:"圧倒的な熱量でチームを引っ張る",kw:["巻き込み力","粘り強さ","フルコミット"],jobs:["営業","プロデューサー","SNSマーケ"],
+    per:"人と関わることが好きで、しかも先頭に立ってチームを引っ張るエネルギーがあるタイプ。仕事にのめり込むことに充実感を覚え、成果が出るまでやり切る粘り強さがあります。自分の裁量で動ける環境で最も輝きます。",
+    str:"圧倒的な巻き込み力と、成果が出るまでやり切る粘り強さ。チームの士気を上げる天性の力。",
+    com:"エネルギッシュに場を引っ張る。熱量が高いため、周りを自然と動かしてしまう。",
+    sts:"裁量を与えてもらえず、指示通りにしか動けない環境。チームの温度差が大きいとき。",
+    grw:"全力が強みだからこそ、意図的に「引く」ことを覚えると、巻き込み力がさらに上がる。",
+    why:"この情熱と巻き込み力は、大きな案件を動かすプロデューサー職や、チームを率いる営業リーダーにぴったり。仕事にフルコミットできる環境で真価を発揮します。",
+    desc:"人との関わりの中で全力で働きたい。裁量を持ってチームを引っ張るリーダーシップ型。",
+    good:["HAWG","DAWS","HBWS"],gR:{team:"HAWGの素直さと熱量が噛み合い最強タッグに。DAWSの突破力と組めば大きな成果。",senpai:"HBWSの裏方力が全力型を支えてくれる最高の組み合わせ。",friend:"DAWSとの就活仲間関係は互いに火花散らす最高の刺激に。"},
+    bad:["DBLS","DBLG"],bR:{team:"DBLSの冷静さとは温度差が大きい。",senpai:"DBLGの慎重さがスピード感を重視するHAWSにはもどかしく映る。",friend:"焦りや温度差が出やすいため割り切ったつき合い方が良い。"}},
+  HAWG:{name:"熱血プレイヤー",icon:"💪",tag:"仲間のために全力を尽くすひたむきさ",kw:["素直さ","情の深さ","努力家"],jobs:["営業","人材紹介","広告営業"],
+    per:"仲間のために全力を尽くせる、熱量の高いタイプ。人と深く関わる仕事にやりがいを感じ、仕事に没頭することをいとわない姿勢があります。先輩や上司からしっかり学びたいという素直さも武器。",
+    str:"ひたむきな努力と素直さ。「この人のために頑張りたい」と思える情の深さ。",
+    com:"感情がストレートに出る。熱意が伝わりやすく、クライアントとの信頼関係を築きやすい。",
+    sts:"努力が報われないと感じるとき。一人で抱え込んでしまいがち。",
+    grw:"熱量を保ちつつ、「戦略的に動く」視点を加えると、成果の出方が大きく変わる。",
+    why:"クライアントに寄り添う営業や人材紹介で、持ち前の熱意と素直さが信頼につながります。教育体制が整った企業でメンターに恵まれると成長スピードが加速します。",
+    desc:"人のために全力で働き、組織的なサポートの中でスキルを磨きたい。丁寧にキャリアを積み上げるタイプ。",
+    good:["HAWS","HALG","HBWG"],gR:{team:"HAWSのリーダーシップの下で力を発揮する最高の組み合わせ。",senpai:"HALGの温かさに安心して成長できる環境に。",friend:"HBWGの真面目さと通じ合える就活仲間に。"},
+    bad:["DALS","DBLS"],bR:{team:"DALSの自由奔放さとはペースが合わない。",senpai:"DBLSのクールさが感情重視のHAWGには物足りなく感じる。",friend:"方向性が違うため、お互いの軸を尊重した関係が大切。"}},
+  HBLS:{name:"ナチュラルケアリスト",icon:"🌿",tag:"さりげなく場を整える自然体の気配り",kw:["空気を読む","自然体","オンオフ上手"],jobs:["人事","広報・PR","CS"],
+    per:"押し付けがましくなく、自然体で人を支えられるタイプ。場の空気を読んで「ちょうどいい距離感」で関わるのが得意です。自分の時間も大切にしていて、オンオフの切り替えが上手。",
+    str:"空気を読む力と、さりげないフォロー力。周囲が気づかないところで場を整えている。",
+    com:"聞き上手で、相手が話しやすい雰囲気を自然に作れる。押しが強くないからこそ信頼される。",
+    sts:"自分のケアが後回しになること。感謝されないまま当たり前にされるとき。",
+    grw:"「自分がやっていることの価値」を言語化して伝える練習をすると、評価が正当についてくる。",
+    why:"この自然な気配り力は、社員の気持ちに寄り添う人事職や、社外との橋渡し役である広報・PR、顧客対応のCSに向いています。",
+    desc:"自然体で人を支え、プライベートも大事に。自分の裁量で動くスタイル。",
+    good:["HALS","HBLG","DBLS"],gR:{team:"HALSのエネルギーをそっと支える最高のコンビ。",senpai:"DBLSの冷静さに安心感をプラスし、チームを整える。",friend:"HBLGの温かさと心地よく共鳴できる就活仲間に。"},
+    bad:["HAWS","DAWS"],bR:{team:"HAWSの圧倒的熱量に巻き込まれて消耗しがち。",senpai:"DAWSのスピード感についていけないことも。",friend:"エネルギーの違いを認識して距離感を大事にしよう。"}},
+  HBLG:{name:"ほっこりサポーター",icon:"☕",tag:"温かい雰囲気でチームを支える安定の存在",kw:["安心感","穏やか","着実"],jobs:["人事","総務","CS"],
+    per:"人の役に立つことに喜びを感じ、温かい雰囲気でチームを支えるタイプ。自分が前に出るよりも、誰かが困っているときにそっと手を差し伸べる方が性に合っています。安定した環境で着実に成長したい堅実な面も。",
+    str:"安心感を与える存在感。「この人がいるとチームの雰囲気が良くなる」と言われるタイプ。",
+    com:"穏やかで丁寧。相手のペースに合わせた会話ができる。急かされるのは苦手。",
+    sts:"急な変化が多い環境。自分の意見を強く求められる場面。",
+    grw:"「支える力」に自信を持ちつつ、自分の意見を小さくてもいいから発信する練習を。",
+    why:"この温かさと堅実さは、社員をケアする人事・総務や、お客様に寄り添うCS職にマッチ。研修が充実した企業で安心してスキルを磨ける環境が最適です。",
+    desc:"人のサポートが好きで、研修が充実した環境で着実に成長したい。WLBも重視する安定志向。",
+    good:["HALG","HBLS","DBLG"],gR:{team:"HALGの温かいリーダーシップの下で安心して力を発揮。",senpai:"HBLSとは穏やかな共鳴で居心地の良い環境に。",friend:"DBLGの丁寧さと相性抜群の就活仲間に。"},
+    bad:["DAWS","HAWS"],bR:{team:"DAWSの突き進むスタイルに戸惑いがち。",senpai:"HAWSの圧倒的熱量はプレッシャーに感じることも。",friend:"テンポが違いすぎるので、刺激をもらう程度の距離感が良い。"}},
+  HBWS:{name:"黒子のプロデューサー",icon:"🎭",tag:"裏から全体を動かす影の実力者",kw:["構想力","没入力","縁の下の力持ち"],jobs:["広報・PR","キャリアアドバイザー","CS"],
+    per:"表に出るよりも裏から人を動かすのが好きなタイプ。仕事にのめり込む集中力があり、チーム全体の成果に貢献することに充実感を覚えます。自分なりの方法論を持っていて、それを黙々と磨き続ける職人気質の一面も。",
+    str:"舞台裏から全体を見渡す構想力と、仕事への深い没入力。「気づいたら全部この人が回していた」という存在。",
+    com:"必要なことを的確に、でも控えめに伝える。目立つことは避けるが、影響力は大きい。",
+    sts:"自分の仕事が可視化されず、他の人が手柄を持っていくとき。表舞台に立つことを強いられるとき。",
+    grw:"裏方の強みを保ちつつ、成果を「見える化」する術を身につけると、キャリアが加速する。",
+    why:"「裏方力×仕事への没頭」は、戦略的に情報発信を設計する広報・PRや、求職者と企業をつなぐキャリアアドバイザーで力を発揮します。",
+    desc:"仕事にのめり込みつつ、チーム全体の成果に貢献したい。裏から組織を動かす力がある。",
+    good:["HAWS","DBWS","DAWG"],gR:{team:"HAWSの表舞台を裏で支える最高のコンビ。",senpai:"DBWSの冷静さと方向性が一致する理想の関係。",friend:"DAWGの探究心と深いレベルで協業可能な就活仲間に。"},
+    bad:["HALS","DALS"],bR:{team:"HALSのメリハリ型とは仕事への没入度に差が出やすい。",senpai:"DALSの自由な発想が計画的なHBWSには散漫に映ることも。",friend:"就活のペース感が違うので、割り切った関係が良い。"}},
+  HBWG:{name:"まっすぐガーディアン",icon:"🛡️",tag:"誠実さで絶対的な信頼を勝ち取る",kw:["誠実","責任感","約束を守る"],jobs:["人事","総務","キャリアアドバイザー"],
+    per:"真面目で誠実、チームのためにコツコツ努力できるタイプ。人を支えることに強いやりがいを感じ、仕事に全力で向き合います。先輩や上司のもとでしっかり学びたいという向上心があり、言われたことを丁寧にやり切る信頼感が武器。",
+    str:"誠実さと責任感。「この人に任せれば間違いない」という絶対的な信頼を勝ち取る力。",
+    com:"言葉よりも行動で示すタイプ。約束したことは必ず守る。嘘やごまかしが苦手。",
+    sts:"ルールが曖昧な環境。自分の努力の方向性が見えないとき。",
+    grw:"真面目さは最大の武器。あとは「完璧じゃなくてもOK」と自分を許す余裕を持てると楽になる。",
+    why:"この誠実さと丁寧さは、組織の安定運営を担う人事・総務で高く評価されます。メンター制度が整った企業で着実にキャリアを積むスタイルが◎。",
+    desc:"仕事に全力で向き合い、先輩のもとで丁寧にスキルを磨きながら組織に貢献するタイプ。",
+    good:["HAWG","DBWG","DBLG"],gR:{team:"HAWGの素直さと信頼で結ばれる最高の組み合わせ。",senpai:"DBWGのコツコツ型と最高の相性で安心して学べる。",friend:"DBLGの丁寧さとも通じ合える就活仲間に。"},
+    bad:["HALS","DALS"],bR:{team:"HALSのメリハリ型は真面目なHBWGには軽く映ることも。",senpai:"DALSの自由奔放さがルール重視のHBWGにはストレス。",friend:"就活観が違うため、刺激として割り切ると良い関係に。"}},
+  DALS:{name:"ひらめきクリエイター",icon:"💡",tag:"自由な発想でゼロから形にする",kw:["発想力","自由","オリジナリティ"],jobs:["企画","エンジニア","デザイナー"],
+    per:"アイデアを形にすることが好きで、一人で集中してモノづくりに没頭できるタイプ。人と関わることより、課題や作品そのものに向き合う方がエネルギーが湧きます。自由な環境で創造性を発揮します。",
+    str:"発想力と、ゼロから何かを生み出す力。「普通はこうでしょ」に縛られない自由な思考。",
+    com:"アイデアベースの会話が得意。雑談からでもインスピレーションを得る。ただし長い会議は苦手。",
+    sts:"自由がない環境。ルーティンワークの連続。アイデアを否定され続けるとき。",
+    grw:"ひらめきを「形にして届ける」ところまで完遂する力をつけると、クリエイターとして一段上に。",
+    why:"この創造力と自律性は、新しい企画を生み出す企画職や、技術で課題を解決するエンジニア、デザイナーにフィット。裁量のある環境でオリジナリティを発揮できます。",
+    desc:"自分のペースでモノづくりに没頭したい。プライベートも大事にしつつ、裁量のある環境で創造性を発揮。",
+    good:["HALS","DALG","DBLS"],gR:{team:"HALSの巻き込み力がアイデアを広めてくれる。",senpai:"DALGの丁寧さが発想を形にする力を補強。",friend:"DBLSの分析力が方向性を補強してくれる就活仲間に。"},
+    bad:["HBWG","HAWG"],bR:{team:"HBWGのルール重視は自由なDALSには窮屈に感じる。",senpai:"HAWGの感情ベースの関わりとはリズムが合いにくい。",friend:"就活ペースが違うので、割り切って情報交換する程度が良い。"}},
+  DALG:{name:"じっくりクラフター",icon:"🔧",tag:"専門性をコツコツ磨く品質の職人",kw:["継続力","品質","専門性"],jobs:["エンジニア","デザイナー","データマーケ"],
+    per:"専門スキルを腰を据えて磨きたいタイプ。課題に対して丁寧にアプローチし、着実に質を高めていく粘り強さがあります。無理なペースよりも、自分のリズムで確実に成長したい。しっかりした教育環境があると安心して力を出せます。",
+    str:"継続する力と、品質へのこだわり。「急がば回れ」を体現するタイプ。",
+    com:"必要なことを端的に、正確に伝える。無駄な会話は少ないが、技術的な話になると熱くなる。",
+    sts:"スピード重視で質を犠牲にする環境。教わる機会がなく放置されるとき。",
+    grw:"完璧を目指しすぎず「80点でまず出す」を意識すると、成果が目に見えて増える。",
+    why:"この堅実さと専門性への志向は、技術力を積み上げるエンジニアやデザイナー、データを扱うマーケ職に向いています。研修が充実した大手企業との相性◎。",
+    desc:"専門性をじっくり磨きたい。研修のもとで確実にスキルを積み上げ、安定した働き方をしたい。",
+    good:["DALS","DBLG","DAWG"],gR:{team:"DALSの発想を形に落とし込める最高の組み合わせ。",senpai:"DBLGの正確さと高め合える理想の関係。",friend:"DAWGの探究心と深い技術トークが可能な就活仲間に。"},
+    bad:["HAWS","HALS"],bR:{team:"HAWSのスピード感がじっくり派のDALGにはプレッシャー。",senpai:"HALSのメリハリ型とは仕事のテンポが合いにくい。",friend:"価値観の違いを理解した上でつき合うと刺激になる。"}},
+  DAWS:{name:"突き抜けパイオニア",icon:"🚀",tag:"前例のない課題に立ち向かう突破者",kw:["突破力","行動力","前例なし上等"],jobs:["コンサル","事業企画","PM"],
+    per:"未知の課題に立ち向かうことにワクワクするタイプ。仕事に全力でのめり込み、自分の力で道を切り拓く推進力があります。課題やプロダクトに集中する方が力を発揮。スピード感のある環境で最も輝きます。",
+    str:"突破力と行動力。「前例がない」が最大のモチベーションになる稀有なタイプ。",
+    com:"結論ファーストで端的。議論より行動を重視する。スピード感のない会話にはイライラしがち。",
+    sts:"前例踏襲を求められる環境。意思決定が遅い組織。自分の裁量がないとき。",
+    grw:"突き進む力に「巻き込む力」を加えると、一人では到達できない高みに行ける。",
+    why:"この突破力と集中力は、難題を解くコンサルタントや、ゼロから事業を立ち上げる事業企画・PMにぴったり。スタートアップ的な環境でも活躍できます。",
+    desc:"技術やプロダクトに全力で向き合う。スタートアップ的なスピード感と裁量で事業を推進するタイプ。",
+    good:["HAWS","DBWS","DAWG"],gR:{team:"HAWSの巻き込み力と合わされば最強。",senpai:"DBWSの冷静な制御が暴走を防ぐ良いブレーキに。",friend:"DAWGの深掘り力が品質を担保してくれる最高の就活仲間に。"},
+    bad:["HBLG","HBLS"],bR:{team:"HBLGの穏やかさとはスピード感が合わない。",senpai:"HBLSの慎重さがDAWSにはブレーキに感じる。",friend:"テンポが違いすぎるので、刺激をもらう程度の距離感が良い。"}},
+  DAWG:{name:"のめり込みビルダー",icon:"🏗️",tag:"技術を極める情熱の職人",kw:["集中力","探究心","師弟関係"],jobs:["エンジニア","コンサル","データマーケ・CRM"],
+    per:"ものづくりや課題解決に深くのめり込む職人気質。仕事に情熱を注ぎ、技術やスキルをとことん追求したいタイプです。師匠や先輩から技を学ぶことに抵抗がなく、体系的に教わることで成長が加速します。",
+    str:"集中力と技術への探究心。一度ハマると誰よりも深く掘り下げる。",
+    com:"技術的な話題では饒舌になるが、雑談は苦手な面も。信頼した相手には深く心を開く。",
+    sts:"表面的にしか取り組めない環境。技術を軽視する文化。",
+    grw:"のめり込む力を活かしつつ「全体像を見る」視点を意識すると、リードエンジニアへの道が開ける。",
+    why:"この技術への情熱と学ぶ姿勢は、大手企業の技術職や研究職、データ系のマーケ職で真価を発揮。メンター制度のある環境で腕を磨くのが最適です。",
+    desc:"ものづくりに情熱を注ぎつつ、組織的なサポートの中で成長。大手の技術職や研究職にも向く。",
+    good:["DAWS","HBWS","DALG"],gR:{team:"DAWSの推進力の下で技術を極められる。",senpai:"HBWSの裏方力と深いレベルで協業できる。",friend:"DALGの品質志向と切磋琢磨できる就活仲間に。"},
+    bad:["HALS","HAWS"],bR:{team:"HALSのメリハリ型は深掘り派のDAWGには表面的に映る。",senpai:"HAWSの熱量は対人ベースでDAWGとは方向が違う。",friend:"就活スタイルが違うので、刺激として割り切った関係が良い。"}},
+  DBLS:{name:"冷静なブレイン",icon:"🧊",tag:"データとロジックで組織を支える頭脳",kw:["論理的思考","俯瞰","冷静"],jobs:["経営企画","データアナリスト","社内SE"],
+    per:"データとロジックで物事を考えるのが得意なタイプ。派手に前に出るより、分析と戦略で組織を支えることに充実感を覚えます。冷静に全体を俯瞰する視点が強み。自分のペースで思考を深められる環境を好みます。",
+    str:"論理的思考力と、感情に流されない冷静さ。複雑な問題を構造的に整理する力。",
+    com:"事実ベースで話す。感情論が飛び交う場では一歩引いて「で、ファクトは？」と問いかけるタイプ。",
+    sts:"感情的な議論に巻き込まれるとき。データなしに意思決定される環境。",
+    grw:"ロジックは最強の武器。ここに「相手の感情を動かす伝え方」が加わると、影響力が飛躍的に増す。",
+    why:"この分析力と俯瞰力は、経営企画やデータアナリスト、社内SEのように組織の意思決定を裏から支える仕事にフィットします。",
+    desc:"データやロジックで組織を支える。プライベートも大事にしつつ、自分のペースで分析・改善を回す。",
+    good:["HBLS","DALS","DBLG"],gR:{team:"HBLSの気配りが冷静さを和らげ、チームに温かみをプラス。",senpai:"DALSの発想力に分析で道筋をつける最高の組み合わせ。",friend:"DBLGの正確さとは最強の分析タッグを組める就活仲間に。"},
+    bad:["HAWG","HAWS"],bR:{team:"HAWGの感情重視とは価値観が違いすぎる。",senpai:"HAWSの熱量ベースの判断はDBLSにはノイズに感じる。",friend:"感情と論理の違いを理解した関係が大切。"}},
+  DBLG:{name:"きっちり参謀",icon:"📐",tag:"正確さとルールで組織の最後の砦に",kw:["精緻","正確性","堅実"],jobs:["経理・財務","データアナリスト","法務"],
+    per:"正確さと丁寧さが武器のタイプ。数字やルールに強く、曖昧なことをきちんと整理するのが得意です。安定した環境でしっかり教わりながらスキルを高めたいという堅実さがあり、細部へのこだわりが周囲の信頼につながります。",
+    str:"ミスを見逃さない精緻さと、ルール・手順を守り切る確実性。「最後の砦」のような存在。",
+    com:"正確で丁寧な報告が得意。口頭より文書の方が真価を発揮する。曖昧な指示が苦手。",
+    sts:"ルールが曖昧でカオスな環境。大雑把な人と組むとき。",
+    grw:"正確さを保ちつつ「大局観」も身につけると、参謀からリーダーへの道が見えてくる。",
+    why:"この精緻さと安定志向は、ミスが許されない経理・財務や法務、正確なデータ分析が求められるアナリスト職に最適。研修のしっかりした企業で専門性を磨けます。",
+    desc:"数字やデータに強く、充実した研修のもとで着実に専門性を高めたい。安定した環境を好む。",
+    good:["DBLS","HBLG","HBWG"],gR:{team:"DBLSとは最強の分析タッグを組める。",senpai:"HBLGの温かさに安心して力を発揮できる。",friend:"HBWGの誠実さと深く通じ合える就活仲間に。"},
+    bad:["HAWS","DAWS"],bR:{team:"HAWSのスピード感はDBLGにはストレスになりやすい。",senpai:"DAWSの「前例なし」が慎重派のDBLGには不安要素。",friend:"就活スタイルが違うので、情報交換程度の距離感が良い。"}},
+  DBWS:{name:"鉄壁コントローラー",icon:"🏰",tag:"冷静な判断でプレッシャーに立ち向かう",kw:["冷静","胆力","制御力"],jobs:["経営企画","コンサル","社内SE"],
+    per:"仕事にのめり込み、データとロジックで組織の基盤を固めるタイプ。感情より事実で判断し、冷静に全体を制御する力があります。自分の裁量で意思決定したい志向が強く、責任の大きな仕事ほど燃えます。",
+    str:"冷静な判断力と、プレッシャー下でもブレない胆力。組織の根幹を担える器の大きさ。",
+    com:"端的で論理的。無駄を嫌い、要点だけを伝える。部下には厳しいが、信頼は厚い。",
+    sts:"権限が与えられず、裁量がないとき。非論理的な意思決定が横行する環境。",
+    grw:"制御力に「人を育てる」視点を加えると、経営者としての器がさらに広がる。",
+    why:"この冷静な制御力と仕事への没頭は、経営の根幹を支える経営企画や、論理で課題を解くコンサルで力を発揮。裁量のあるポジションで真価を発揮します。",
+    desc:"仕事にのめり込み、データとロジックで組織の土台を固める。裁量を持って経営を支えるタイプ。",
+    good:["DAWS","HBWS","DBLS"],gR:{team:"DAWSの突破力を冷静に制御する最強コンビ。",senpai:"HBWSの裏方力と戦略が噛み合う理想の関係。",friend:"DBLSとは論理で通じ合える最高の就活仲間に。"},
+    bad:["HALG","HBLG"],bR:{team:"HALGの感情ベースの判断はDBWSには非効率に映る。",senpai:"HBLGの穏やかさがスピード感を求めるDBWSにはもどかしい。",friend:"価値観の違いを認識した上でつき合うと良い。"}},
+  DBWG:{name:"コツコツマイスター",icon:"⚙️",tag:"品質に妥協しない職人の矜持",kw:["忍耐力","品質","職人魂"],jobs:["経理・財務","法務","品質管理"],
+    per:"地道な作業を丁寧にやり抜く粘り強さがあるタイプ。仕事に全力で向き合い、先輩から技を吸収して確実にスキルを高めていきます。派手さよりも正確さ、スピードよりも品質を重視する姿勢が周囲からの信頼を集めます。",
+    str:"忍耐力と、品質に妥協しない職人魂。「この人が最終チェックしたなら大丈夫」という信頼。",
+    com:"寡黙だが、専門分野の話になると頼れるアドバイザーに。言葉少なだが重みがある。",
+    sts:"雑に仕事を進めることを求められるとき。自分のペースを乱されること。",
+    grw:"品質へのこだわりは唯一無二の強み。ここに「速さ」を少しずつ加えると市場価値が急上昇する。",
+    why:"この緻密さと粘り強さは、正確さが命の経理・財務や法務、品質管理で真価を発揮。師匠のもとで技を磨く職人的なキャリアパスが合っています。",
+    desc:"仕事に全力で向き合い、先輩のもとで丁寧にスキルを磨く。専門職で真価を発揮するタイプ。",
+    good:["HBWG","DBLG","DALG"],gR:{team:"HBWGの誠実さと最高の相性でチームが安定する。",senpai:"DBLGの正確さと切磋琢磨できる理想の関係。",friend:"DALGの品質志向と深いレベルで通じ合える就活仲間に。"},
+    bad:["HALS","DAWS"],bR:{team:"HALSのメリハリ型はコツコツ派のDBWGには表面的に映る。",senpai:"DAWSのスピード重視は品質重視のDBWGにはストレス。",friend:"就活ペースが全然違うので、刺激として割り切った関係が良い。"}}
 };
 
-const companyData = {
-  "IT / Web": ["サイバーエージェント","楽天グループ","LINE ヤフー","メルカリ","リクルート"],
-  "広告 / メディア": ["電通","博報堂","サイバーエージェント","ADK","東急エージェンシー"],
-  "金融": ["三菱UFJ銀行","三井住友銀行","野村證券","東京海上日動","第一生命"],
-  "コンサル": ["マッキンゼー","BCG","デロイト トーマツ","アクセンチュア","PwC"],
-  "メーカー": ["トヨタ自動車","ソニーグループ","パナソニック","キーエンス","味の素"],
-  "商社": ["三菱商事","三井物産","伊藤忠商事","住友商事","丸紅"],
+/* ===== COMPANY DATA (from ORIGINAL, adapted to new UI format) ===== */
+const CD={
+  "IT / Web":[{co:"サイバーエージェント",job:"デジタルマーケター"},{co:"楽天グループ",job:"プロダクトマネージャー"},{co:"LINE ヤフー",job:"データアナリスト"},{co:"メルカリ",job:"ソフトウェアエンジニア"},{co:"リクルート",job:"事業企画"}],
+  "広告 / メディア":[{co:"電通",job:"コピーライター・プランナー"},{co:"博報堂",job:"アカウントプランナー"},{co:"サイバーエージェント",job:"SNSマーケター"},{co:"ADK",job:"メディアプランナー"},{co:"東急エージェンシー",job:"営業プロデューサー"}],
+  "金融":[{co:"三菱UFJ銀行",job:"法人営業"},{co:"三井住友銀行",job:"リテール営業"},{co:"野村證券",job:"投資銀行部門"},{co:"東京海上日動",job:"損害サービス"},{co:"第一生命",job:"ファイナンシャルプランナー"}],
+  "コンサル":[{co:"マッキンゼー",job:"戦略コンサルタント"},{co:"BCG",job:"戦略コンサルタント"},{co:"デロイト トーマツ",job:"財務コンサルタント"},{co:"アクセンチュア",job:"ITコンサルタント"},{co:"PwC",job:"リスクコンサルタント"}],
+  "メーカー":[{co:"トヨタ自動車",job:"技術開発"},{co:"ソニーグループ",job:"商品企画"},{co:"パナソニック",job:"プロダクトマネージャー"},{co:"キーエンス",job:"テクニカルセールス"},{co:"味の素",job:"マーケティング"}],
+  "商社":[{co:"三菱商事",job:"トレーダー"},{co:"三井物産",job:"プロジェクトマネージャー"},{co:"伊藤忠商事",job:"ビジネスディベロップメント"},{co:"住友商事",job:"グローバル営業"},{co:"丸紅",job:"新規事業開発"}]
 };
 
-let selectedIndustries = [];
-let currentQ = 0;
-let scores = { 1: 0, 2: 0, 3: 0, 4: 0 };
-let answers = [];
-let isTransitioning = false;
+/* ===== STATE ===== */
+let curQ=0,scores={1:0,2:0,3:0,4:0},ans=[],selectedIndustries=[],trans=false,binaryMode=false;
 
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  window.scrollTo(0, 0);
-}
-
-function toggleIndustry(el) {
-  el.classList.toggle('selected');
-  const ind = el.dataset.industry;
-  if (selectedIndustries.includes(ind)) { selectedIndustries = selectedIndustries.filter(i => i !== ind); }
-  else { selectedIndustries.push(ind); }
-  const btn = document.getElementById('industry-next-btn');
-  btn.classList.toggle('next-btn-disabled', selectedIndustries.length === 0);
-}
-
-function startQuiz() { currentQ = 0; scores = {1:0,2:0,3:0,4:0}; answers = []; renderQuestion(); showScreen('screen-quiz'); }
-
-function renderQuestion() {
-  const q = questions[currentQ];
-  document.getElementById('q-number').textContent = `Q${currentQ+1}`;
-  document.getElementById('q-axis').textContent = `軸${q.axis}：${q.axisLabel}`;
-  document.getElementById('q-text').textContent = q.q;
-  document.getElementById('choice-a-text').textContent = q.a;
-  document.getElementById('choice-b-text').textContent = q.b;
-  document.getElementById('progress-text').textContent = `Q${currentQ+1} / 20`;
-  document.getElementById('axis-text').textContent = q.axisLabel;
-  document.getElementById('progress-fill').style.width = `${(currentQ/20)*100}%`;
-  document.querySelectorAll('.spectrum-dot').forEach(d => d.classList.remove('selected'));
-  document.getElementById('back-btn').style.display = currentQ > 0 ? 'inline-flex' : 'none';
-  const card = document.getElementById('question-card');
-  card.classList.remove('fade-in'); void card.offsetWidth; card.classList.add('fade-in');
-}
-
-function selectSpectrum(el) {
-  if (isTransitioning) return;
-  isTransitioning = true;
-  const q = questions[currentQ];
-  const value = parseInt(el.dataset.value);
-  document.querySelectorAll('.spectrum-dot').forEach(d => d.classList.remove('selected'));
-  el.classList.add('selected');
-  scores[q.axis] += value;
-  answers[currentQ] = value;
-  setTimeout(() => {
-    currentQ++;
-    isTransitioning = false;
-    if (currentQ < questions.length) { renderQuestion(); }
-    else { document.getElementById('progress-fill').style.width = '100%'; setTimeout(() => showResult(), 300); }
-  }, 500);
-}
-
-function goBack() {
-  if (currentQ <= 0) return;
-  currentQ--;
-  scores[questions[currentQ].axis] -= answers[currentQ];
-  answers[currentQ] = undefined;
-  renderQuestion();
-}
-
-function getTypeCode() {
-  // Category: axis1(対人>=0 → H, 対課題<0 → D) + axis2(攻め>=0 → A, 支え<0 → B)
-  // H+A → A category, H+B → B category, D+A → C category, D+B → D category
-  const isHuman = scores[1] >= 0;  // 対人
-  const isAttack = scores[2] >= 0; // 攻め
-
-  let cat;
-  if (isHuman && isAttack) cat = 'A';
-  else if (isHuman && !isAttack) cat = 'B';
-  else if (!isHuman && isAttack) cat = 'C';
-  else cat = 'D';
-
-  // Subtype: axis3(WLB>=0 → L, ワーク<0 → W) + axis4(自走>=0 → S, 育成<0 → G)
-  // L+S → 1, L+G → 2, W+S → 3, W+G → 4
-  const isLife = scores[3] >= 0;   // WLB重視
-  const isSelf = scores[4] >= 0;   // 自走型
-
-  let sub;
-  if (isLife && isSelf) sub = 1;
-  else if (isLife && !isSelf) sub = 2;
-  else if (!isLife && isSelf) sub = 3;
-  else sub = 4;
-
-  return cat + String(sub);
-}
-
-function showResult() {
-  const code = getTypeCode();
-  const type = typeData[code];
-  const industries = selectedIndustries.length > 0 ? selectedIndustries : Object.keys(companyData);
-
-  let companiesHTML = '';
-  industries.forEach(ind => {
-    const companies = companyData[ind] || [];
-    companiesHTML += `<div class="result-section"><h3><span>🏢</span> ${ind} のおすすめ企業</h3><div class="company-list">`;
-    companies.forEach((c, i) => { companiesHTML += `<div class="company-item"><div class="company-rank">${i+1}</div><div class="company-info"><h4>${c}</h4><p>${ind}</p></div></div>`; });
-    companiesHTML += '</div></div>';
+/* ===== INIT ===== */
+window.addEventListener('DOMContentLoaded',()=>{
+  buildTypeOverview();
+  animateCount();
+  checkSavedProgress();
+  window.addEventListener('scroll',()=>document.getElementById('hdr').classList.toggle('sc',scrollY>10));
+  document.addEventListener('click',e=>{
+    const d=document.getElementById('drawer'),b=document.getElementById('ham');
+    if(d.classList.contains('open')&&!d.contains(e.target)&&!b.contains(e.target))closeDrawer();
   });
+});
 
-  const axisNames = [
-    { label: "対人", labelB: "対課題", score: scores[1], color: "blue" },
-    { label: "攻め", labelB: "支え", score: scores[2], color: "green" },
-    { label: "ライフ重視", labelB: "ワーク重視", score: scores[3], color: "orange" },
-    { label: "自走型", labelB: "育成型", score: scores[4], color: "purple" },
+function animateCount(){
+  const target=12847,el=document.getElementById('stat-count');
+  if(!el)return;
+  let n=0,step=Math.ceil(target/60);
+  const t=setInterval(()=>{n=Math.min(n+step,target);el.textContent=n.toLocaleString();if(n>=target)clearInterval(t);},30);
+}
+
+const CODE_IMG={HALS:'a1',HALG:'a2',HAWS:'a3',HAWG:'a4',HBLS:'b1',HBLG:'b2',HBWS:'b3',HBWG:'b4',DALS:'c1',DALG:'c2',DAWS:'c3',DAWG:'c4',DBLS:'d1',DBLG:'d2',DBWS:'d3',DBWG:'d4'};
+function codeImg(code){return CODE_IMG[code]||code.toLowerCase();}
+
+function buildTypeOverview(){
+  const cats=[['HA','リーダー系','pa','#2563eb',['HALS','HALG','HAWS','HAWG']],['HB','サポート系','pb','#7c3aed',['HBLS','HBLG','HBWS','HBWG']],['DA','推進系','pc','#0f766e',['DALS','DALG','DAWS','DAWG']],['DB','分析系','pd','#334155',['DBLS','DBLG','DBWS','DBWG']]];
+  let h='';
+  cats.forEach(([cat,lbl,pill,col,codes])=>{
+    h+=`<div style="margin-bottom:20px;"><div class="type-cat-hd"><div class="tc-pill ${pill}">${cat}系 — ${lbl}</div><div class="tc-line"></div></div><div class="type-grid">`;
+    codes.forEach(code=>{
+      const t=TD[code];
+      h+=`<div class="tc" onclick="jumpToType('${code}')"><div class="tc-sil" style="background-image:url('images/chars/${codeImg(code)}.png');"></div><img src="images/chars/${codeImg(code)}.png" alt="${code}"><div class="tc-code" style="color:${col};">${code}</div><div class="tc-name">${t.name}</div></div>`;
+    });
+    h+=`</div></div>`;
+  });
+  const el=document.getElementById('type-overview');
+  if(el)el.innerHTML=h;
+}
+
+function saveProgress(){try{localStorage.setItem('cq_p',JSON.stringify({curQ,scores,ans,selectedIndustries}));}catch(e){}}
+function clearSavedProgress(){try{localStorage.removeItem('cq_p');}catch(e){}}
+function checkSavedProgress(){
+  try{
+    const s=localStorage.getItem('cq_p');if(!s)return;
+    const d=JSON.parse(s);
+    if(d.curQ>0&&d.curQ<Qs.length){
+      const b=document.getElementById('cont-banner');
+      if(b){b.style.display='flex';document.getElementById('cont-sub').textContent=`Q${d.curQ}まで回答済み（残り${Qs.length-d.curQ}問）`;}
+    }
+  }catch(e){}
+}
+function continueDiag(){
+  try{const d=JSON.parse(localStorage.getItem('cq_p'));curQ=d.curQ;scores=d.scores;ans=d.ans;selectedIndustries=d.selectedIndustries||[];renderQ();toScreen('screen-quiz');}
+  catch(e){startFresh();}
+}
+
+function addRipple(e,el){
+  const r=el.getBoundingClientRect();
+  const d=document.createElement('span');d.className='rpl-dot';
+  const sz=Math.max(el.offsetWidth,el.offsetHeight)*2;
+  d.style.cssText=`width:${sz}px;height:${sz}px;left:${e.clientX-r.left-sz/2}px;top:${e.clientY-r.top-sz/2}px;`;
+  el.appendChild(d);setTimeout(()=>d.remove(),600);
+}
+
+function toScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const sc=document.getElementById(id);
+  sc.classList.add('active');
+  sc.classList.add('page-in');
+  setTimeout(()=>sc.classList.remove('page-in'),400);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function gotoTop(){toScreen('screen-title');}
+function startFresh(){
+  curQ=0;scores={1:0,2:0,3:0,4:0};ans=[];selectedIndustries=[];
+  clearSavedProgress();renderQ();toScreen('screen-quiz');
+}
+function toggleDrawer(){document.getElementById('ham').classList.toggle('open');document.getElementById('drawer').classList.toggle('open');}
+function closeDrawer(){document.getElementById('ham').classList.remove('open');document.getElementById('drawer').classList.remove('open');}
+function toggleBinary(){
+  binaryMode=!binaryMode;
+  const tog=document.getElementById('bin-tog');
+  tog.textContent=binaryMode?'ON':'OFF';
+  tog.className='bin-tog '+(binaryMode?'on':'off');
+  document.getElementById('spec-track').classList.toggle('binary-on',binaryMode);
+}
+
+function renderQ(){
+  const q=Qs[curQ],ax=q.ax;
+  const bg=AX[ax].bg;
+  document.getElementById('quiz-bg').style.background=`linear-gradient(160deg,${bg[0]},${bg[1]})`;
+  const gr=AX_GRAD[ax];
+  document.getElementById('q-top').style.background=`linear-gradient(${gr[0]},${gr[1]},${gr[2]})`;
+  const rem=Qs.length-curQ;
+  document.getElementById('prog-text').textContent=`Q${curQ+1} / ${Qs.length}`;
+  const msgIdx=Math.min(Math.floor((curQ/Qs.length)*PROG_MSGS.length),PROG_MSGS.length-1);
+  document.getElementById('prog-msg').textContent=rem===1?'最後の1問！':rem<=3?`残り${rem}問！`:PROG_MSGS[msgIdx];
+  document.getElementById('dot-prog').innerHTML=Qs.map((_,i)=>`<div class="dp${i<curQ?' done':i===curQ?' cur':''}"></div>`).join('');
+  const bars=document.querySelectorAll('.ax-bar');
+  let axP=[0,0,0,0,0];for(let i=0;i<curQ;i++)axP[Qs[i].ax]++;
+  bars.forEach((b,i)=>b.classList.toggle('done',axP[i+1]>0));
+  document.getElementById('q-num').textContent=`Q${curQ+1}`;
+  document.getElementById('q-axis').textContent=`軸${ax}：${AX[ax].l} or ${AX[ax].r}`;
+  document.getElementById('q-text').textContent=q.t;
+  document.getElementById('q-a').textContent=q.a;
+  document.getElementById('q-b').textContent=q.b;
+  document.getElementById('sl-a').textContent=`← ${AX[ax].l}寄り`;
+  document.getElementById('sl-b').textContent=`${AX[ax].r}寄り →`;
+  document.querySelectorAll('.sdw').forEach(d=>d.classList.remove('sel'));
+  document.getElementById('back-btn').style.display=curQ>0?'flex':'none';
+  document.getElementById('spec-track').classList.toggle('binary-on',binaryMode);
+  const card=document.getElementById('q-card');
+  card.classList.remove('qin');void card.offsetWidth;card.classList.add('qin');
+}
+
+function pick(el){
+  if(trans)return;trans=true;
+  const v=parseInt(el.dataset.v);
+  if(binaryMode&&v===0){trans=false;return;}
+  document.querySelectorAll('.sdw').forEach(d=>d.classList.remove('sel'));
+  el.classList.add('sel');
+  scores[Qs[curQ].ax]+=v;ans[curQ]=v;
+  saveProgress();
+  setTimeout(()=>{curQ++;trans=false;if(curQ<Qs.length)renderQ();else{saveProgress();setTimeout(showLoading,300);}},500);
+}
+function goBack(){
+  if(curQ<=0)return;
+  curQ--;scores[Qs[curQ].ax]-=ans[curQ];ans[curQ]=undefined;saveProgress();renderQ();
+}
+
+/* ===== SCORING (same logic as ORIGINAL) ===== */
+function getCode(){
+  const h=scores[1]>=0?'H':'D';
+  const a=scores[2]>=0?'A':'B';
+  const l=scores[3]>=0?'L':'W';
+  const s=scores[4]>=0?'S':'G';
+  return h+a+l+s;
+}
+function getSubCode(){
+  const primary=getCode();
+  const ns={...scores};
+  const absS=[Math.abs(scores[1]),Math.abs(scores[2]),Math.abs(scores[3]),Math.abs(scores[4])];
+  const minAx=absS.indexOf(Math.min(...absS))+1;
+  ns[minAx]=-ns[minAx];
+  const h2=ns[1]>=0?'H':'D';
+  const a2=ns[2]>=0?'A':'B';
+  const l2=ns[3]>=0?'L':'W';
+  const s2=ns[4]>=0?'S':'G';
+  const sub=h2+a2+l2+s2;
+  return sub===primary?null:sub;
+}
+
+function showLoading(){
+  toScreen('screen-loading');
+  const bar=document.getElementById('l-bar');
+  bar.style.animation='none';void bar.offsetWidth;bar.style.animation='lbA 3.2s cubic-bezier(.4,0,.6,1) forwards';
+  setTimeout(showResult,3600);
+}
+
+function launchConfetti(){
+  const wrap=document.getElementById('conf-wrap');
+  const colors=['#2563eb','#818cf8','#f59e0b','#10b981','#ef4444','#ec4899','#fcd34d'];
+  for(let i=0;i<80;i++){
+    const c=document.createElement('div');c.className='conf';
+    c.style.cssText=`left:${Math.random()*100}vw;top:${-Math.random()*20}vh;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>.5?'50%':'2px'};width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;animation-duration:${1.5+Math.random()*1.5}s;animation-delay:${Math.random()*.8}s;`;
+    wrap.appendChild(c);
+  }
+  setTimeout(()=>wrap.innerHTML='',4000);
+}
+
+function buildAxisViz(sc){
+  const axes=[
+    {l:AX[1].l,r:AX[1].r,s:sc[1],ca:AX[1].ca,cb:AX[1].cb},
+    {l:AX[2].l,r:AX[2].r,s:sc[2],ca:AX[2].ca,cb:AX[2].cb},
+    {l:AX[3].l,r:AX[3].r,s:sc[3],ca:AX[3].ca,cb:AX[3].cb},
+    {l:AX[4].l,r:AX[4].r,s:sc[4],ca:AX[4].ca,cb:AX[4].cb}
   ];
-
-  let axisHTML = '';
-  axisNames.forEach(ax => {
-    const displayPct = Math.round(((10 - ax.score) / 20) * 100);
-    const strength = Math.min(100, Math.round((Math.abs(ax.score) / 10) * 100));
-    axisHTML += `<div class="axis-bar"><div class="axis-label"><span>${ax.label}</span><span>${ax.labelB}</span></div><div class="axis-track"><div class="axis-marker ${ax.color}" style="left:${displayPct}%"></div></div><div class="axis-pct" style="color:${ax.score > 0 ? '#2563eb' : ax.score < 0 ? '#7c3aed' : '#64748b'}">${ax.score > 0 ? ax.label : ax.score < 0 ? ax.labelB : 'バランス型'}（${strength}%）</div></div>`;
+  let h='<div class="axis-viz">';
+  axes.forEach(ax=>{
+    const pct=Math.round(((10-ax.s)/20)*100);
+    const str=Math.min(100,Math.round((Math.abs(ax.s)/10)*100));
+    const isL=ax.s>=0;
+    const col=isL?ax.ca:ax.cb;
+    const lbl=ax.s===0?'バランス型':(isL?ax.l:ax.r);
+    const leftW=Math.round(((10+ax.s)/20)*100);
+    const rightW=100-leftW;
+    h+=`<div class="av-row">
+      <div class="av-labels"><span class="av-l" style="color:${ax.ca}">${ax.l}</span><span class="av-l" style="color:${ax.cb}">${ax.r}</span></div>
+      <div class="av-track">
+        <div class="av-fill-l" style="width:${leftW}%;background:${ax.ca};opacity:${leftW>50?.35:.15}"></div>
+        <div class="av-fill-r" style="width:${rightW}%;background:${ax.cb};opacity:${rightW>50?.35:.15}"></div>
+        <div class="av-center"></div>
+        <div class="av-marker" style="left:${pct}%;background:${col};border-color:${col};box-shadow:0 2px 10px ${col}55"></div>
+      </div>
+      <div class="av-result" style="color:${col}">${lbl} ${str}%</div>
+    </div>`;
   });
+  h+='</div>';
+  return h;
+}
 
-  const detailStyle = "font-size:13px;line-height:1.8;color:#374151;";
-  const detailLabel = "display:inline-block;font-size:11px;font-weight:700;padding:2px 10px;border-radius:12px;margin-bottom:6px;";
+function toggleAcc(head){head.classList.toggle('aopen');head.nextElementSibling.classList.toggle('aopen');}
 
-  // Compatibility section
-  let compatHTML = '';
-  if (type.good && type.good.length > 0) {
-    compatHTML += '<div class="result-section fade-in"><h3><span>💕</span> 相性の良いタイプ</h3>';
-    type.good.forEach(g => {
-      const gt = typeData[g];
-      compatHTML += `<div class="compat-item"><div class="compat-badge good">${g}</div><div class="compat-info"><h4>${gt.icon} ${gt.name}</h4><p>${gt.tagline}</p></div></div>`;
+function cImg(code,sz=54){return `<img src="images/chars/${codeImg(code)}.png" alt="${code}" style="width:${sz}px;height:${sz}px;object-fit:contain;" onclick="jumpToType('${code}')">`;}
+function jumpToType(code){
+  if(!TD[code])return;
+  const saved={...scores};
+  scores[1]=code[0]==='H'?5:-5;
+  scores[2]=code[1]==='A'?5:-5;
+  scores[3]=code[2]==='L'?5:-5;
+  scores[4]=code[3]==='S'?5:-5;
+  showResult(true);scores=saved;
+}
+
+function buildCoHTML(inds){
+  let h='';
+  inds.forEach(ind=>{
+    const cos=CD[ind]||[];
+    h+=`<div style="margin-bottom:16px;"><div style="font-size:9px;font-weight:900;letter-spacing:3px;color:var(--blue2);text-transform:uppercase;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);">${ind}</div>`;
+    cos.forEach((c,i)=>{h+=`<div class="co-item"><div class="co-rank">${i+1}</div><div class="co-info"><h4>${c.co}</h4><p>${ind}</p></div><span class="co-job">${c.job}</span></div>`;});
+    h+=`</div>`;
+  });
+  return h;
+}
+function toggleIndSm(el,ind){
+  el.classList.toggle('sel');
+  if(el.classList.contains('sel'))selectedIndustries.push(ind);
+  else selectedIndustries=selectedIndustries.filter(i=>i!==ind);
+  const cl=document.getElementById('company-list');
+  if(cl)cl.innerHTML=buildCoHTML(selectedIndustries.length?selectedIndustries:Object.keys(CD));
+}
+
+function countUpCode(el,code){
+  const pools=['HD','AB','LW','SG'];
+  let ticks=0;const max=18;
+  const t=setInterval(()=>{
+    ticks++;const r=ticks/max;
+    el.textContent=code.split('').map((c,i)=>{
+      if(Math.random()<r)return c;
+      return pools[i][Math.floor(Math.random()*pools[i].length)];
+    }).join('');
+    if(ticks>=max){clearInterval(t);el.textContent=code;}
+  },60);
+}
+
+/* ===== SHOW RESULT ===== */
+function showResult(skipConfetti=false){
+  const code=getCode(),t=TD[code],subCode=getSubCode();
+  const cat=code.slice(0,2),sub=code.slice(2,4);
+  const inds=selectedIndustries.length>0?selectedIndustries:Object.keys(CD);
+  const pct=TYPE_PCT[code];
+  const r=REASON[cat],rl=REASON_L[sub];
+  const h=scores[1]>=0,a=scores[2]>=0,l=scores[3]>=0,s=scores[4]>=0;
+  const s1=Math.min(100,Math.round(Math.abs(scores[1]/10)*100));
+  const s2=Math.min(100,Math.round(Math.abs(scores[2]/10)*100));
+  const s3=Math.min(100,Math.round(Math.abs(scores[3]/10)*100));
+  const s4=Math.min(100,Math.round(Math.abs(scores[4]/10)*100));
+  const avgStr=Math.round((s1+s2+s3+s4)/4);
+  const varMsg=avgStr>=70?'回答が一貫しており、診断精度が高い結果です。':avgStr>=40?'バランス型の回答で、多面的な魅力を持つタイプです。':'各軸が接近しており、状況適応型の柔軟さを持ちます。';
+
+  function compatSec(codes,cls,title,icon){
+    if(!codes?.length)return'';
+    let h=`<div class="r-panel fade-in"><div class="r-ph" onclick="toggleAcc(this)"><div class="r-pi">${icon}</div><div class="r-pt">${title}</div><span class="r-tog">▼</span></div><div class="r-pb">`;
+    codes.forEach(c=>{
+      const ct=TD[c],gr=cls==='good'?t.gR:t.bR;
+      h+=`<div class="compat-item"><div class="compat-chars"><div class="compat-cbox">${cImg(code,54)}<span class="code" style="color:var(--blue2);">${code}</span></div><span class="compat-vs">⇔</span><div class="compat-cbox">${cImg(c,54)}<span class="code" style="color:var(--blue2);">${c}</span></div><div class="compat-info"><span class="cm-badge cm-${cls}">${cls==='good'?'相性◎':'要注意'}</span><div class="compat-name">${ct.icon} ${ct.name}</div><div class="compat-tag">${ct.tag}</div></div></div><div class="compat-angles"><div class="ca"><div class="ca-icon">👥</div><span class="ca-lbl">チームで</span><div class="ca-txt">${gr.team}</div></div><div class="ca"><div class="ca-icon">👆</div><span class="ca-lbl">先輩なら</span><div class="ca-txt">${gr.senpai}</div></div><div class="ca"><div class="ca-icon">🎓</div><span class="ca-lbl">就活仲間</span><div class="ca-txt">${gr.friend}</div></div></div></div>`;
     });
-    compatHTML += `<p style="${detailStyle}margin-top:12px;">${type.goodReason}</p></div>`;
-  }
-  if (type.bad && type.bad.length > 0) {
-    compatHTML += '<div class="result-section fade-in"><h3><span>⚡</span> 注意が必要なタイプ</h3>';
-    type.bad.forEach(b => {
-      const bt = typeData[b];
-      compatHTML += `<div class="compat-item"><div class="compat-badge bad">${b}</div><div class="compat-info"><h4>${bt.icon} ${bt.name}</h4><p>${bt.tagline}</p></div></div>`;
-    });
-    compatHTML += `<p style="${detailStyle}margin-top:12px;">${type.badReason}</p></div>`;
+    return h+`</div></div>`;
   }
 
-  document.getElementById('screen-result').innerHTML = `
-    <div class="result-hero fade-in">
-      <div class="result-type-badge">Career Type</div>
-      <div class="char-img-box">
-        <div class="char-img-icon">${type.icon}</div>
-        <div class="char-img-label">CHARACTER</div>
+  let subH='';
+  if(subCode&&TD[subCode]){
+    const st=TD[subCode];
+    subH=`<div class="r-panel fade-in"><div class="r-ph" onclick="toggleAcc(this)"><div class="r-pi">🔮</div><div class="r-pt">サブタイプ</div><span class="r-tog">▼</span></div><div class="r-pb"><div class="subtype-card"><div class="sub-head">あなたのサブタイプ</div><div class="sub-inner"><img class="sub-img" src="images/chars/${codeImg(subCode)}.png" alt="${subCode}"><div><div class="sub-code">${subCode}</div><div class="sub-name">${st.icon} ${st.name}</div><div class="sub-tag">${st.tag}</div><span class="sub-pct">全体の${TYPE_PCT[subCode]}%</span></div></div></div></div></div>`;
+  }
+
+  const indChips=Object.keys(CD).map(ind=>`<div class="ind-sm${selectedIndustries.includes(ind)?' sel':''}" onclick="toggleIndSm(this,'${ind}')">${ind}</div>`).join('');
+
+  document.getElementById('screen-result').innerHTML=`
+  <div class="result-wrap">
+    <div class="result-hero">
+      <div class="ro ro1"></div><div class="ro ro2"></div>
+      <img class="result-sil" src="images/chars/${codeImg(code)}.png" alt="" aria-hidden="true">
+      <div class="result-inner">
+        <div class="res-announce">Career Type Result</div>
+        <div class="char-frame"><img class="res-char" src="images/chars/${codeImg(code)}.png" alt="${code}"></div>
+        <div class="res-code" id="res-code-el">----</div>
+        <div class="res-type-name">${t.icon} ${t.name}</div>
+        <div class="res-tagline">${t.tag}</div>
+        <div class="rarity-row"><span class="rar-badge">⭐ 希少度 ${pct}%タイプ</span><span class="pct-badge">👥 診断者の${pct}%</span></div>
+        <div class="res-kws">${t.kw.map(k=>`<span class="res-kw">${k}</span>`).join('')}</div>
+        <div class="famous-box"><div class="famous-icon">🌟</div><div class="famous-text"><span>${TYPE_FAMOUS[code]} — ${t.tag}</span></div></div>
+        <div class="share-grid" style="margin-bottom:8px;">
+          <button class="sh sh-x rpl" onclick="addRipple(event,this);shareX()">𝕏 シェア</button>
+          <button class="sh sh-ln rpl" onclick="addRipple(event,this);shareLINE()">LINE</button>
+          <button class="sh sh-cp rpl" onclick="addRipple(event,this);copyResult()">コピー</button>
+        </div>
+        <div class="friend-card"><div class="friend-text">👥 友達のタイプも診断してみよう！</div><button class="friend-btn" onclick="copyLink()">🔗 診断リンクを友達に送る</button></div>
       </div>
-      <div class="result-code">${code}</div>
-      <div class="result-name">${type.name}</div>
-      <div class="result-tagline">${type.tagline}</div>
-      <div class="result-keywords">${type.keywords.map(k => `<span class="result-keyword">${k}</span>`).join('')}</div>
-      <div class="result-desc">${type.desc}</div>
     </div>
-    <div class="result-section fade-in">
-      <h3><span>📊</span> あなたの診断スコア</h3>
-      ${axisHTML}
+    <div class="wrap" style="padding-top:20px;">
+      <div class="narration fade-in">${t.desc}</div>
+      <div class="narration fade-in" style="background:linear-gradient(135deg,#eff6ff,#f5f3ff);font-size:.78rem;">📊 ${varMsg}</div>
+      <div class="reason-box fade-in"><div class="rb-title">判定理由</div><div class="rb-text">${r.h} ${r.a} ${rl}</div><div class="rb-tags"><span class="rbt rbt1">${AX[1].l}:${h?'高':'低'} ${s1}%</span><span class="rbt rbt2">${AX[2].l}:${a?'高':'低'} ${s2}%</span><span class="rbt rbt3">${l?AX[3].l:AX[3].r} ${s3}%</span><span class="rbt rbt4">${s?AX[4].l:AX[4].r} ${s4}%</span></div></div>
+      <div class="r-panel fade-in"><div class="r-ph aopen" onclick="toggleAcc(this)"><div class="r-pi">📊</div><div class="r-pt">診断スコア</div><span class="r-tog" style="transform:rotate(180deg);">▼</span></div><div class="r-pb aopen">${buildAxisViz(scores)}</div></div>
+      ${subH}
+      <div class="r-panel fade-in"><div class="r-ph aopen" onclick="toggleAcc(this)"><div class="r-pi">🧠</div><div class="r-pt">性格タイプ詳細</div><span class="r-tog" style="transform:rotate(180deg);">▼</span></div><div class="r-pb aopen"><div class="body-txt" style="margin-bottom:16px;">${t.per}</div><div class="d-sec"><div class="d-lbl ls">強み</div><div class="body-txt">${t.str}</div></div><div class="d-sec"><div class="d-lbl lc">コミュニケーション</div><div class="body-txt">${t.com}</div></div><div class="d-sec"><div class="d-lbl lt">ストレス源</div><div class="body-txt">${t.sts}</div></div><div class="d-sec"><div class="d-lbl lg">成長のヒント</div><div class="body-txt">${t.grw}</div></div></div></div>
+      <div class="r-panel fade-in"><div class="r-ph" onclick="toggleAcc(this)"><div class="r-pi">💼</div><div class="r-pt">向いている職種</div><span class="r-tog">▼</span></div><div class="r-pb"><div class="job-tags">${t.jobs.map(j=>`<div class="job-tag">${j}</div>`).join('')}</div><div class="body-txt">${t.why}</div></div></div>
+      ${compatSec(t.good,'good','相性の良いタイプ','🤝')}
+      ${compatSec(t.bad,'bad','注意が必要なタイプ','⚠️')}
+      <div class="r-panel fade-in"><div class="r-ph" onclick="toggleAcc(this)"><div class="r-pi">🏢</div><div class="r-pt">おすすめ企業・職種</div><span class="r-tog">▼</span></div><div class="r-pb"><div class="ind-grid-sm">${indChips}</div><div id="company-list">${buildCoHTML(inds)}</div></div></div>
+      <div class="r-panel fade-in"><div class="r-ph always" style="cursor:default;"><div class="r-pi">📤</div><div class="r-pt">結果をシェア</div></div><div class="r-pb always"><div class="share-grid"><button class="sh sh-x rpl" onclick="addRipple(event,this);shareX()">𝕏 シェア</button><button class="sh sh-ln rpl" onclick="addRipple(event,this);shareLINE()">LINE</button><button class="sh sh-cp rpl" onclick="addRipple(event,this);copyResult()">コピー</button></div></div></div>
+      <button class="retry-btn rpl" onclick="addRipple(event,this);clearSavedProgress();location.reload()">もう一度診断する →</button>
+      <div style="height:50px;"></div>
     </div>
-    <div class="result-section fade-in">
-      <h3><span>🧠</span> あなたの性格タイプ</h3>
-      <p style="${detailStyle}">${type.personality}</p>
-      <div style="margin-top:16px;">
-        <div style="margin-bottom:14px;"><span style="${detailLabel}background:#DBEAFE;color:#1E40AF;">💪 強み</span><p style="${detailStyle}margin-top:4px;">${type.strengths}</p></div>
-        <div style="margin-bottom:14px;"><span style="${detailLabel}background:#D1FAE5;color:#065F46;">💬 コミュニケーション</span><p style="${detailStyle}margin-top:4px;">${type.comm}</p></div>
-        <div style="margin-bottom:14px;"><span style="${detailLabel}background:#FEE2E2;color:#991B1B;">😣 ストレスを感じる場面</span><p style="${detailStyle}margin-top:4px;">${type.stress}</p></div>
-        <div><span style="${detailLabel}background:#FEF3C7;color:#92400E;">🌱 成長のヒント</span><p style="${detailStyle}margin-top:4px;">${type.growth}</p></div>
-      </div>
-    </div>
-    <div class="result-section fade-in">
-      <h3><span>💼</span> あなたに向いている職種</h3>
-      <div class="job-tags" style="margin-bottom:12px;">${type.jobs.map(j => `<div class="job-tag">${j}</div>`).join('')}</div>
-      <p style="${detailStyle}">${type.whyJobs}</p>
-    </div>
-    ${compatHTML}
-    ${companiesHTML}
-    <div class="share-area">
-      <button class="share-btn x" onclick="shareX()">Xでシェア</button>
-      <button class="share-btn line" onclick="shareLINE()">LINEで送る</button>
-      <button class="share-btn copy" onclick="copyResult()">コピー</button>
-    </div>
-    <button class="retry-btn" onclick="location.reload()">もう一度診断する</button>
-  `;
-  showScreen('screen-result');
+  </div>`;
+
+  toScreen('screen-result');
+  setTimeout(()=>{const el=document.getElementById('res-code-el');if(el)countUpCode(el,code);},600);
+  if(!skipConfetti)setTimeout(launchConfetti,800);
+  clearSavedProgress();
 }
 
-function shareX() {
-  const code = getTypeCode(); const type = typeData[code];
-  const text = encodeURIComponent(`私のキャリアタイプは【${code}：${type.icon} ${type.name}】でした！\n${type.tagline}\n向いている職種：${type.jobs.join('、')}\n\n#就活キャリアタイプ診断 #16Types`);
-  window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
-}
-function shareLINE() {
-  const code = getTypeCode(); const type = typeData[code];
-  const text = encodeURIComponent(`私のキャリアタイプは【${code}：${type.icon} ${type.name}】でした！向いている職種：${type.jobs.join('、')}`);
-  window.open(`https://line.me/R/msg/text/?${text}`, '_blank');
-}
-function copyResult() {
-  const code = getTypeCode(); const type = typeData[code];
-  navigator.clipboard.writeText(`私のキャリアタイプは【${code}：${type.icon} ${type.name}】でした！\n${type.tagline}\n向いている職種：${type.jobs.join('、')}\n${type.desc}`).then(() => alert('コピーしました！'));
-}
+function shareX(){const c=getCode(),t=TD[c];window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`私のキャリアタイプは【${c}：${t.icon} ${t.name}】でした！\n全体の${TYPE_PCT[c]}%しかいない希少タイプ🎉\n${t.tag}\n向いている職種：${t.jobs.join('、')}\n\n#就活キャリアタイプ診断 #16Types`)}`,'_blank');}
+function shareLINE(){const c=getCode(),t=TD[c];window.open(`https://line.me/R/msg/text/?${encodeURIComponent(`私のキャリアタイプは【${c}：${t.icon} ${t.name}】でした！全体の${TYPE_PCT[c]}%の希少タイプ🎉\n向いている職種：${t.jobs.join('、')}\nあなたも診断してみて！`)}`,'_blank');}
+function copyResult(){const c=getCode(),t=TD[c];navigator.clipboard.writeText(`私のキャリアタイプは【${c}：${t.icon} ${t.name}】でした！\n全体の${TYPE_PCT[c]}%の希少タイプ🎉\n${t.tag}\n向いている職種：${t.jobs.join('、')}\n${t.desc}`).then(()=>alert('コピーしました！'));}
+function copyLink(){navigator.clipboard.writeText(location.href).then(()=>alert('リンクをコピーしました！友達に送ってみよう🎉'));}
 
-// URL parameter support for sharing results
-(function() {
-  const params = new URLSearchParams(window.location.search);
-  const typeParam = params.get('type');
-  if (typeParam && typeData[typeParam]) {
-    // Simulate scores to show this type
-    const cat = typeParam[0];
-    const sub = parseInt(typeParam[1]);
-    scores[1] = (cat === 'A' || cat === 'B') ? 5 : -5;
-    scores[2] = (cat === 'A' || cat === 'C') ? 5 : -5;
-    scores[3] = (sub === 1 || sub === 2) ? 5 : -5;
-    scores[4] = (sub === 1 || sub === 3) ? 5 : -5;
-    showResult();
+(function(){
+  const p=new URLSearchParams(location.search),tp=p.get('type');
+  if(tp&&TD[tp.toUpperCase()]){
+    const code=tp.toUpperCase();
+    scores[1]=code[0]==='H'?5:-5;
+    scores[2]=code[1]==='A'?5:-5;
+    scores[3]=code[2]==='L'?5:-5;
+    scores[4]=code[3]==='S'?5:-5;
+    showResult(true);
   }
 })();
 </script>
