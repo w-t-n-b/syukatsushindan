@@ -1,0 +1,10 @@
+# 内部作業ファイル（公開リポジトリには含めない）
+prompt_for_claude_design.md
+docs/
+char_card_hals.html
+char_card_hals.pdf
+char_card_hals.pptx
+images/hals.PNG
+images/bg.jpg
+
+.DS_Store

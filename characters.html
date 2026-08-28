@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>キャリアタイプ一覧 — 16タイプ診断</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --color-leader: #2563eb;
+    --color-leader-light: #dbeafe;
+    --color-support: #7c3aed;
+    --color-support-light: #ede9fe;
+    --color-drive: #0f766e;
+    --color-drive-light: #ccfbf1;
+    --color-analyst: #334155;
+    --color-analyst-light: #e2e8f0;
+    --font-sans: "Noto Sans JP", -apple-system, "SF Pro Display", system-ui, sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; }
+  body {
+    font-family: var(--font-sans);
+    background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 50%, #f0fdf4 100%);
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  /* ===== Header ===== */
+  .page-header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .page-header h1 {
+    font-size: 28px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+  .page-header p {
+    font-size: 14px;
+    color: #64748b;
+    font-weight: 400;
+  }
+
+  /* ===== Grid Container ===== */
+  .type-grid-container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  /* ===== Category Row ===== */
+  .category-row {
+    display: flex;
+    align-items: stretch;
+    margin-bottom: 24px;
+  }
+
+  /* Category Label (left side) */
+  .category-label {
+    width: 80px;
+    min-width: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px 0 0 16px;
+    padding: 12px 8px;
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    position: relative;
+  }
+  .category-label.leader { background: var(--color-leader); }
+  .category-label.support { background: var(--color-support); }
+  .category-label.drive { background: var(--color-drive); }
+  .category-label.analyst { background: var(--color-analyst); }
+
+  .cat-code {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 0.08em;
+    writing-mode: horizontal-tb;
+    margin-bottom: 8px;
+  }
+  .cat-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.15em;
+  }
+
+  /* Card Row */
+  .card-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    flex: 1;
+    padding: 12px;
+    border-radius: 0 16px 16px 0;
+    background: rgba(255,255,255,0.5);
+    backdrop-filter: blur(8px);
+  }
+  .category-row.leader .card-row { background: rgba(219,234,254,0.35); }
+  .category-row.support .card-row { background: rgba(237,233,254,0.35); }
+  .category-row.drive .card-row { background: rgba(204,251,241,0.35); }
+  .category-row.analyst .card-row { background: rgba(226,232,240,0.35); }
+
+  /* ===== Character Card ===== */
+  .char-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 16px 12px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.03);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: default;
+  }
+  .char-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.05);
+  }
+
+  /* Speech Bubble */
+  .speech-bubble {
+    position: relative;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: #475569;
+    font-weight: 500;
+    margin-bottom: 12px;
+    width: 100%;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 12px;
+    height: 7px;
+    background: #f8fafc;
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+    border: none;
+  }
+  .speech-bubble::before {
+    content: '';
+    position: absolute;
+    bottom: -9px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 14px;
+    height: 9px;
+    background: #e2e8f0;
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+  }
+
+  /* Character Image */
+  .char-img-wrap {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+    flex-shrink: 0;
+  }
+  .char-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+  }
+
+  /* Type Info */
+  .type-code {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    margin-bottom: 2px;
+    opacity: 0.7;
+  }
+  .leader .type-code { color: var(--color-leader); }
+  .support .type-code { color: var(--color-support); }
+  .drive .type-code { color: var(--color-drive); }
+  .analyst .type-code { color: var(--color-analyst); }
+
+  .type-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.3;
+  }
+
+  .type-icon {
+    font-size: 18px;
+    margin-bottom: 2px;
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 900px) {
+    .category-row {
+      flex-direction: column;
+    }
+    .category-label {
+      width: 100%;
+      min-width: unset;
+      writing-mode: horizontal-tb;
+      text-orientation: initial;
+      flex-direction: row;
+      border-radius: 16px 16px 0 0;
+      padding: 12px 20px;
+      gap: 10px;
+    }
+    .cat-code {
+      writing-mode: horizontal-tb;
+      margin-bottom: 0;
+    }
+    .card-row {
+      border-radius: 0 0 16px 16px;
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 500px) {
+    body { padding: 20px 10px; }
+    .page-header h1 { font-size: 22px; }
+    .card-row {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      padding: 8px;
+    }
+    .char-img-wrap {
+      width: 72px;
+      height: 72px;
+    }
+    .speech-bubble {
+      font-size: 10px;
+      padding: 6px 8px;
+      min-height: 40px;
+    }
+    .type-name { font-size: 12px; }
+    .category-label {
+      padding: 10px 16px;
+    }
+  }
+
+  /* ===== Footer CTA ===== */
+  .footer-cta {
+    text-align: center;
+    margin-top: 48px;
+  }
+  .cta-btn {
+    display: inline-block;
+    background: linear-gradient(135deg, #533afd, #7c3aed);
+    color: #fff;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 16px 48px;
+    border-radius: 60px;
+    box-shadow: 0 4px 16px rgba(83,58,253,0.3);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(83,58,253,0.4);
+  }
+  .footer-note {
+    margin-top: 12px;
+    font-size: 13px;
+    color: #94a3b8;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>🎭 16タイプ キャリア診断キャラクター</h1>
+  <p>4つの軸 × 16の個性 — あなたはどのタイプ？</p>
+</div>
+
+<div class="type-grid-container">
+
+  <!-- ===== HA系 — リーダー系 ===== -->
+  <div class="category-row leader">
+    <div class="category-label leader">
+      <span class="cat-code">HA系</span>
+      <span class="cat-name">リーダー系</span>
+    </div>
+    <div class="card-row">
+      <div class="char-card">
+        <div class="speech-bubble">人を巻き込み、自分のペースで成果を出す</div>
+        <div class="char-img-wrap"><img src="images/chars/a1.webp" alt="HALS"></div>
+        <div class="type-icon">⚡</div>
+        <div class="type-code">HALS</div>
+        <div class="type-name">オンオフのエース</div>
+      </div>
+      <div class="char-card">
+        <div class="speech-bubble">人望で自然とチームをまとめる安定リーダー</div>
+        <div class="char-img-wrap"><img src="images/chars/a2.webp" alt="HALG"></div>
+        <div class="type-icon">🌟</div>
+        <div class="type-code">HALG</div>
+        <div class="type-name">あったかリーダー</div>
+      </div>
+      <div class="char-card">
+        <div class="speech-bubble">圧倒的な熱量でチームを引っ張る</div>
+        <div class="char-img-wrap"><img src="images/chars/a3.webp" alt="HAWS"></div>
+        <div class="type-icon">🔥</div>
+        <div class="type-code">HAWS</div>
+        <div class="type-name">全力キャプテン</div>
+      </div>
+      <div class="char-card">
+        <div class="speech-bubble">仲間のために全力を尽くすひたむきさ</div>
+        <div class="char-img-wrap"><img src="images/chars/a4.webp" alt="HAWG"></div>
+        <div class="type-icon">💪</div>
+        <div class="type-code">HAWG</div>
+        <div class="type-name">熱血プレイヤー</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== HB系 — サポート系 ===== -->
+  <div class="category-row support">
+    <div class="category-label support">
+      <span class="cat-code">HB系</span>
+      <span class="cat-name">サポート系</span>
+    </div>
+    <div class="card-row">
+      <div class="char-card">
+        <div class="speech-bubble">さりげなく場を整える自然体の気配り</div>
+        <div class="char-img-wrap"><img src="images/chars/b1.webp" alt="HBLS"></div>
+        <div class="type-icon">🌿</div>
+        <div class="type-code">HBLS</div>
+        <div class="type-name">ナチュラルケアリスト</div>
+      </div>
+      <div class="char-card">
+        <div class="speech-bubble">温かい雰囲気でチームを支える安定の存在</div>
+        <div class="char-img-wrap"><img src="images/chars/b2.webp" alt="HBLG"></div>
+        <div class="type-icon">☕</div>
+        <div class="type-code">HBLG</div>
+        <div class="type-name">ほっこりサポーター</div>
+      </div>
+      <div class="char-card">
+        <div class="speech-bubble">裏から全体を動かす影の実力者</div>
+        <div class="char-img-wrap"><img src="images/chars/b3.webp" alt="HBWS"></div>
+        <div class="type-icon">🎭</div>
+        <div class="type-code">HBWS</div>
+        <div class="type-name">黒子のプロデューサー</div>
+      </div>
+      <div class="char-card">
+        <div class="speech-bubble">誠実さで絶対的な信頼を勝ち取る</div>
+        <div class="char-img-wrap"><img src="images/chars/b4.webp" alt="HBWG"></div>
+        <div class="type-icon">🛡️</div>
+        <div class="type-code">HBWG</div>
+        <div class="type-name">まっすぐガーディアン</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DA系 — 推進系 ===== -->
+  <div class="category-row drive">
+    <div class="category-label drive">
+      <span class="cat-code">DA系</span>
+      <span class="cat-name">推進系</span>
+    </div>
+    <div class="card-row">
+      <div class="char-card">
+        <div class="speech-bubble">自由な発想でゼロから形にする</div>
+        <div class="char-img-wrap"><img src="images/chars/c1.webp" alt="DALS"></div>
+        <div class="type-icon">💡</div>
+        <div class="type-code">DALS</div>
+        <div class="type-name">ひらめきクリエイター</div>
+      </div>
+      <div class="char-card">
+        <div class="speech-bubble">専門性をコツコツ磨く品質の職人</div>
+        <div class="char-img-wrap"><img src="images/chars/c2.webp" alt="DALG"></div>
+        <div class="type-icon">🔧</div>
+        <div class="type-code">DALG</div>
+        <div class="type-name">じっくりクラフター</div>
+      </div>
+      <div class="char-card">
+        <div class="speech-bubble">前例のない課題に立ち向かう突破者</div>
+        <div class="char-img-wrap"><img src="images/chars/c3.webp" alt="DAWS"></div>
+        <div class="type-icon">🚀</div>
+        <div class="type-code">DAWS</div>
+        <div class="type-name">突き抜けパイオニア</div>
+      </div>
+      <div class="char-card">
+        <div class="speech-bubble">技術を極める情熱の職人</div>
+        <div class="char-img-wrap"><img src="images/chars/c4.webp" alt="DAWG"></div>
+        <div class="type-icon">🏗️</div>
+        <div class="type-code">DAWG</div>
+        <div class="type-name">のめり込みビルダー</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DB系 — 分析系 ===== -->
+  <div class="category-row analyst">
+    <div class="category-label analyst">
+      <span class="cat-code">DB系</span>
+      <span class="cat-name">分析系</span>
+    </div>
+    <div class="card-row">
+      <div class="char-card">
+        <div class="speech-bubble">データとロジックで組織を支える頭脳</div>
+        <div class="char-img-wrap"><img src="images/chars/d1.webp" alt="DBLS"></div>
+        <div class="type-icon">🧊</div>
+        <div class="type-code">DBLS</div>
+        <div class="type-name">冷静なブレイン</div>
+      </div>
+      <div class="char-card">
+        <div class="speech-bubble">正確さとルールで組織の最後の砦に</div>
+        <div class="char-img-wrap"><img src="images/chars/d2.webp" alt="DBLG"></div>
+        <div class="type-icon">📐</div>
+        <div class="type-code">DBLG</div>
+        <div class="type-name">きっちり参謀</div>
+      </div>
+      <div class="char-card">
+        <div class="speech-bubble">冷静な判断でプレッシャーに立ち向かう</div>
+        <div class="char-img-wrap"><img src="images/chars/d3.webp" alt="DBWS"></div>
+        <div class="type-icon">🏰</div>
+        <div class="type-code">DBWS</div>
+        <div class="type-name">鉄壁コントローラー</div>
+      </div>
+      <div class="char-card">
+        <div class="speech-bubble">品質に妥協しない職人の矜持</div>
+        <div class="char-img-wrap"><img src="images/chars/d4.webp" alt="DBWG"></div>
+        <div class="type-icon">⚙️</div>
+        <div class="type-code">DBWG</div>
+        <div class="type-name">コツコツマイスター</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer-cta">
+  <a href="index.html" class="cta-btn">自分のタイプを診断する →</a>
+  <p class="footer-note">約3分 / 全20問の診断であなたのキャリアタイプがわかります</p>
+</div>
+
+</body>
+</html>
