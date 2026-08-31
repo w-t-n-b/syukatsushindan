@@ -353,8 +353,23 @@ try{
     chk(d.querySelectorAll('.type-peek').length===1,'同時に開くのは1枚まで');
     d.querySelector('.tp-close').click(); await sleep(200);
     chk(d.querySelectorAll('.type-peek').length===0,'✕ で閉じる');
+    /* 閉じ方が ✕ だけだと「閉じられない」と受け取られる（オーナー報告）。
+       外側タップと Esc でも閉じ、かつ中身のタップでは閉じないことを押さえる。 */
+    d.querySelector('#type-overview .tc[data-code="HALS"]').click(); await sleep(300);
+    d.querySelector('.tp-name').dispatchEvent(new w.PointerEvent('pointerdown',{bubbles:true}));
+    await sleep(150);
+    chk(d.querySelectorAll('.type-peek').length===1,'紹介の中をタップしても閉じない');
+    d.querySelector('.sec-title').dispatchEvent(new w.PointerEvent('pointerdown',{bubbles:true}));
+    await sleep(150);
+    chk(d.querySelectorAll('.type-peek').length===0,'紹介の外をタップすると閉じる');
+    d.querySelector('#type-overview .tc[data-code="HALS"]').click(); await sleep(300);
+    d.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    await sleep(150);
+    chk(d.querySelectorAll('.type-peek').length===0,'Esc で閉じる');
     // 紹介からの診断開始
     d.querySelector('#type-overview .tc[data-code="HALS"]').click(); await sleep(300);
+    chk(/自分のタイプを診断する/.test(d.querySelector('.tp-cta').textContent),
+        '紹介のCTAは「自分のタイプを診断する」: '+d.querySelector('.tp-cta').textContent.trim());
     d.querySelector('.type-peek .tp-cta').click(); await sleep(500);
     chk(d.getElementById('screen-quiz').classList.contains('active'),'タイプ紹介のCTAから診断が始まる');
     chk(w.eval('curQ')===0,'未回答なら1問目から');

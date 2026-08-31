@@ -1971,12 +1971,32 @@ function openTypePeek(code,el){
     +`<div class="tp-txt"><div class="tp-code">${esc(code)}</div><div class="tp-name">${esc(t.icon)} ${esc(t.name)}</div><div class="tp-tag">${esc(t.tag)}</div></div>`
     +'</div>'
     +`<div class="tp-str"><span class="tp-str-lbl">強み</span><div class="tp-str-txt">${esc(firstSentence(t.str))}</div></div>`
-    +'<button type="button" class="btn rpl tp-cta" onclick="addRipple(event,this);continueOrStart(&quot;peek&quot;)">このタイプかどうか、20問で確かめる →</button>';
+    +'<button type="button" class="btn rpl tp-cta" onclick="addRipple(event,this);continueOrStart(&quot;peek&quot;)">自分のタイプを診断する →</button>';
   grid.insertBefore(box,rowEnd?rowEnd.nextSibling:null);
   track('type_peek',{type_code:code});
   if(box.scrollIntoView)box.scrollIntoView({block:'nearest',behavior:'smooth'});
   if(box.focus){try{box.focus({preventScroll:true});}catch(e){}}
 }
+
+/* 開いている紹介は、✕ 以外のどこかを触っても閉じる。閉じ方が1つしかないと
+   「閉じられない」と感じさせるため。document に1つだけ委譲で持たせる
+   （紹介は開くたびに作り直されるので、要素側に付けると解除漏れが出る）。
+   紹介の中と、開いた元のカードは対象外にする。カードは openTypePeek 側で
+   同じカードの再タップを閉じる扱いにしているので、ここで拾うと二重に動く。 */
+document.addEventListener('pointerdown',function(e){
+  const peek=document.querySelector('.type-peek');
+  if(!peek)return;
+  const t=e.target;
+  if(peek.contains(t))return;                    /* 紹介の中 */
+  if(t.closest&&t.closest('.tc'))return;         /* タイプカード */
+  closeTypePeek();
+},true);
+
+/* Esc でも閉じる（キーボード利用者の逃げ道） */
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Escape')return;
+  if(document.querySelector('.type-peek'))closeTypePeek();
+});
 
 function buildCoHTML(inds){
   let h='';
