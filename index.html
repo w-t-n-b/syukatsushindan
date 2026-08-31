@@ -4,6 +4,32 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>就活キャリアタイプ診断 | 16Types</title>
+
+<!-- ============================================================
+     絶対URLの基準（SITE BASE）
+     独自ドメインへ移行する場合（未決事項 U-2）は、この直下の
+     https://w-t-n-b.github.io/syukatsushindan/ を一括置換すれば足りる。
+     同じ値を JS 冒頭の const SITE_BASE にも持たせてある。
+     置換対象: 本ブロック内の href/content 5箇所 + SITE_BASE 1箇所。
+     ============================================================ -->
+<meta name="description" content="20問・約3分で、あなたの働き方の傾向を4軸16タイプに分類します。登録不要・無料。">
+<link rel="canonical" href="https://w-t-n-b.github.io/syukatsushindan/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="就活キャリアタイプ診断">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:title" content="就活キャリアタイプ診断 | 16Types">
+<meta property="og:description" content="20問・約3分で、あなたの働き方の傾向を4軸16タイプに分類します。登録不要・無料。">
+<meta property="og:url" content="https://w-t-n-b.github.io/syukatsushindan/">
+<meta property="og:image" content="https://w-t-n-b.github.io/syukatsushindan/images/ogp/default.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="就活キャリアタイプ診断 16Types">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="就活キャリアタイプ診断 | 16Types">
+<meta name="twitter:description" content="20問・約3分で、あなたの働き方の傾向を4軸16タイプに分類します。登録不要・無料。">
+<meta name="twitter:image" content="https://w-t-n-b.github.io/syukatsushindan/images/ogp/default.png">
+<!-- TODO: タイプ別OGP（r/<CODE>.html 16枚 / og:image 16枚）は未決事項 U-11 決定後に追加する -->
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@600;700&family=Noto+Sans+JP:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" rel="stylesheet">
@@ -153,28 +179,12 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 /* QUIZ */
 .quiz-bg{min-height:100svh;padding:60px 0 0;transition:background .6s;}
 .prog-area{background:var(--paper);padding:14px 20px 16px;border-bottom:1.5px solid var(--navy);position:sticky;top:60px;z-index:50;}
-.ax-bars{display:flex;gap:4px;margin-bottom:8px;}
-.ax-bar{flex:1;height:4px;border-radius:0;opacity:.22;transition:opacity .4s;}
-.ax-bar.done{opacity:1;}
-.dot-prog{display:flex;gap:3px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
-.dp{flex-shrink:0;width:9px;height:9px;border-radius:0;background:var(--border2);transition:all .3s ease;}
-.dp.done{background:var(--blue2);}
-.dp.cur{background:var(--verm);transform:scale(1.35);}
 .prog-meta{display:flex;justify-content:space-between;align-items:center;}
 .prog-num{font-family:var(--disp);font-size:12px;font-weight:700;color:var(--navy);letter-spacing:2px;}
 .prog-msg{font-size:10px;font-weight:700;color:var(--mid);}
 .back-btn{display:flex;align-items:center;gap:8px;background:var(--paper);border:1.5px solid var(--navy);color:var(--navy);font-family:inherit;font-size:.85rem;font-weight:700;padding:12px 18px;border-radius:7px;cursor:pointer;transition:transform .14s,box-shadow .14s;margin-bottom:14px;width:100%;box-shadow:3px 3px 0 rgba(15,23,42,.14);}
 .back-btn:hover{color:var(--blue2);}
 .back-btn:active{transform:translate(3px,3px);box-shadow:0 0 0;}
-.bin-banner{background:#fdf6e3;border:1.5px solid var(--navy);border-radius:7px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:transform .14s,box-shadow .14s;box-shadow:3px 3px 0 var(--must);}
-.bin-banner:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--must);}
-.bin-banner:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--must);}
-.bin-icon{font-size:1.2rem;flex-shrink:0;}
-.bin-body{flex:1;}
-.bin-title{font-size:.8rem;font-weight:900;color:#7a4a10;display:block;}
-.bin-sub{font-size:.68rem;color:#9a6519;margin-top:1px;display:block;}
-.bin-tog{font-family:var(--disp);font-size:.78rem;font-weight:700;letter-spacing:1px;padding:4px 11px;border-radius:3px;border:1.5px solid var(--navy);cursor:pointer;}
-.bin-tog.off{background:#f6e6bd;color:#7a4a10;}.bin-tog.on{background:var(--verm);color:#fff;}
 .q-card{border-radius:10px;overflow:hidden;border:1.5px solid var(--navy);box-shadow:4px 4px 0 rgba(15,23,42,.18);margin-bottom:14px;background:var(--w);}
 .q-card.qin{animation:qIn .32s cubic-bezier(.33,1,.68,1) forwards;}
 @keyframes qIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
@@ -205,7 +215,6 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .sdw.sel .sd::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.78rem;font-weight:900;}
 .sdw ~ .sdw.sel .sd{background:var(--lav);box-shadow:3px 3px 0 var(--navy);}
 .spec-hint{display:flex;justify-content:space-between;font-size:10px;color:var(--light);font-weight:700;letter-spacing:1px;}
-.binary-on .sdw[data-v="0"]{opacity:.3;pointer-events:none;}
 
 /* LOADING */
 .loading-wrap{min-height:100svh;background:#edf3fd;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 20px;position:relative;overflow:hidden;}
@@ -398,7 +407,7 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .hero-badge,.sub-head,.rb-title,.ca-lbl{letter-spacing:var(--ls-lbl);}
 /* 欧文のみの文字列に --lat を限定（混植を止める） */
 .res-code,.cc-code,.tc-code,.sub-code,.prog-num,.q-badge,.res-announce,
-.hdr-logo,.d-title,.step-n,.bin-tog,.co-rank,.sec-lbl{
+.hdr-logo,.d-title,.step-n,.co-rank,.sec-lbl{
   font-family:var(--lat);letter-spacing:var(--ls-lat);
 }
 
@@ -564,15 +573,303 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .prog-msg{font-size:11px;}                                 /* 10px → 11px */
 .q-card{border:var(--bd) solid var(--navy);border-radius:var(--r-1);box-shadow:var(--sh-2);}
 
+/* ==========================================================================
+   送客ファネル — docs/specs/agent-referral-funnel.md
+   ここから下は新規セレクタのみ。既存ルールは書き換えていない。
+   ========================================================================== */
+
+/* --- 共通フッター（診断中・ローディング中のみ隠す） ---------------------- */
+.ftr{background:var(--ink-field);border-top:var(--bd-heavy) solid var(--navy);
+  padding:28px 20px 34px;color:#c3cbdd;}
+.ftr-inner{max-width:480px;margin:0 auto;text-align:center;}
+.ftr-logo{font-family:var(--lat);font-weight:700;font-size:1rem;
+  letter-spacing:var(--ls-lat);color:var(--paper);margin-bottom:12px;}
+.ftr-note{font-size:11px;line-height:1.9;color:#a8b2c7;margin-bottom:16px;text-align:left;}
+.ftr-links{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 18px;margin-bottom:16px;}
+.ftr-links a{font-size:12px;font-weight:700;color:var(--must);text-decoration:underline;
+  text-underline-offset:3px;padding:4px 0;}
+.ftr-links a:hover{color:#fff;}
+.ftr-copy{font-size:11px;color:#8792a8;}
+.ftr-todo{display:inline-block;border:1.5px dashed var(--verm);color:#ffb3a6;
+  background:rgba(200,65,46,.14);padding:1px 8px;border-radius:var(--r-1);font-weight:700;}
+body[data-screen="screen-quiz"] .ftr,
+body[data-screen="screen-loading"] .ftr{display:none;}
+
+/* --- ref=share で来た人に出す紹介バナー（結果全文は見せない。§A-6） ------ */
+.shared-banner{background:var(--paper);border:var(--bd-heavy) solid var(--navy);
+  border-radius:var(--r-1);box-shadow:6px 6px 0 var(--must);
+  padding:16px;margin:0 auto 22px;max-width:344px;text-align:left;position:relative;}
+.sb-lbl{font-size:11px;font-weight:900;letter-spacing:var(--ls-lbl);
+  color:var(--verm);margin-bottom:10px;}
+.sb-body{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.sb-img{width:64px;height:96px;object-fit:cover;object-position:50% 6%;flex-shrink:0;
+  border:var(--bd) solid var(--navy);border-radius:var(--r-1);background:#f7f6f3;display:block;}
+.sb-txt{display:flex;flex-direction:column;gap:3px;min-width:0;}
+.sb-code{font-family:var(--lat);font-weight:700;font-size:1.15rem;
+  letter-spacing:var(--ls-lat);color:var(--navy);line-height:1;}
+.sb-name{font-size:.88rem;font-weight:900;color:var(--navy);}
+.sb-tag{font-size:11px;line-height:1.7;color:var(--mid);}
+.sb-cta{display:block;width:100%;background:var(--verm);color:#fff;
+  border:var(--bd) solid var(--navy);border-radius:var(--r-1);
+  box-shadow:4px 4px 0 var(--navy);font-family:var(--jp-disp);font-weight:900;
+  font-size:.95rem;letter-spacing:.04em;padding:14px 16px;cursor:pointer;
+  transition:transform .14s,box-shadow .14s;}
+.sb-cta:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--navy);}
+.sb-cta:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--navy);}
+
+/* --- 送客ブロック（AGENTS が0件のあいだは DOM ごと出ない） --------------- */
+.agent-block{background:var(--paper);border:var(--bd-heavy) solid var(--navy);
+  border-radius:var(--r-1);box-shadow:var(--sh-2);padding:16px;margin-bottom:14px;}
+/* PR表記はブロック冒頭・リンクより先に読める位置に置く（景表法ステマ規制 L-4） */
+.ab-lbl{display:inline-block;background:var(--navy);color:var(--paper);
+  font-family:var(--lat);font-weight:700;font-size:11px;letter-spacing:var(--ls-lat);
+  padding:3px 10px;border-radius:var(--r-0);margin-bottom:10px;}
+.ab-title{font-family:var(--jp-disp);font-weight:900;font-size:1.02rem;
+  letter-spacing:var(--ls-disp);font-feature-settings:'palt' 1;
+  color:var(--navy);margin-bottom:8px;}
+.ab-lead{font-size:.8rem;line-height:1.9;color:var(--mid);margin-bottom:14px;}
+.ab-list{list-style:none;display:flex;flex-direction:column;gap:10px;margin:0 0 12px;padding:0;}
+.ab-item{margin:0;}
+.ab-link{display:block;background:var(--w);border:var(--bd) solid var(--navy);
+  border-radius:var(--r-1);box-shadow:var(--sh-1);padding:13px 15px;color:var(--ink);
+  transition:transform .14s,box-shadow .14s;}
+.ab-link:hover{transform:translate(-2px,-2px);box-shadow:var(--sh-2);color:var(--ink);}
+.ab-link:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--navy);}
+.ab-name{display:block;font-weight:900;font-size:.95rem;color:var(--navy);margin-bottom:5px;}
+.ab-for{display:block;font-size:.78rem;line-height:1.75;color:var(--ink);margin-bottom:7px;}
+.ab-meta{display:block;font-size:11px;line-height:1.75;color:var(--forest);font-weight:700;}
+.ab-note{display:block;font-size:10px;line-height:1.7;color:var(--light);margin-top:6px;}
+.ab-disc{font-size:10px;line-height:1.8;color:var(--light);
+  border-top:var(--bd-hair) solid var(--border);padding-top:10px;margin:0;}
+
+/* --- 職種例の注記（実在企業名の順位表示を削除した箇所） ------------------ */
+.co-note{font-size:11px;line-height:1.8;color:var(--mid);
+  background:var(--paper2);border-left:3px solid var(--border2);
+  padding:8px 10px;margin-bottom:12px;}
+
 /* --- アクセシビリティ：可視フォーカスが1箇所も無かった ------------------ */
 :focus-visible{outline:3px solid var(--must);outline-offset:2px;}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;
     transition-duration:.01ms!important;scroll-behavior:auto!important;}
 }
+
+/* ==========================================================================
+   診断体験の改訂 — docs/specs/diagnosis-experience-revamp.md
+                    docs/design/diagnosis-experience-revamp.md
+   実装順序 1〜6（設計B / C-7 / A-3 / A-2 / 設計A本体 / C-6）
+   既存ルールは書き換えず、カスケード末尾での上書きと新規セレクタだけで構成する。
+   ========================================================================== */
+
+/* --- 閉じたドロワーがタブ順に残っていた（design §8-2）--------------------
+   LPに操作対象（質問カード）が増えるため、先に直す。閉じたメニューの
+   <button> 7個を通過しないと最初の質問に到達できない状態を作らない。
+   visibility は遅延させ、閉じるアニメーションは従来どおり見えるようにする。 */
+.drawer{visibility:hidden;transition:transform .38s cubic-bezier(.4,0,.2,1),visibility 0s linear .38s;}
+.drawer.open{visibility:visible;transition:transform .38s cubic-bezier(.4,0,.2,1),visibility 0s;}
+
+/* --- A-2: 軸別インライン背景を廃止したため、面と文字色をCSSで確定させる ---
+   design §6-1 X-1 / X-2 / X-3。インライン background が消えると
+   .q-text（白文字）と #quiz-bg（無指定＝白）が読めなくなるため必須。 */
+.quiz-bg{background:var(--ink-field);transition:none;}
+.q-card{background:var(--paper);border:var(--bd-heavy) solid var(--navy);
+  border-radius:var(--r-1);box-shadow:var(--sh-3);margin-bottom:10px;}
+.q-top{background:var(--paper2);border-bottom:var(--bd) solid var(--navy);padding:14px 18px;}
+.q-top::before{content:none;}                       /* 暗い面前提の白ハイライト */
+.q-text{color:var(--navy);text-shadow:none;font-size:.97rem;line-height:1.7;min-height:5.1em;}
+.q-text:focus{outline:none;}                        /* 回答後の programmatic focus 用 */
+/* #q-axis は C-4（今回スコープ外）で削除予定。それまでは暖色紙の上で読める色にする */
+.q-ax{color:var(--mid);font-size:.66rem;}
+.q-body{background:var(--paper);padding:18px 18px 16px;}
+
+/* 軸の手がかりは .q-badge の影の色に限定する（面積の大きい背景では表現しない） */
+.q-card{--ax:#123c9b;}
+.q-card[data-ax="2"]{--ax:#14523a;}
+.q-card[data-ax="3"]{--ax:#a4301f;}
+.q-card[data-ax="4"]{--ax:#3d376c;}
+.q-badge{background:var(--paper);color:var(--navy);
+  border:var(--bd) solid var(--navy);border-radius:var(--r-0);
+  box-shadow:2px 2px 0 var(--ax);}
+
+/* 質問文と選択肢の行数が揺れてもカードの高さが変わらないようにする（X-11）。
+   LPでは「回答しても #lp-quiz が伸びない」ことが破綻しない条件そのもの。 */
+.choice-row{gap:10px;margin-bottom:14px;min-height:106px;}
+.choice-box{padding:12px 11px;border:var(--bd) solid var(--navy);
+  border-radius:var(--r-1);font-size:.73rem;line-height:1.65;}
+.cb-l{border-left:6px solid var(--blue2);background:#e6edfb;color:#123c9b;}
+.cb-r{border-right:6px solid var(--lav-ink);background:#eeecf6;color:var(--lav-ink);}
+.spec-labels{margin-bottom:10px;}
+
+/* --- C-7: .sdw を <button> にする。padding は残す（design §6-3 X-6）------
+   padding:0 を当てると目盛の間隔とタッチターゲットが消える。
+   併せて、5つの目盛を「トラックを5等分したセル」にする。従来は固定 padding の
+   合計がトラック幅を超えており、5つ目のドットが .q-card の overflow:hidden で
+   切れていた（375/390px で20px、320px で36px はみ出していた）。
+   LPでは最初に触る操作がこれになるため、複製する前に直す。 */
+.sdw{-webkit-appearance:none;appearance:none;
+  background:none;border:0;font:inherit;color:inherit;
+  flex:1 1 0;min-width:0;
+  padding:11px 0;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;position:relative;z-index:1;}
+.spec-track{padding:6px 0;margin-bottom:8px;}
+.sd{position:relative;}                     /* ✓ を .sd 基準に置く */
+.sdw:focus-visible{outline:3px solid var(--must);outline-offset:0;border-radius:50%;}
+
+/* --- A-3 / C-1: 進捗の共通部品。#dot-prog と .ax-bars を統合して置き換える -
+   4群（＝4軸）× 5目盛。基数は「間隔」、現在地は「高さ」で伝え、
+   色は補助チャネルに留める（design §2-2。WCAG 1.4.1）。 */
+.prog-seg{
+  display:flex;gap:10px;align-items:flex-end;
+  height:32px;box-sizing:border-box;        /* 完走時に .cur が消えても高さが変わらない */
+  padding:6px 8px;
+  background:var(--paper2);
+  border:var(--bd) solid var(--navy);
+  border-radius:var(--r-0);
+  box-shadow:var(--sh-1);
+}
+.ps-group{display:flex;gap:3px;flex:1 1 0;min-width:0;align-items:flex-end;}
+.ps-cell{
+  flex:1 1 0;height:10px;
+  background:var(--paper);
+  border:var(--bd-hair) solid var(--navy);
+  border-radius:var(--r-0);
+  transition:background .25s ease,height .25s ease,border-width .25s ease;
+}
+.ps-cell.done{background:var(--ps-c);}
+.ps-cell.cur{height:16px;border-width:var(--bd);}
+.ps-group:nth-child(1){--ps-c:#123c9b;}
+.ps-group:nth-child(2){--ps-c:#14523a;}
+.ps-group:nth-child(3){--ps-c:#a4301f;}
+.ps-group:nth-child(4){--ps-c:#3d376c;}
+.prog-area .prog-seg{margin-bottom:10px;}
+
+/* --- 設計A: LPに埋め込む質問カード ---------------------------------------
+   中身の .q-card は質問画面と完全に同一の class / 同一の CSS を使う。
+   LP専用の質問カードデザインは作らない（仕様 §A-4）。 */
+#lp-quiz{
+  width:100%;max-width:340px;                /* .hero-stats / .cont-banner と同じ列幅 */
+  margin:0 auto 22px;
+  text-align:left;                           /* .hero は center。カード内は左揃えに戻す */
+}
+.lq-head{margin-bottom:10px;}
+.lq-lbl{
+  display:flex;align-items:flex-start;gap:6px;
+  font-family:var(--jp-body);font-weight:700;
+  font-size:11px;line-height:1.5;letter-spacing:.04em;
+  color:var(--must);                          /* #cf9a24 on #132043 = 6.31:1 */
+}
+.lq-lbl::before{
+  content:'';flex:0 0 auto;width:9px;height:9px;margin-top:3px;
+  background:var(--verm);border:var(--bd-hair) solid var(--navy);
+}
+.lq-foot{display:flex;align-items:center;gap:10px;margin-top:0;}
+.lq-foot .prog-seg{flex:1 1 auto;min-width:0;}
+.lq-back{
+  flex:0 0 auto;width:44px;height:32px;
+  background:none;border:var(--bd-hair) solid rgba(255,255,255,.35);
+  border-radius:var(--r-0);
+  font-size:13px;line-height:1;color:#c3cbdd;cursor:pointer;  /* 9.81:1 */
+}
+.lq-back:hover{border-color:var(--must);color:var(--must);}
+.lq-back[hidden]{display:none;}
+
+/* 5問回答後に #lq-card と差し替わる面。高さは .q-card に合わせて JS が固定する
+   （差し替えの瞬間に下の要素がせり上がると、指の下に別のボタンが来る。X-9） */
+.lq-done{
+  display:none;
+  min-height:404px;
+  flex-direction:column;justify-content:space-between;
+  background:var(--paper);
+  border:var(--bd-heavy) solid var(--navy);
+  border-radius:var(--r-1);
+  box-shadow:var(--sh-3);
+  padding:22px 18px 18px;position:relative;margin-bottom:10px;
+}
+.lq-done.on{display:flex;animation:qIn .32s cubic-bezier(.33,1,.68,1) forwards;}
+.lq-done::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;background:var(--must);}
+.lq-done-txt{
+  font-family:var(--jp-disp);font-weight:900;
+  font-size:1.02rem;line-height:1.7;
+  letter-spacing:var(--ls-disp);font-feature-settings:'palt' 1;
+  color:var(--navy);
+}
+.lq-next{
+  border-top:var(--bd-hair) solid var(--border2);
+  border-bottom:var(--bd-hair) solid var(--border2);
+  padding:12px 0;
+}
+.lq-next-lbl{
+  display:block;font-size:11px;font-weight:700;
+  letter-spacing:var(--ls-lbl);color:var(--mid);
+  margin-bottom:8px;
+}
+.lq-next-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px;}
+.lq-next-list li{position:relative;padding-left:16px;font-size:.82rem;line-height:1.6;color:var(--ink);}
+.lq-next-list li::before{
+  content:'';position:absolute;left:0;top:.5em;
+  width:7px;height:7px;background:var(--blue);border:var(--bd-hair) solid var(--navy);
+}
+.lq-done-meta{
+  font-size:11px;font-weight:700;letter-spacing:.06em;
+  color:var(--mid);text-align:center;margin-bottom:10px;
+}
+
+/* ヒーローの縦を締める（#lp-quiz のぶん伸びるため。design §6-3） */
+.hero{padding:68px 16px 40px;}
+/* 見出しの字送り。下限 2rem のままだと 340px 以下で
+   「16Typesから見つける。」が2行に折り返し、見出しが4行になる。
+   下限を下げて vw 係数で連続的に詰める（--ls-disp は変えない）。
+   320px:25.9px / 375px:30px / 390px:31.2px / 430px:34.4px、いずれも2行に収まる。 */
+.hero-title{font-size:clamp(1.62rem,8vw,3rem);}
+.hero-badge{margin-bottom:16px;}
+.hero-title{margin-bottom:12px;}
+.hero-sub{margin-bottom:16px;}
+
+/* --- C-6: 16タイプ一覧のタップ先。結果全文ではなくタイプ紹介を出す --------
+   .r-panel / .subtype-card の意匠を流用し、押した .tc の行の直後に展開する。 */
+.type-peek{
+  grid-column:1 / -1;position:relative;
+  --cat:#1a56db;--cat-ink:#123c9b;
+  background:var(--paper);
+  border:var(--bd-heavy) solid var(--navy);
+  border-radius:var(--r-1);
+  box-shadow:var(--sh-2);
+  padding:16px 16px 18px;margin:2px 0 6px;
+  animation:qIn .28s cubic-bezier(.33,1,.68,1) forwards;   /* 既存キーフレームの使い回し */
+}
+.type-peek:has(.tp-img[src*="chars/b"]){--cat:#1d6b4c;--cat-ink:#14523a;}
+.type-peek:has(.tp-img[src*="chars/c"]){--cat:#c8412e;--cat-ink:#a4301f;}
+.type-peek:has(.tp-img[src*="chars/d"]){--cat:#4b4483;--cat-ink:#3d376c;}
+.type-peek::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;background:var(--cat);}
+.type-peek:focus-visible{outline:3px solid var(--must);outline-offset:2px;}
+.tp-close{
+  position:absolute;top:5px;right:5px;width:44px;height:44px;
+  background:none;border:0;font-size:1.05rem;line-height:1;
+  color:var(--navy);cursor:pointer;
+}
+.tp-inner{display:flex;gap:14px;align-items:flex-start;margin-bottom:12px;}
+.tp-img{
+  flex:0 0 auto;width:96px;height:144px;                   /* 2:3。顔 約48px */
+  object-fit:cover;object-position:50% 6%;display:block;
+  background:#f7f6f3;border:var(--bd) solid var(--navy);border-radius:var(--r-1);
+}
+.tp-txt{min-width:0;padding-top:2px;padding-right:40px;}   /* .tp-close の逃げ */
+.tp-code{font-family:var(--lat);font-weight:700;font-size:1.35rem;
+  letter-spacing:var(--ls-lat);color:var(--cat-ink);line-height:1;}
+.tp-name{font-family:var(--jp-disp);font-weight:900;font-size:.98rem;
+  letter-spacing:var(--ls-disp);font-feature-settings:'palt' 1;color:var(--navy);margin-top:6px;}
+.tp-tag{font-size:.78rem;line-height:1.75;color:var(--mid);margin-top:6px;}
+.tp-str{border-top:var(--bd-hair) solid var(--border2);padding-top:12px;margin-bottom:14px;}
+.tp-str-lbl{display:inline-block;font-size:11px;font-weight:900;letter-spacing:var(--ls-lbl);
+  padding:3px 10px;border:var(--bd-hair) solid var(--navy);border-radius:var(--r-0);
+  background:var(--blue-l);color:var(--cat-ink);margin-bottom:8px;}
+.tp-str-txt{font-size:.84rem;line-height:1.9;color:var(--ink);}
+/* 相性キャラは押せなくなったので、押せるようには見せない */
+.compat-cbox img{cursor:default;}
+.compat-cbox img:hover{transform:none;}
 </style>
 </head>
-<body>
+<body data-screen="screen-title">
 
 <header class="hdr" id="hdr">
   <div class="hdr-logo" onclick="gotoTop()"><div class="hdr-dot"></div>Career<span>Type</span></div>
@@ -582,16 +879,19 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 <nav class="drawer" id="drawer">
   <div class="d-title">Navigation</div>
   <button class="d-link" onclick="gotoTop();closeDrawer()"><div class="d-icon">🏠</div>トップ</button>
-  <button class="d-link" onclick="startFresh();closeDrawer()"><div class="d-icon">⚡</div>診断をはじめる</button>
   <div class="d-div"></div>
   <div class="d-title" style="margin-top:4px;">16 Types</div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 4px;">
-    <button class="d-link" style="padding:10px 12px;" onclick="closeDrawer()"><div class="d-icon" style="font-size:.7rem;font-weight:900;color:var(--blue2);">HA系</div>リーダー</button>
-    <button class="d-link" style="padding:10px 12px;" onclick="closeDrawer()"><div class="d-icon" style="font-size:.7rem;font-weight:900;color:#7c3aed;background:#ede9fe;">HB系</div>サポート</button>
-    <button class="d-link" style="padding:10px 12px;" onclick="closeDrawer()"><div class="d-icon" style="font-size:.7rem;font-weight:900;color:#0f766e;background:#ccfbf1;">DA系</div>推進</button>
-    <button class="d-link" style="padding:10px 12px;" onclick="closeDrawer()"><div class="d-icon" style="font-size:.7rem;font-weight:900;color:#334155;background:var(--off);">DB系</div>分析</button>
+    <button class="d-link" style="padding:10px 12px;" onclick="scrollToTypes('HA');closeDrawer()"><div class="d-icon" style="font-size:.7rem;font-weight:900;color:var(--blue2);">HA系</div>リーダー</button>
+    <button class="d-link" style="padding:10px 12px;" onclick="scrollToTypes('HB');closeDrawer()"><div class="d-icon" style="font-size:.7rem;font-weight:900;color:#7c3aed;background:#ede9fe;">HB系</div>サポート</button>
+    <button class="d-link" style="padding:10px 12px;" onclick="scrollToTypes('DA');closeDrawer()"><div class="d-icon" style="font-size:.7rem;font-weight:900;color:#0f766e;background:#ccfbf1;">DA系</div>推進</button>
+    <button class="d-link" style="padding:10px 12px;" onclick="scrollToTypes('DB');closeDrawer()"><div class="d-icon" style="font-size:.7rem;font-weight:900;color:#334155;background:var(--off);">DB系</div>分析</button>
   </div>
-  <button class="d-cta" onclick="startFresh();closeDrawer()">▶ 診断をはじめる</button>
+  <button class="d-cta" id="cta-drawer" onclick="continueOrStart('drawer');closeDrawer()">▶ 診断をはじめる</button>
+  <div class="d-div"></div>
+  <div class="d-title" style="margin-top:4px;">Site Info</div>
+  <a class="d-link" href="privacy.html"><div class="d-icon">🔒</div>プライバシーポリシー</a>
+  <a class="d-link" href="privacy.html#operator"><div class="d-icon">🏢</div>運営者情報</a>
 </nav>
 
 <div class="conf-wrap" id="conf-wrap"></div>
@@ -603,19 +903,62 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
     <img class="hero-sil" src="images/chars/a3.webp" alt="" aria-hidden="true">
     <div class="hero-inner">
       <div class="hero-stats">
-        <div class="hstat"><span class="hstat-num" id="stat-count">0</span><span class="hstat-lbl">診断者数</span></div>
+        <div class="hstat"><span class="hstat-num" id="stat-count">0</span><span class="hstat-lbl">質問数</span></div>
         <div class="hstat-div"></div>
         <div class="hstat"><span class="hstat-num">16</span><span class="hstat-lbl">タイプ数</span></div>
         <div class="hstat-div"></div>
         <div class="hstat"><span class="hstat-num">3分</span><span class="hstat-lbl">所要時間</span></div>
       </div>
       <div class="hero-badge">就活キャリア診断</div>
-      <h1 class="hero-title">あなたの仕事タイプ、<em>16Typesで判明。</em></h1>
-      <p class="hero-sub">20問・約3分でわかる本格キャリアタイプ診断。<br>あなたに向いている仕事と企業が見つかる。</p>
+      <h1 class="hero-title">あなたの仕事タイプ、<em>16Typesから見つける。</em></h1>
+      <p class="hero-sub">20問・約3分でわかる本格キャリアタイプ診断。<br>あなたに向いている仕事の傾向と、探し方のヒントまで。</p>
       <div class="cont-banner" id="cont-banner" style="display:none;" onclick="continueDiag()">
         <div class="cont-icon">💾</div>
         <div class="cont-body"><span class="cont-title">前回の途中から続ける</span><span class="cont-sub" id="cont-sub">Q?まで回答済み</span></div>
         <span class="cont-arrow">→</span>
+      </div>
+
+      <!-- LP埋め込み質問（設計A）。中身の .q-card は #screen-quiz と完全に同一の class。
+           renderQ('lp') / renderQ('quiz') が同じ関数で両方を描画する。 -->
+      <div id="lp-quiz">
+        <div class="lq-head"><span class="lq-lbl" id="lq-lbl">1問目です。答えた分はそのまま引き継がれます。</span></div>
+        <div class="q-card qin" id="lq-card" data-ax="1" role="group" aria-labelledby="lq-num lq-text">
+          <div class="q-top">
+            <div class="q-num-row"><div class="q-badge" id="lq-num">Q1</div><div class="q-ax" id="lq-axis"></div></div>
+            <div class="q-text" id="lq-text" tabindex="-1"></div>
+          </div>
+          <div class="q-body">
+            <div class="choice-row"><div class="choice-box cb-l" id="lq-a"></div><div class="choice-box cb-r" id="lq-b"></div></div>
+            <div class="spec-labels"><span class="sl-a" id="lq-sl-a">← A寄り</span><span class="sl-b" id="lq-sl-b">B寄り →</span></div>
+            <div class="spec-track" id="lq-spec-track" role="radiogroup" aria-label="5段階で選んでください" aria-describedby="lq-a lq-b">
+              <button type="button" class="sdw" data-v="2"  role="radio" aria-checked="false" aria-label="左の選択肢に強く近い" onclick="pick(this)"><span class="sd"></span></button>
+              <button type="button" class="sdw" data-v="1"  role="radio" aria-checked="false" aria-label="左の選択肢にやや近い" onclick="pick(this)"><span class="sd"></span></button>
+              <button type="button" class="sdw" data-v="0"  role="radio" aria-checked="false" aria-label="どちらでもない" onclick="pick(this)"><span class="sd"></span></button>
+              <button type="button" class="sdw" data-v="-1" role="radio" aria-checked="false" aria-label="右の選択肢にやや近い" onclick="pick(this)"><span class="sd"></span></button>
+              <button type="button" class="sdw" data-v="-2" role="radio" aria-checked="false" aria-label="右の選択肢に強く近い" onclick="pick(this)"><span class="sd"></span></button>
+            </div>
+            <div class="spec-hint"><span>← Aに近い</span><span>どちらでもない</span><span>Bに近い →</span></div>
+          </div>
+        </div>
+        <div class="lq-done" id="lq-done">
+          <div class="lq-done-txt">ここまで5問。残りは15問、形式はまったく同じです。</div>
+          <div class="lq-next">
+            <span class="lq-next-lbl">20問すべてに答えると</span>
+            <ul class="lq-next-list">
+              <li>16タイプのうち、あなたに近い1つ</li>
+              <li>4つの軸それぞれの傾き</li>
+              <li>向いている職種の例</li>
+            </ul>
+          </div>
+          <div>
+            <div class="lq-done-meta">残り15問 / 約2分</div>
+            <button class="btn rpl" id="lq-continue" onclick="addRipple(event,this);lqContinue()">残り15問を続ける →</button>
+          </div>
+        </div>
+        <div class="lq-foot">
+          <div class="prog-seg" id="lq-prog-seg" role="progressbar" aria-label="回答の進捗" aria-valuemin="0" aria-valuemax="20" aria-valuenow="0" aria-valuetext="20問中0問に回答済み"></div>
+          <button class="lq-back" id="lq-back" hidden onclick="goBack()" aria-label="1つ前の質問に戻る"><span aria-hidden="true">↩</span></button>
+        </div>
       </div>
 
       <!-- CHAR STRIP with ORIGINAL type names -->
@@ -658,8 +1001,7 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
       </div>
 
       <div class="btn-wrap">
-        <button class="btn rpl" onclick="addRipple(event,this);startFresh()">診断をはじめる →</button>
-        <button class="btn-ghost" onclick="startFresh()">まず診断だけ受けてみる</button>
+        <button class="btn rpl" id="cta-hero" onclick="addRipple(event,this);continueOrStart('hero')">診断をはじめる →</button>
       </div>
     </div>
   </div>
@@ -668,20 +1010,20 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
     <div class="wrap">
       <div class="sec-lbl">How it works</div>
       <div class="sec-title">3ステップで完了</div>
-      <p class="sec-sub">SPI性格検査をベースにした4軸・16タイプ診断。</p>
+      <p class="sec-sub">4つの軸と20問で、あなたの働き方の傾向を分類します。</p>
       <div class="steps">
         <div class="step"><div class="step-n">1</div><div class="step-lbl">20問<br>回答</div><div class="step-desc">約3分</div></div>
-        <div class="step"><div class="step-n">2</div><div class="step-lbl">タイプ<br>判明</div><div class="step-desc">即時</div></div>
-        <div class="step"><div class="step-n">3</div><div class="step-lbl">企業<br>レコメンド</div><div class="step-desc">業界別</div></div>
+        <div class="step"><div class="step-n">2</div><div class="step-lbl">タイプ<br>判定</div><div class="step-desc">即時</div></div>
+        <div class="step"><div class="step-n">3</div><div class="step-lbl">職種<br>の例</div><div class="step-desc">業界別</div></div>
       </div>
     </div>
   </div>
 
-  <div style="background:var(--off);padding:40px 0;">
+  <div id="type-section" style="background:var(--off);padding:40px 0;">
     <div class="wrap">
       <div class="sec-lbl">All Types</div><div class="sec-title">全16タイプ一覧</div><p class="sec-sub">あなたはどれ？</p>
       <div id="type-overview"></div>
-      <div style="margin-top:28px;"><button class="btn rpl" onclick="addRipple(event,this);startFresh()">診断をはじめる →</button></div>
+      <div style="margin-top:28px;"><button class="btn rpl" id="cta-grid" onclick="addRipple(event,this);continueOrStart('grid')">診断をはじめる →</button></div>
     </div>
   </div>
 </div>
@@ -690,39 +1032,28 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 <div id="screen-quiz" class="screen">
   <div class="quiz-bg" id="quiz-bg">
     <div class="prog-area">
-      <div class="ax-bars" id="ax-bars">
-        <div class="ax-bar" style="background:#2563eb;"></div>
-        <div class="ax-bar" style="background:#ea580c;"></div>
-        <div class="ax-bar" style="background:#0891b2;"></div>
-        <div class="ax-bar" style="background:#d97706;"></div>
-      </div>
-      <div class="dot-prog" id="dot-prog"></div>
+      <div class="prog-seg" id="prog-seg" role="progressbar" aria-label="回答の進捗" aria-valuemin="0" aria-valuemax="20" aria-valuenow="0" aria-valuetext="20問中0問に回答済み"></div>
       <div class="prog-meta">
-        <div class="prog-num" id="prog-text">Q1 / 20</div>
+        <div class="prog-num" id="prog-text" aria-hidden="true">Q1 / 20</div>
         <div class="prog-msg" id="prog-msg">さあはじめよう！</div>
       </div>
     </div>
     <div style="padding:20px 16px;max-width:480px;margin:0 auto;">
-      <div class="bin-banner" id="bin-banner" onclick="toggleBinary()">
-        <div class="bin-icon">🎯</div>
-        <div class="bin-body"><span class="bin-title">強制二択モード</span><span class="bin-sub">「どちらでもない」を使わず精度UP</span></div>
-        <button class="bin-tog off" id="bin-tog">OFF</button>
-      </div>
       <button class="back-btn" id="back-btn" onclick="goBack()" style="display:none;">← 前の質問に戻る</button>
-      <div class="q-card qin" id="q-card">
+      <div class="q-card qin" id="q-card" data-ax="1" role="group" aria-labelledby="q-num q-text">
         <div class="q-top" id="q-top">
           <div class="q-num-row"><div class="q-badge" id="q-num">Q1</div><div class="q-ax" id="q-axis"></div></div>
-          <div class="q-text" id="q-text"></div>
+          <div class="q-text" id="q-text" tabindex="-1"></div>
         </div>
         <div class="q-body">
           <div class="choice-row"><div class="choice-box cb-l" id="q-a"></div><div class="choice-box cb-r" id="q-b"></div></div>
           <div class="spec-labels"><span class="sl-a" id="sl-a">← A寄り</span><span class="sl-b" id="sl-b">B寄り →</span></div>
-          <div class="spec-track" id="spec-track">
-            <div class="sdw" data-v="2"  onclick="pick(this)"><div class="sd"></div></div>
-            <div class="sdw" data-v="1"  onclick="pick(this)"><div class="sd"></div></div>
-            <div class="sdw" data-v="0"  onclick="pick(this)"><div class="sd"></div></div>
-            <div class="sdw" data-v="-1" onclick="pick(this)"><div class="sd"></div></div>
-            <div class="sdw" data-v="-2" onclick="pick(this)"><div class="sd"></div></div>
+          <div class="spec-track" id="spec-track" role="radiogroup" aria-label="5段階で選んでください" aria-describedby="q-a q-b">
+            <button type="button" class="sdw" data-v="2"  role="radio" aria-checked="false" aria-label="左の選択肢に強く近い" onclick="pick(this)"><span class="sd"></span></button>
+            <button type="button" class="sdw" data-v="1"  role="radio" aria-checked="false" aria-label="左の選択肢にやや近い" onclick="pick(this)"><span class="sd"></span></button>
+            <button type="button" class="sdw" data-v="0"  role="radio" aria-checked="false" aria-label="どちらでもない" onclick="pick(this)"><span class="sd"></span></button>
+            <button type="button" class="sdw" data-v="-1" role="radio" aria-checked="false" aria-label="右の選択肢にやや近い" onclick="pick(this)"><span class="sd"></span></button>
+            <button type="button" class="sdw" data-v="-2" role="radio" aria-checked="false" aria-label="右の選択肢に強く近い" onclick="pick(this)"><span class="sd"></span></button>
           </div>
           <div class="spec-hint"><span>← Aに近い</span><span>どちらでもない</span><span>Bに近い →</span></div>
         </div>
@@ -746,7 +1077,87 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 
 <!-- RESULT -->
 <div id="screen-result" class="screen"></div>
+
+<!-- 共通フッター（診断中・ローディング中は CSS で非表示） -->
+<footer class="ftr">
+  <div class="ftr-inner">
+    <div class="ftr-logo">CareerType</div>
+    <p class="ftr-note">本診断は、20問の回答から働き方の傾向を4つの軸・16タイプに分類するものです。職業への適性や、選考の合否を判定するものではありません。</p>
+    <nav class="ftr-links">
+      <a href="privacy.html">プライバシーポリシー</a>
+      <a href="privacy.html#operator">運営者情報</a>
+      <a href="privacy.html#contact">お問い合わせ</a>
+    </nav>
+    <!-- TODO: 運営者情報（未決事項 U-6）— 開示する表示名が決まったら下の <span class="ftr-todo"> ごと置き換える -->
+    <div class="ftr-copy">© <span class="ftr-todo">TODO: 運営者名</span></div>
+  </div>
+</footer>
+
 <script>
+/* =========================================================================
+   0. サイト設定 — 環境に依存する値はすべてここに集約する
+   ========================================================================= */
+
+/* 絶対URLの基準。独自ドメインへ移行する場合（未決事項 U-2、当面は github.io で確定）は
+   この1行と、<head> の SITE BASE ブロック内の5箇所を書き換えれば全部追従する。
+   末尾のスラッシュは必須。 */
+const SITE_BASE='https://w-t-n-b.github.io/syukatsushindan/';
+
+/* GA4 測定ID。空文字のあいだは gtag.js を読み込まず、外部送信を一切行わない。
+   → Cookie 同意バナー（未決事項 U-7）の論点も発生しない。
+   TODO: 測定ID（G-XXXXXXXXXX）が届いたらここに入れるだけで計測が始まる。 */
+const GA_ID='';
+
+/* =========================================================================
+   1. 送客ブロックの掲載データ（表示ロジックとは完全に分離する）
+      ここに1件足すだけで #agent-primary / #agent-secondary が公開される。
+      0件のあいだは DOM ごと描画しない（プレースホルダも出さない）。
+   -------------------------------------------------------------------------
+   1件の形:
+     id      … 内部ID。GA4 の agent_id と utm に使う。半角英数字とハイフンのみ
+     name    … 画面に出すサービス名／担当者名
+     url     … 遷移先。utm は agentUrl() が自動で付ける
+     forWhom … 「こんな人向け」1行
+     meta    … 無料 / 所要時間 / オンライン可否 / 連絡手段。
+               ★ 連絡手段（とくに電話の有無）は必ず書く。ここが唯一の差別化点
+     company … 運営会社名。個人の場合は屋号または空
+     license … 有料職業紹介事業許可番号。持たない場合は空にする（空なら行ごと出さない）
+   掲載セットは全タイプ共通。並び順だけ AGENT_ORDER でカテゴリ別に入れ替える。
+   「あなた専用に選定した」とは書かないこと（PM仕様 §3 / 法務 L-4・L-5）。
+   ========================================================================= */
+const AGENTS=[
+  /* 例（コメントアウト中）:
+  {id:'sample-ca', name:'（サービス名）', url:'https://example.com/lp',
+   forWhom:'まず何から始めるか決めきれていない人',
+   meta:'無料／オンライン面談30分／連絡は原則メール・電話なし',
+   company:'（運営会社名）', license:'（有料職業紹介事業許可番号）'},
+  */
+];
+
+/* カテゴリ別の表示順。AGENTS の id を並べる。
+   ここに載っていない掲載も末尾に必ず出るので、掲載される集合はタイプ間で常に同一。 */
+const AGENT_ORDER={HA:[],HB:[],DA:[],DB:[]};
+
+/* =========================================================================
+   2. GA4（測定IDが空なら何もしない）
+   ========================================================================= */
+function initGA(){
+  if(!GA_ID)return;
+  const s=document.createElement('script');
+  s.async=true;
+  s.src='https://www.googletagmanager.com/gtag/js?id='+encodeURIComponent(GA_ID);
+  document.head.appendChild(s);
+  window.dataLayer=window.dataLayer||[];
+  window.gtag=function(){window.dataLayer.push(arguments);};
+  window.gtag('js',new Date());
+  window.gtag('config',GA_ID);
+}
+function track(name,params){
+  if(!GA_ID)return;
+  if(typeof window.gtag!=='function')return;
+  try{window.gtag('event',name,params||{});}catch(e){}
+}
+
 /* ===== AXIS DEFINITIONS (from new UI) ===== */
 const AX=[null,
   {l:"対人",r:"対課題",ca:"#2563eb",cb:"#7c3aed",bg:["#eef5ff","#f0f4ff"]},
@@ -782,9 +1193,41 @@ const Qs=[
 /* ===== NEW UI FEATURES ===== */
 const REASON={HA:{h:"対人スコアが高く、人と関わる中で力を発揮するタイプ。",a:"攻めスコアも高く、自ら前に出てリードするスタイル。"},HB:{h:"対人スコアが高く、人との関係を大切にするタイプ。",a:"支えスコアが高く、縁の下でチームを支えるスタイル。"},DA:{h:"課題解決スコアが高く、問題に向き合うことに燃えるタイプ。",a:"攻めスコアが高く、新しいことに自ら挑戦するスタイル。"},DB:{h:"課題解決スコアが高く、データやロジックで考えるタイプ。",a:"支えスコアが高く、正確さと安定で組織を支えるスタイル。"}};
 const REASON_L={LS:"ライフ重視×自走型で、プライベートを大切にしながら自分のペースで動くスタイル。",LG:"ライフ重視×育成型で、安定した環境で先輩から学びながら着実に成長するスタイル。",WS:"ワーク重視×自走型で、仕事に没頭し自分の裁量で突き進むスタイル。",WG:"ワーク重視×育成型で、仕事に全力で向き合いつつ先輩から技を吸収するスタイル。"};
-const TYPE_PCT={HALS:"8.2",HALG:"6.5",HAWS:"7.1",HAWG:"6.8",HBLS:"7.4",HBLG:"6.2",HBWS:"5.9",HBWG:"6.1",DALS:"7.8",DALG:"5.4",DAWS:"6.9",DAWG:"5.2",DBLS:"6.6",DBLG:"5.8",DBWS:"6.0",DBWG:"5.1"};
-const TYPE_FAMOUS={HALS:"孫正義（ソフトバンク）タイプ",HALG:"松下幸之助（パナソニック）タイプ",HAWS:"稲盛和夫（京セラ）タイプ",HAWG:"本田宗一郎（Honda）タイプ",HBLS:"柳井正（ユニクロ）タイプ",HBLG:"三木谷浩史（楽天）タイプ",HBWS:"永守重信（日本電産）タイプ",HBWG:"張富士夫（トヨタ）タイプ",DALS:"前澤友作（ZOZO）タイプ",DALG:"出澤剛（LINE）タイプ",DAWS:"堀江貴文（ライブドア）タイプ",DAWG:"川上量生（ドワンゴ）タイプ",DBLS:"柳川隆之（マッキンゼー）タイプ",DBLG:"新浪剛史（サントリー）タイプ",DBWS:"冨山和彦（IGPIグループ）タイプ",DBWG:"土光敏夫（東芝）タイプ"};
-const AX_GRAD=[null,['135deg','#1e40af','#4f46e5'],['135deg','#c2410c','#15803d'],['135deg','#0e7490','#b91c1c'],['135deg','#b45309','#6d28d9']];
+/* TYPE_PCT（タイプ別の割合）は削除した。
+   実測データが存在せず、根拠のない統計を結果画面とシェア文に出していたため。
+   docs/design/retro-restyle.md §10-1(1)(2) / docs/specs/agent-referral-funnel.md L-6・U-8。
+   実測値を出す場合は GA4 の result_view を集計した実データに置き換えること。 */
+/* 実在の人名・企業名（TYPE_FAMOUS）は、本人・企業の関与がない結び付けであり、
+   実在を確認できない人物も含まれていたため、実名を使わない類型表現に置き換えた。
+   retro-restyle.md §10-1(4)。 */
+const TYPE_ARCHETYPE={
+  HALS:"大きな構想を掲げ、周囲を巻き込んで動かしていくタイプ",
+  HALG:"人望で信頼を集め、チームごと引き上げていくタイプ",
+  HAWS:"理想を語り、自らも最前線で走り続けるタイプ",
+  HAWG:"現場に立ち続け、手を動かしながら道を切り拓くタイプ",
+  HBLS:"人と場の状態を見極め、必要な手を静かに打つタイプ",
+  HBLG:"仕組みと関係を整え、組織を長く続く形にするタイプ",
+  HBWS:"表に出ずに全体を設計し、成果だけを残すタイプ",
+  HBWG:"決めたことを守り抜き、品質で信頼を積み上げるタイプ",
+  DALS:"前例のない発想を持ち込み、市場そのものを作るタイプ",
+  DALG:"ひとつの技を磨き込み、質で勝負するタイプ",
+  DAWS:"常識を疑い、誰も試していない方法に賭けるタイプ",
+  DAWG:"没頭できる対象を見つけ、深く掘り下げていくタイプ",
+  DBLS:"情報を構造化し、筋の通った打ち手を示すタイプ",
+  DBLG:"数字と事実を積み上げ、意思決定の精度を上げるタイプ",
+  DBWS:"複雑な状況を分解し、立て直しの道筋を引くタイプ",
+  DBWG:"地道な改善を積み重ね、土台を強くしていくタイプ"
+};
+/* Qs のインデックスを「出題する順」に並べたもの。軸を 1→2→3→4 で回す。
+   先頭 LP_Q_COUNT 件（0,5,10,15,1）が LP に埋め込まれる分。
+   Qs 配列そのものは並べ替えない。データと提示順を分離することで、
+   採点ロジック（getCode / getSubCode / scores への加算）には一切触らずに済む。
+   加算の順序は変わるが、設問と値の対応が同じなら合計は不変である。 */
+const Q_ORDER=[0,5,10,15,1, 6,11,16,2,7, 12,17,3,8,13, 18,4,9,14,19];
+const LP_Q_COUNT=5;
+/* 出題位置 i の設問。curQ は「出題位置」を指し、Qs の添字ではない。 */
+function qAt(i){return Qs[Q_ORDER[i]];}
+
 const PROG_MSGS=["さあはじめよう！","いい感じです！","順調です！","折り返し！","半分超えた！","もうすぐ！","ラストスパート！","あと少し！","もう少し！","完了まであと1問！"];
 
 /* ===== TYPE DATA (from ORIGINAL, field names adapted for new UI) ===== */
@@ -952,23 +1395,36 @@ const TD={
 };
 
 /* ===== COMPANY DATA (from ORIGINAL, adapted to new UI format) ===== */
+/* 実在企業名の1〜5位表示は削除した（未決事項 U-9 → 「削除」で確定 / 法務 L-2）。
+   企業の関与なく実名を順位付きで出すと「この企業に向いている＝受かりやすい」と読まれうるため、
+   実名を含まない「業界 × 企業タイプ × 職種」の粒度に置き換えている。
+   co = 企業タイプ（実名を書かないこと）／ job = 職種。 */
 const CD={
-  "IT / Web":[{co:"サイバーエージェント",job:"デジタルマーケター"},{co:"楽天グループ",job:"プロダクトマネージャー"},{co:"LINE ヤフー",job:"データアナリスト"},{co:"メルカリ",job:"ソフトウェアエンジニア"},{co:"リクルート",job:"事業企画"}],
-  "広告 / メディア":[{co:"電通",job:"コピーライター・プランナー"},{co:"博報堂",job:"アカウントプランナー"},{co:"サイバーエージェント",job:"SNSマーケター"},{co:"ADK",job:"メディアプランナー"},{co:"東急エージェンシー",job:"営業プロデューサー"}],
-  "金融":[{co:"三菱UFJ銀行",job:"法人営業"},{co:"三井住友銀行",job:"リテール営業"},{co:"野村證券",job:"投資銀行部門"},{co:"東京海上日動",job:"損害サービス"},{co:"第一生命",job:"ファイナンシャルプランナー"}],
-  "コンサル":[{co:"マッキンゼー",job:"戦略コンサルタント"},{co:"BCG",job:"戦略コンサルタント"},{co:"デロイト トーマツ",job:"財務コンサルタント"},{co:"アクセンチュア",job:"ITコンサルタント"},{co:"PwC",job:"リスクコンサルタント"}],
-  "メーカー":[{co:"トヨタ自動車",job:"技術開発"},{co:"ソニーグループ",job:"商品企画"},{co:"パナソニック",job:"プロダクトマネージャー"},{co:"キーエンス",job:"テクニカルセールス"},{co:"味の素",job:"マーケティング"}],
-  "商社":[{co:"三菱商事",job:"トレーダー"},{co:"三井物産",job:"プロジェクトマネージャー"},{co:"伊藤忠商事",job:"ビジネスディベロップメント"},{co:"住友商事",job:"グローバル営業"},{co:"丸紅",job:"新規事業開発"}]
+  "IT / Web":[{co:"ネット広告・メディアの事業会社",job:"デジタルマーケター"},{co:"大手ECプラットフォーム",job:"プロダクトマネージャー"},{co:"ポータル・検索サービス",job:"データアナリスト"},{co:"C2Cサービスの開発組織",job:"ソフトウェアエンジニア"},{co:"人材・販促の総合ネット企業",job:"事業企画"}],
+  "広告 / メディア":[{co:"総合広告代理店",job:"コピーライター・プランナー"},{co:"広告会社のプランニング部門",job:"アカウントプランナー"},{co:"デジタル専業の広告会社",job:"SNSマーケター"},{co:"メディアバイイングの専門会社",job:"メディアプランナー"},{co:"ハウスエージェンシー",job:"営業プロデューサー"}],
+  "金融":[{co:"メガバンク",job:"法人営業"},{co:"地域金融機関",job:"リテール営業"},{co:"大手証券会社",job:"投資銀行部門"},{co:"損害保険会社",job:"損害サービス"},{co:"生命保険会社",job:"ファイナンシャルプランナー"}],
+  "コンサル":[{co:"戦略系コンサルティングファーム",job:"戦略コンサルタント"},{co:"総合系コンサルティングファーム",job:"業務コンサルタント"},{co:"会計系コンサルティングファーム",job:"財務コンサルタント"},{co:"IT系コンサルティングファーム",job:"ITコンサルタント"},{co:"リスク・内部統制の専門ファーム",job:"リスクコンサルタント"}],
+  "メーカー":[{co:"自動車メーカー",job:"技術開発"},{co:"総合電機メーカー",job:"商品企画"},{co:"産業機械メーカー",job:"プロダクトマネージャー"},{co:"精密機器・センサーメーカー",job:"テクニカルセールス"},{co:"食品メーカー",job:"マーケティング"}],
+  "商社":[{co:"総合商社",job:"トレーダー"},{co:"総合商社の事業投資部門",job:"プロジェクトマネージャー"},{co:"専門商社",job:"ビジネスディベロップメント"},{co:"商社の海外拠点",job:"グローバル営業"},{co:"商社の新規事業部門",job:"新規事業開発"}]
 };
 
 /* ===== STATE ===== */
-let curQ=0,scores={1:0,2:0,3:0,4:0},ans=[],selectedIndustries=[],trans=false,binaryMode=false;
+let curQ=0,scores={1:0,2:0,3:0,4:0},ans=[],selectedIndustries=[],trans=false;
+let quizStartedAt=0;   /* quiz_complete の duration_sec 用 */
+/* いま質問カードを描画している先。'lp'（LP埋め込み）か 'quiz'（質問画面）。
+   両者は同じ class・同じ renderQ() を使い、id の接頭辞だけが違う。 */
+let qTarget='lp';
+/* quiz_start はセッション内で1回だけ発火させる（LP1問目の回答か、CTA経由か） */
+let quizStarted=false;
 
 /* ===== INIT ===== */
 window.addEventListener('DOMContentLoaded',()=>{
+  initGA();
   buildTypeOverview();
   animateCount();
+  dropLegacyProgress();
   checkSavedProgress();
+  renderQ('lp');   /* LP埋め込みの1問目を描画する */
   window.addEventListener('scroll',()=>document.getElementById('hdr').classList.toggle('sc',scrollY>10));
   document.addEventListener('click',e=>{
     const d=document.getElementById('drawer'),b=document.getElementById('ham');
@@ -977,7 +1433,8 @@ window.addEventListener('DOMContentLoaded',()=>{
 });
 
 function animateCount(){
-  const target=12847,el=document.getElementById('stat-count');
+  /* 架空の診断者数 12,847 を廃止し、検証可能な「質問数」に差し替えた。retro-restyle.md §10-1(3) */
+  const target=Qs.length,el=document.getElementById('stat-count');
   if(!el)return;
   let n=0,step=Math.ceil(target/60);
   const t=setInterval(()=>{n=Math.min(n+step,target);el.textContent=n.toLocaleString();if(n>=target)clearInterval(t);},30);
@@ -990,10 +1447,10 @@ function buildTypeOverview(){
   const cats=[['HA','リーダー系','pa','#2563eb',['HALS','HALG','HAWS','HAWG']],['HB','サポート系','pb','#7c3aed',['HBLS','HBLG','HBWS','HBWG']],['DA','推進系','pc','#0f766e',['DALS','DALG','DAWS','DAWG']],['DB','分析系','pd','#334155',['DBLS','DBLG','DBWS','DBWG']]];
   let h='';
   cats.forEach(([cat,lbl,pill,col,codes])=>{
-    h+=`<div style="margin-bottom:20px;"><div class="type-cat-hd"><div class="tc-pill ${pill}">${cat}系 — ${lbl}</div><div class="tc-line"></div></div><div class="type-grid">`;
+    h+=`<div id="type-cat-${cat}" style="margin-bottom:20px;"><div class="type-cat-hd"><div class="tc-pill ${pill}">${cat}系 — ${lbl}</div><div class="tc-line"></div></div><div class="type-grid">`;
     codes.forEach(code=>{
       const t=TD[code];
-      h+=`<div class="tc" onclick="jumpToType('${code}')"><div class="tc-sil" style="background-image:url('images/chars/sm/${codeImg(code)}.webp');"></div><img src="images/chars/${codeImg(code)}.webp" alt="${code}"><div class="tc-code" style="color:${col};">${code}</div><div class="tc-name">${t.name}</div></div>`;
+      h+=`<div class="tc" data-code="${code}" tabindex="-1" onclick="openTypePeek('${code}',this)"><div class="tc-sil" style="background-image:url('images/chars/sm/${codeImg(code)}.webp');"></div><img src="images/chars/${codeImg(code)}.webp" alt="${code}"><div class="tc-code" style="color:${col};">${code}</div><div class="tc-name">${t.name}</div></div>`;
     });
     h+=`</div></div>`;
   });
@@ -1001,11 +1458,16 @@ function buildTypeOverview(){
   if(el)el.innerHTML=h;
 }
 
-function saveProgress(){try{localStorage.setItem('cq_p',JSON.stringify({curQ,scores,ans,selectedIndustries}));}catch(e){}}
-function clearSavedProgress(){try{localStorage.removeItem('cq_p');}catch(e){}}
+/* 保存キー。旧 cq_p は「軸ごとに5問ずつ」の旧出題順で ans を持っており、
+   Q_ORDER 導入後に復元すると別の設問の回答として加算されてしまう。
+   そのためキーを変え、旧キーは起動時に黙って削除する（§A-2）。 */
+const SAVE_KEY='cq_p2';
+function saveProgress(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({curQ,scores,ans,selectedIndustries}));}catch(e){}}
+function clearSavedProgress(){try{localStorage.removeItem(SAVE_KEY);}catch(e){}}
+function dropLegacyProgress(){try{localStorage.removeItem('cq_p');}catch(e){}}
 function checkSavedProgress(){
   try{
-    const s=localStorage.getItem('cq_p');if(!s)return;
+    const s=localStorage.getItem(SAVE_KEY);if(!s)return;
     const d=JSON.parse(s);
     if(d.curQ>0&&d.curQ<Qs.length){
       const b=document.getElementById('cont-banner');
@@ -1014,7 +1476,15 @@ function checkSavedProgress(){
   }catch(e){}
 }
 function continueDiag(){
-  try{const d=JSON.parse(localStorage.getItem('cq_p'));curQ=d.curQ;scores=d.scores;ans=d.ans;selectedIndustries=d.selectedIndustries||[];renderQ();toScreen('screen-quiz');}
+  try{
+    const d=JSON.parse(localStorage.getItem(SAVE_KEY));
+    curQ=d.curQ;scores=d.scores;ans=d.ans;selectedIndustries=d.selectedIndustries||[];
+    quizStartedAt=Date.now();
+    if(!quizStarted){quizStarted=true;track('quiz_start',{entry:'continue'});}
+    /* 復帰先を分岐させる。LPで2問だけ答えた人を質問画面のQ3に放り込まない（§A-6） */
+    if(curQ<LP_Q_COUNT)goToLpQuiz();
+    else{renderQ('quiz');toScreen('screen-quiz');}
+  }
   catch(e){startFresh();}
 }
 
@@ -1031,65 +1501,204 @@ function toScreen(id){
   const sc=document.getElementById(id);
   sc.classList.add('active');
   sc.classList.add('page-in');
+  document.body.dataset.screen=id;   /* 診断中/ローディング中にフッターを隠すためのフック */
   setTimeout(()=>sc.classList.remove('page-in'),400);
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function gotoTop(){toScreen('screen-title');}
-function startFresh(){
-  curQ=0;scores={1:0,2:0,3:0,4:0};ans=[];selectedIndustries=[];
-  clearSavedProgress();renderQ();toScreen('screen-quiz');
-}
-function toggleDrawer(){document.getElementById('ham').classList.toggle('open');document.getElementById('drawer').classList.toggle('open');}
-function closeDrawer(){document.getElementById('ham').classList.remove('open');document.getElementById('drawer').classList.remove('open');}
-function toggleBinary(){
-  binaryMode=!binaryMode;
-  const tog=document.getElementById('bin-tog');
-  tog.textContent=binaryMode?'ON':'OFF';
-  tog.className='bin-tog '+(binaryMode?'on':'off');
-  document.getElementById('spec-track').classList.toggle('binary-on',binaryMode);
+
+/* 16タイプ一覧へスクロールする。cat を渡すとそのカテゴリの見出しへ。
+   副CTA「16タイプを見る」とドロワーの系統ボタン4つが呼ぶ。
+   いずれも従来は主CTAと同一動作、または押しても何も起きなかった。 */
+function scrollToTypes(cat){
+  const go=()=>{
+    const el=(cat&&document.getElementById('type-cat-'+cat))||document.getElementById('type-section');
+    if(!el)return;
+    const y=el.getBoundingClientRect().top+window.pageYOffset-70;   /* .hdr の60pxぶん逃がす */
+    window.scrollTo({top:Math.max(0,y),behavior:'smooth'});
+  };
+  const title=document.getElementById('screen-title');
+  if(title&&!title.classList.contains('active')){toScreen('screen-title');setTimeout(go,520);}
+  else go();
 }
 
-function renderQ(){
-  const q=Qs[curQ],ax=q.ax;
-  const bg=AX[ax].bg;
-  document.getElementById('quiz-bg').style.background=`linear-gradient(160deg,${bg[0]},${bg[1]})`;
-  const gr=AX_GRAD[ax];
-  document.getElementById('q-top').style.background=`linear-gradient(${gr[0]},${gr[1]},${gr[2]})`;
-  const rem=Qs.length-curQ;
-  document.getElementById('prog-text').textContent=`Q${curQ+1} / ${Qs.length}`;
-  const msgIdx=Math.min(Math.floor((curQ/Qs.length)*PROG_MSGS.length),PROG_MSGS.length-1);
-  document.getElementById('prog-msg').textContent=rem===1?'最後の1問！':rem<=3?`残り${rem}問！`:PROG_MSGS[msgIdx];
-  document.getElementById('dot-prog').innerHTML=Qs.map((_,i)=>`<div class="dp${i<curQ?' done':i===curQ?' cur':''}"></div>`).join('');
-  const bars=document.querySelectorAll('.ax-bar');
-  let axP=[0,0,0,0,0];for(let i=0;i<curQ;i++)axP[Qs[i].ax]++;
-  bars.forEach((b,i)=>b.classList.toggle('done',axP[i+1]>0));
-  document.getElementById('q-num').textContent=`Q${curQ+1}`;
-  document.getElementById('q-axis').textContent=`軸${ax}：${AX[ax].l} or ${AX[ax].r}`;
-  document.getElementById('q-text').textContent=q.t;
-  document.getElementById('q-a').textContent=q.a;
-  document.getElementById('q-b').textContent=q.b;
-  document.getElementById('sl-a').textContent=`← ${AX[ax].l}寄り`;
-  document.getElementById('sl-b').textContent=`${AX[ax].r}寄り →`;
-  document.querySelectorAll('.sdw').forEach(d=>d.classList.remove('sel'));
-  document.getElementById('back-btn').style.display=curQ>0?'flex':'none';
-  document.getElementById('spec-track').classList.toggle('binary-on',binaryMode);
-  const card=document.getElementById('q-card');
+function startFresh(entry){
+  curQ=0;scores={1:0,2:0,3:0,4:0};ans=[];selectedIndustries=[];
+  quizStartedAt=Date.now();
+  if(!quizStarted){quizStarted=true;track('quiz_start',{entry:entry||'hero'});}
+  clearSavedProgress();
+  renderQ('lp');                 /* LP側のカードも1問目に戻しておく */
+  renderQ('quiz');toScreen('screen-quiz');
+}
+
+/* 既存CTA（ヒーロー・16タイプ節・ドロワー・共有バナー・タイプ紹介）の呼び先。
+   startFresh() は状態を全消去するため、LPで数問答えた人が押すと回答が消える。
+   ここで「消さずに続きへ送る」ことが、設計Aの回答を捨てさせない約束の実装である。 */
+function continueOrStart(entry){
+  if(curQ<=0){
+    /* 共有リンクで来た人だけは段差を作らず #lp-quiz へ送る（仕様 §A-6）。
+       他の入口（hero / grid / drawer / peek）は従来どおり質問画面へ（仕様 §A-5）。
+       ※この2つは仕様内で扱いが分かれている。UI仕様 §11 A-2 の指摘どおり未決。 */
+    if(entry==='shared'){goToLpQuiz();return;}
+    startFresh(entry);return;
+  }
+  if(curQ<LP_Q_COUNT){goToLpQuiz();return;}
+  renderQ('quiz');toScreen('screen-quiz');
+}
+
+/* LPの質問カードまで送る（画面遷移ではなくスクロール） */
+function goToLpQuiz(){
+  const go=()=>{
+    if(curQ>=LP_Q_COUNT)showLqDone();else renderQ('lp');
+    const el=document.getElementById('lp-quiz');
+    if(!el)return;
+    const y=el.getBoundingClientRect().top+window.pageYOffset-70;   /* .hdr の60pxぶん逃がす */
+    window.scrollTo({top:Math.max(0,y),behavior:'smooth'});
+  };
+  const title=document.getElementById('screen-title');
+  if(title&&!title.classList.contains('active')){toScreen('screen-title');setTimeout(go,520);}
+  else go();
+}
+
+function lqContinue(){
+  track('lq_continue_click',{});
+  renderQ('quiz');toScreen('screen-quiz');
+}
+
+function toggleDrawer(){document.getElementById('ham').classList.toggle('open');document.getElementById('drawer').classList.toggle('open');}
+function closeDrawer(){document.getElementById('ham').classList.remove('open');document.getElementById('drawer').classList.remove('open');}
+
+/* LP と質問画面で id の接頭辞だけが違う。描画関数は1つしか作らない（仕様 §A-4） */
+const Q_IDS={
+  quiz:{card:'q-card',num:'q-num',axis:'q-axis',text:'q-text',a:'q-a',b:'q-b',sla:'sl-a',slb:'sl-b',track:'spec-track',seg:'prog-seg'},
+  lp:  {card:'lq-card',num:'lq-num',axis:'lq-axis',text:'lq-text',a:'lq-a',b:'lq-b',sla:'lq-sl-a',slb:'lq-sl-b',track:'lq-spec-track',seg:'lq-prog-seg'}
+};
+
+/* 進捗の共通部品。4群 × 5目盛で、塗り数＝回答済み数、.cur＝現在地。
+   #dot-prog（20個の空ドット）と .ax-bars（軸の二値）を統合したもの（§A-3）。
+   群は「出題位置の4分割」であって軸ではない。Q_ORDER で軸は1問ごとに回るため、
+   軸で群を作ると塗りが飛び飛びになり、進捗量が読めなくなる。 */
+function renderProgSeg(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  let h='';
+  for(let g=0;g<4;g++){
+    h+='<div class="ps-group">';
+    for(let c=0;c<5;c++){
+      const i=g*5+c;
+      h+=`<span class="ps-cell${i<curQ?' done':i===curQ?' cur':''}"></span>`;
+    }
+    h+='</div>';
+  }
+  el.innerHTML=h;
+  el.setAttribute('aria-valuenow',String(curQ));
+  el.setAttribute('aria-valuetext',`${Qs.length}問中${curQ}問に回答済み`);
+}
+
+/* 1問以上答えていたら、CTAの文言を実際の遷移先に合わせる（§A-5）。
+   「診断をはじめる」のまま「続きから」に飛ばすと、既存の .btn-ghost と
+   同じ種類の不整合を新しく作ることになる。 */
+function updateCtas(){
+  const rem=Qs.length-curQ,fresh=curQ<=0;
+  const set=(id,base,cont)=>{const el=document.getElementById(id);if(el)el.textContent=fresh?base:cont;};
+  set('cta-hero','診断をはじめる →',`残り${rem}問を続ける →`);
+  set('cta-grid','診断をはじめる →',`残り${rem}問を続ける →`);
+  set('cta-drawer','▶ 診断をはじめる',`▶ 残り${rem}問を続ける`);
+  const sb=document.querySelector('.sb-cta');
+  if(sb&&!fresh)sb.textContent=`残り${rem}問を続ける →`;
+}
+
+function renderQ(target){
+  const tg=(target==='lp'||target==='quiz')?target:qTarget;
+  qTarget=tg;
+  const ids=Q_IDS[tg],$=id=>document.getElementById(id);
+  const card=$(ids.card);
+  if(!card)return;
+  const q=qAt(curQ),ax=q.ax;
+  /* 軸の手がかりは .q-badge の影の色だけに置く。面の全面グラデーションは
+     出題順のローテーションにより1問ごとに激変するため廃止した（§A-2） */
+  card.dataset.ax=String(ax);
+  $(ids.num).textContent=`Q${curQ+1}`;
+  $(ids.axis).textContent=`軸${ax}：${AX[ax].l} or ${AX[ax].r}`;
+  $(ids.text).textContent=q.t;
+  $(ids.a).textContent=q.a;
+  $(ids.b).textContent=q.b;
+  $(ids.sla).textContent=`← ${AX[ax].l}寄り`;
+  $(ids.slb).textContent=`${AX[ax].r}寄り →`;
+  const tk=$(ids.track);
+  if(tk)tk.querySelectorAll('.sdw').forEach(d=>{d.classList.remove('sel');if(d.setAttribute)d.setAttribute('aria-checked','false');});
+  renderProgSeg(ids.seg);
   card.classList.remove('qin');void card.offsetWidth;card.classList.add('qin');
+  if(tg==='quiz'){
+    const rem=Qs.length-curQ;
+    $('prog-text').textContent=`Q${curQ+1} / ${Qs.length}`;
+    const msgIdx=Math.min(Math.floor((curQ/Qs.length)*PROG_MSGS.length),PROG_MSGS.length-1);
+    $('prog-msg').textContent=rem===1?'最後の1問！':rem<=3?`残り${rem}問！`:PROG_MSGS[msgIdx];
+    $('back-btn').style.display=curQ>0?'flex':'none';
+  }else{
+    const lbl=$('lq-lbl');
+    if(lbl)lbl.textContent=`${curQ+1}問目です。答えた分はそのまま引き継がれます。`;
+    const bk=$('lq-back');if(bk)bk.hidden=curQ<=0;
+    card.style.display='';
+    const dn=$('lq-done');if(dn)dn.classList.remove('on');
+  }
+  updateCtas();
+}
+
+/* 5問目に回答したあと。自動では画面遷移しない（仕様 §A-5）。
+   .lq-done の自然高は .q-card より約100px低く、そのまま差し替えると
+   指の下にあった位置に別のボタンがせり上がる。高さを実測して固定する。 */
+function showLqDone(){
+  const card=document.getElementById('lq-card'),done=document.getElementById('lq-done');
+  if(!card||!done)return;
+  if(card.offsetHeight)done.style.minHeight=card.offsetHeight+'px';
+  card.style.display='none';
+  done.classList.add('on');
+  const lbl=document.getElementById('lq-lbl');
+  if(lbl)lbl.textContent='ここまでの回答は保存されています。';
+  const bk=document.getElementById('lq-back');if(bk)bk.hidden=false;
+  renderProgSeg('lq-prog-seg');
+  updateCtas();
 }
 
 function pick(el){
   if(trans)return;trans=true;
   const v=parseInt(el.dataset.v);
-  if(binaryMode&&v===0){trans=false;return;}
-  document.querySelectorAll('.sdw').forEach(d=>d.classList.remove('sel'));
+  const tg=qTarget,ids=Q_IDS[tg];
+  const tk=document.getElementById(ids.track);
+  if(tk)tk.querySelectorAll('.sdw').forEach(d=>{d.classList.remove('sel');if(d.setAttribute)d.setAttribute('aria-checked','false');});
   el.classList.add('sel');
-  scores[Qs[curQ].ax]+=v;ans[curQ]=v;
+  if(el.setAttribute)el.setAttribute('aria-checked','true');
+  /* 採点は従来どおり。出題位置 curQ から実際の設問を引くところだけが変わった */
+  scores[qAt(curQ).ax]+=v;ans[curQ]=v;
+  if(!quizStarted){quizStarted=true;quizStartedAt=Date.now();track('quiz_start',{entry:tg==='lp'?'lp_inline':'quiz'});}
+  if(tg==='lp')track('lp_q_answer',{n:curQ+1});
   saveProgress();
-  setTimeout(()=>{curQ++;trans=false;if(curQ<Qs.length)renderQ();else{saveProgress();setTimeout(showLoading,300);}},500);
+  /* 同じDOMを使い回すため、フォーカスを回答ボタンに置いたままだと
+     読み上げ上は「何も起きていない」ことになる。次の内容を描いてから移す。
+     スクロール位置は動かさない（LPで画面が飛ぶのを防ぐ）。 */
+  const wasFocused=!!(document.activeElement&&document.activeElement===el);
+  const moveFocus=id=>{
+    if(!wasFocused)return;
+    const t=document.getElementById(id);
+    if(t&&t.focus){try{t.focus({preventScroll:true});}catch(e){}}
+  };
+  setTimeout(()=>{
+    curQ++;trans=false;
+    if(curQ>=Qs.length){
+      saveProgress();
+      track('quiz_complete',{type_code:getCode(),duration_sec:quizStartedAt?Math.round((Date.now()-quizStartedAt)/1000):0});
+      setTimeout(showLoading,300);
+      return;
+    }
+    if(tg==='lp'&&curQ>=LP_Q_COUNT){showLqDone();moveFocus('lq-continue');return;}
+    renderQ(tg);
+    moveFocus(ids.text);
+  },500);
 }
 function goBack(){
   if(curQ<=0)return;
-  curQ--;scores[Qs[curQ].ax]-=ans[curQ];ans[curQ]=undefined;saveProgress();renderQ();
+  curQ--;scores[qAt(curQ).ax]-=ans[curQ];ans[curQ]=undefined;saveProgress();renderQ(qTarget);
 }
 
 /* ===== SCORING (same logic as ORIGINAL) ===== */
@@ -1165,15 +1774,60 @@ function buildAxisViz(sc){
 
 function toggleAcc(head){head.classList.toggle('aopen');head.nextElementSibling.classList.toggle('aopen');}
 
-function cImg(code,sz=54){return `<img src="images/chars/sm/${codeImg(code)}.webp" alt="${code}" style="width:${sz}px;height:${sz}px;object-fit:contain;" onclick="jumpToType('${code}')">`;}
-function jumpToType(code){
-  if(!TD[code])return;
-  const saved={...scores};
-  scores[1]=code[0]==='H'?5:-5;
-  scores[2]=code[1]==='A'?5:-5;
-  scores[3]=code[2]==='L'?5:-5;
-  scores[4]=code[3]==='S'?5:-5;
-  showResult(true);scores=saved;
+/* 結果画面の相性キャラは非対話にした。従来はここから scores を捏造して
+   結果全文を出していた（C-6）。診断済みの人に「20問で確かめる →」を出すのは
+   不整合なので、結果画面にはタイプ紹介の展開先を作らない（UI仕様 §11 A-3）。 */
+function cImg(code,sz=54){return `<img src="images/chars/sm/${codeImg(code)}.webp" alt="${code}" style="width:${sz}px;height:${sz}px;object-fit:contain;">`;}
+
+/* =========================================================================
+   C-6 タイプ紹介（.type-peek）
+   -------------------------------------------------------------------------
+   16タイプ一覧のカードは、以前は scores を ±5 に捏造して結果全文を出していた。
+   未診断者に4軸100%の棒グラフと送客ブロックが出るため、経路ごと廃止した。
+   ここで出すのは キャラ画像 / コード / タイプ名 / 一言 / 強み1文 の5つだけで、
+   #agent-primary・#agent-secondary・4軸スコア・判定理由は1つも出さない。
+   ========================================================================= */
+function firstSentence(s){const t=String(s==null?'':s),i=t.indexOf('。');return i<0?t:t.slice(0,i+1);}
+
+function closeTypePeek(){
+  const el=document.querySelector('.type-peek');
+  if(!el)return;
+  const owner=el.dataset?el.dataset.owner:'';
+  if(el.remove)el.remove();
+  if(owner){
+    const back=document.querySelector('.tc[data-code="'+owner+'"]');
+    if(back&&back.focus)back.focus();
+  }
+}
+
+function openTypePeek(code,el){
+  const t=TD[code];if(!t||!el)return;
+  const cur=document.querySelector('.type-peek');
+  const same=!!(cur&&cur.dataset&&cur.dataset.owner===code);
+  closeTypePeek();
+  if(same)return;                       /* 同じカードをもう一度押したら閉じるだけ */
+  const grid=el.parentElement;if(!grid)return;
+  const tcs=[].slice.call(grid.querySelectorAll('.tc'));
+  /* 2列グリッドなので、押したカードが属する行の最後のカードの直後に差し込む */
+  const i=Math.max(tcs.indexOf(el),0);
+  const rowEnd=tcs[Math.min(Math.floor(i/2)*2+1,tcs.length-1)]||el;
+  const box=document.createElement('div');
+  box.className='type-peek';
+  box.dataset.owner=code;
+  box.tabIndex=-1;
+  box.setAttribute('role','region');
+  box.setAttribute('aria-label',t.name+' の紹介');
+  box.innerHTML='<button type="button" class="tp-close" aria-label="閉じる" onclick="closeTypePeek()">✕</button>'
+    +'<div class="tp-inner">'
+    +`<img class="tp-img" src="images/chars/${codeImg(code)}.webp" alt="${esc(code)} ${esc(t.name)}">`
+    +`<div class="tp-txt"><div class="tp-code">${esc(code)}</div><div class="tp-name">${esc(t.icon)} ${esc(t.name)}</div><div class="tp-tag">${esc(t.tag)}</div></div>`
+    +'</div>'
+    +`<div class="tp-str"><span class="tp-str-lbl">強み</span><div class="tp-str-txt">${esc(firstSentence(t.str))}</div></div>`
+    +'<button type="button" class="btn rpl tp-cta" onclick="addRipple(event,this);continueOrStart(&quot;peek&quot;)">このタイプかどうか、20問で確かめる →</button>';
+  grid.insertBefore(box,rowEnd?rowEnd.nextSibling:null);
+  track('type_peek',{type_code:code});
+  if(box.scrollIntoView)box.scrollIntoView({block:'nearest',behavior:'smooth'});
+  if(box.focus){try{box.focus({preventScroll:true});}catch(e){}}
 }
 
 function buildCoHTML(inds){
@@ -1208,11 +1862,10 @@ function countUpCode(el,code){
 }
 
 /* ===== SHOW RESULT ===== */
-function showResult(skipConfetti=false){
+function showResult(skipConfetti=false,source='quiz'){
   const code=getCode(),t=TD[code],subCode=getSubCode();
   const cat=code.slice(0,2),sub=code.slice(2,4);
   const inds=selectedIndustries.length>0?selectedIndustries:Object.keys(CD);
-  const pct=TYPE_PCT[code];
   const r=REASON[cat],rl=REASON_L[sub];
   const h=scores[1]>=0,a=scores[2]>=0,l=scores[3]>=0,s=scores[4]>=0;
   const s1=Math.min(100,Math.round(Math.abs(scores[1]/10)*100));
@@ -1235,7 +1888,7 @@ function showResult(skipConfetti=false){
   let subH='';
   if(subCode&&TD[subCode]){
     const st=TD[subCode];
-    subH=`<div class="r-panel fade-in"><div class="r-ph" onclick="toggleAcc(this)"><div class="r-pi">🔮</div><div class="r-pt">サブタイプ</div><span class="r-tog">▼</span></div><div class="r-pb"><div class="subtype-card"><div class="sub-head">あなたのサブタイプ</div><div class="sub-inner"><img class="sub-img" src="images/chars/sm/${codeImg(subCode)}.webp" alt="${subCode}"><div><div class="sub-code">${subCode}</div><div class="sub-name">${st.icon} ${st.name}</div><div class="sub-tag">${st.tag}</div><span class="sub-pct">全体の${TYPE_PCT[subCode]}%</span></div></div></div></div></div>`;
+    subH=`<div class="r-panel fade-in"><div class="r-ph" onclick="toggleAcc(this)"><div class="r-pi">🔮</div><div class="r-pt">サブタイプ</div><span class="r-tog">▼</span></div><div class="r-pb"><div class="subtype-card"><div class="sub-head">あなたのサブタイプ</div><div class="sub-inner"><img class="sub-img" src="images/chars/sm/${codeImg(subCode)}.webp" alt="${subCode}"><div><div class="sub-code">${subCode}</div><div class="sub-name">${st.icon} ${st.name}</div><div class="sub-tag">${st.tag}</div><span class="sub-pct">2番目に近いタイプ</span></div></div></div></div></div>`;
   }
 
   const indChips=Object.keys(CD).map(ind=>`<div class="ind-sm${selectedIndustries.includes(ind)?' sel':''}" onclick="toggleIndSm(this,'${ind}')">${ind}</div>`).join('');
@@ -1251,9 +1904,9 @@ function showResult(skipConfetti=false){
         <div class="res-code" id="res-code-el">----</div>
         <div class="res-type-name">${t.icon} ${t.name}</div>
         <div class="res-tagline">${t.tag}</div>
-        <div class="rarity-row"><span class="rar-badge">⭐ 希少度 ${pct}%タイプ</span><span class="pct-badge">👥 診断者の${pct}%</span></div>
+        <div class="rarity-row"><span class="rar-badge">📊 20問・4軸による傾向の分類です</span></div>
         <div class="res-kws">${t.kw.map(k=>`<span class="res-kw">${k}</span>`).join('')}</div>
-        <div class="famous-box"><div class="famous-icon">🌟</div><div class="famous-text"><span>${TYPE_FAMOUS[code]} — ${t.tag}</span></div></div>
+        <div class="famous-box"><div class="famous-icon">🌟</div><div class="famous-text"><span>${TYPE_ARCHETYPE[code]}</span></div></div>
         <div class="share-grid" style="margin-bottom:8px;">
           <button class="sh sh-x rpl" onclick="addRipple(event,this);shareX()">𝕏 シェア</button>
           <button class="sh sh-ln rpl" onclick="addRipple(event,this);shareLINE()">LINE</button>
@@ -1270,36 +1923,207 @@ function showResult(skipConfetti=false){
       ${subH}
       <div class="r-panel fade-in"><div class="r-ph aopen" onclick="toggleAcc(this)"><div class="r-pi">🧠</div><div class="r-pt">性格タイプ詳細</div><span class="r-tog" style="transform:rotate(180deg);">▼</span></div><div class="r-pb aopen"><div class="body-txt" style="margin-bottom:16px;">${t.per}</div><div class="d-sec"><div class="d-lbl ls">強み</div><div class="body-txt">${t.str}</div></div><div class="d-sec"><div class="d-lbl lc">コミュニケーション</div><div class="body-txt">${t.com}</div></div><div class="d-sec"><div class="d-lbl lt">ストレス源</div><div class="body-txt">${t.sts}</div></div><div class="d-sec"><div class="d-lbl lg">成長のヒント</div><div class="body-txt">${t.grw}</div></div></div></div>
       <div class="r-panel fade-in"><div class="r-ph" onclick="toggleAcc(this)"><div class="r-pi">💼</div><div class="r-pt">向いている職種</div><span class="r-tog">▼</span></div><div class="r-pb"><div class="job-tags">${t.jobs.map(j=>`<div class="job-tag">${j}</div>`).join('')}</div><div class="body-txt">${t.why}</div></div></div>
+
+      ${buildAgentBlock('primary',cat,code,source)}
       ${compatSec(t.good,'good','相性の良いタイプ','🤝')}
       ${compatSec(t.bad,'bad','注意が必要なタイプ','⚠️')}
-      <div class="r-panel fade-in"><div class="r-ph" onclick="toggleAcc(this)"><div class="r-pi">🏢</div><div class="r-pt">おすすめ企業・職種</div><span class="r-tog">▼</span></div><div class="r-pb"><div class="ind-grid-sm">${indChips}</div><div id="company-list">${buildCoHTML(inds)}</div></div></div>
+      <div class="r-panel fade-in"><div class="r-ph" onclick="toggleAcc(this)"><div class="r-pi">🏢</div><div class="r-pt">業界別の職種例</div><span class="r-tog">▼</span></div><div class="r-pb"><div class="ind-grid-sm">${indChips}</div><p class="co-note">※タイプの傾向に近い職種の例です。掲載順に優劣はなく、特定の企業の採用基準や選考とは関係ありません。</p><div id="company-list">${buildCoHTML(inds)}</div></div></div>
       <div class="r-panel fade-in"><div class="r-ph always" style="cursor:default;"><div class="r-pi">📤</div><div class="r-pt">結果をシェア</div></div><div class="r-pb always"><div class="share-grid"><button class="sh sh-x rpl" onclick="addRipple(event,this);shareX()">𝕏 シェア</button><button class="sh sh-ln rpl" onclick="addRipple(event,this);shareLINE()">LINE</button><button class="sh sh-cp rpl" onclick="addRipple(event,this);copyResult()">コピー</button></div></div></div>
+      ${buildAgentBlock('secondary',cat,code,source)}
       <button class="retry-btn rpl" onclick="addRipple(event,this);clearSavedProgress();location.reload()">もう一度診断する →</button>
       <div style="height:50px;"></div>
     </div>
   </div>`;
 
   toScreen('screen-result');
+  track('result_view',{type_code:code,source:source});
+  observeAgentImpressions();
   setTimeout(()=>{const el=document.getElementById('res-code-el');if(el)countUpCode(el,code);},600);
   if(!skipConfetti)setTimeout(launchConfetti,800);
   clearSavedProgress();
 }
 
-function shareX(){const c=getCode(),t=TD[c];window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`私のキャリアタイプは【${c}：${t.icon} ${t.name}】でした！\n全体の${TYPE_PCT[c]}%しかいない希少タイプ🎉\n${t.tag}\n向いている職種：${t.jobs.join('、')}\n\n#就活キャリアタイプ診断 #16Types`)}`,'_blank');}
-function shareLINE(){const c=getCode(),t=TD[c];window.open(`https://line.me/R/msg/text/?${encodeURIComponent(`私のキャリアタイプは【${c}：${t.icon} ${t.name}】でした！全体の${TYPE_PCT[c]}%の希少タイプ🎉\n向いている職種：${t.jobs.join('、')}\nあなたも診断してみて！`)}`,'_blank');}
-function copyResult(){const c=getCode(),t=TD[c];navigator.clipboard.writeText(`私のキャリアタイプは【${c}：${t.icon} ${t.name}】でした！\n全体の${TYPE_PCT[c]}%の希少タイプ🎉\n${t.tag}\n向いている職種：${t.jobs.join('、')}\n${t.desc}`).then(()=>alert('コピーしました！'));}
-function copyLink(){navigator.clipboard.writeText(location.href).then(()=>alert('リンクをコピーしました！友達に送ってみよう🎉'));}
+/* =========================================================================
+   シェアURL
+   -------------------------------------------------------------------------
+   これまでシェア文にURLが1文字も入っておらず、拡散しても新規流入が0だった。
+   shareUrl(code) … 自分の結果を見せるためのURL。ref=share を付けることで、
+                    踏んだ人には他人の結果を出さず LP を見せる（§A-6）。
+   topUrl()       … 「診断リンクを友達に送る」用。?type= を含まない診断トップ。
+   TODO: タイプ別OGP r/<CODE>.html（未決事項 U-11）を用意したら、shareUrl() の
+         戻り値を SITE_BASE+'r/'+code+'.html' に差し替える。呼び出し側は無変更で済む。
+   ========================================================================= */
+function shareUrl(code){return SITE_BASE+'?type='+encodeURIComponent(code)+'&ref=share';}
+function topUrl(){return SITE_BASE;}
+
+/* クリップボードは HTTPS 以外・古い端末・権限拒否で失敗する。
+   従来は .then() だけで .catch() が無く、失敗しても利用者に何も伝わらなかった。 */
+function copyText(txt,okMsg){
+  const done=()=>alert(okMsg);
+  const fail=()=>{
+    try{
+      const ta=document.createElement('textarea');
+      ta.value=txt;ta.setAttribute('readonly','');
+      ta.style.cssText='position:fixed;top:-1000px;left:0;opacity:0;';
+      document.body.appendChild(ta);ta.select();
+      const ok=document.execCommand('copy');
+      document.body.removeChild(ta);
+      ok?done():alert('コピーできませんでした。次のURLを手動でコピーしてください：\n'+txt);
+    }catch(e){alert('コピーできませんでした。次のURLを手動でコピーしてください：\n'+txt);}
+  };
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(done).catch(fail);
+    }else fail();
+  }catch(e){fail();}
+}
+
+function shareX(){
+  const c=getCode(),t=TD[c];
+  const text=`私のキャリアタイプは【${c}：${t.icon} ${t.name}】でした！\n${t.tag}\n向いている職種：${t.jobs.join('、')}\n\n#就活キャリアタイプ診断 #16Types`;
+  track('share_click',{channel:'x',type_code:c});
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl(c))}`,'_blank','noopener');
+}
+function shareLINE(){
+  const c=getCode(),t=TD[c];
+  const text=`私のキャリアタイプは【${c}：${t.icon} ${t.name}】でした！\n${t.tag}\n向いている職種：${t.jobs.join('、')}\nあなたも診断してみて！\n${shareUrl(c)}`;
+  track('share_click',{channel:'line',type_code:c});
+  window.open(`https://line.me/R/msg/text/?${encodeURIComponent(text)}`,'_blank','noopener');
+}
+function copyResult(){
+  const c=getCode(),t=TD[c];
+  track('share_click',{channel:'copy',type_code:c});
+  copyText(`私のキャリアタイプは【${c}：${t.icon} ${t.name}】でした！\n${t.tag}\n向いている職種：${t.jobs.join('、')}\n${t.desc}\n${shareUrl(c)}`,'コピーしました！');
+}
+function copyLink(){
+  /* location.href だと、?type= 付きURLで来た人が「他人の結果URL」を配ってしまう。
+     このボタンは診断そのものを勧めるものなので、必ず診断トップを配る。 */
+  track('share_click',{channel:'link',type_code:getCode()});
+  copyText(topUrl(),'リンクをコピーしました！友達に送ってみよう🎉');
+}
+
+/* =========================================================================
+   送客ブロック（AGENTS が0件なら DOM ごと出さない）
+   ========================================================================= */
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function orderedAgents(cat){
+  if(!AGENTS.length)return[];
+  const ord=(AGENT_ORDER&&AGENT_ORDER[cat])||[];
+  const out=[];
+  ord.forEach(id=>{const a=AGENTS.find(x=>x.id===id);if(a&&out.indexOf(a)<0)out.push(a);});
+  AGENTS.forEach(a=>{if(out.indexOf(a)<0)out.push(a);});   /* 掲載集合はタイプ間で常に同一 */
+  return out;
+}
+
+/* 提携先レポートと GA4 を突合するための識別子を付ける */
+function agentUrl(a,code,pos){
+  if(!a.url)return '#';
+  const sep=a.url.indexOf('?')>=0?'&':'?';
+  return a.url+sep+'utm_source=careertype&utm_medium=referral&utm_content='+encodeURIComponent(code+'-'+pos);
+}
+
+function buildAgentBlock(pos,cat,code,source){
+  /* 未診断者には出さない。source が 'quiz'（20問に実際に回答した）ときだけ描画する。
+     ?type= 来訪は scores を ±5 に捏造して結果画面を出しているだけで、
+     本人の診断結果ではない。そこに送客を載せると、根拠のない文脈で広告を
+     出すことになる（PM仕様 §3）。16タイプ一覧のカードタップは C-6 で
+     タイプ紹介（.type-peek）に置き換え、結果画面を経由しなくなった。 */
+  if(source!=='quiz')return '';
+  const list=orderedAgents(cat);
+  if(!list.length)return '';           /* 掲載0件 → 枠ごと描画しない */
+  const items=list.map(a=>{
+    const note=[a.company,a.license].filter(Boolean).join('　/　');   /* 許可番号が空なら出さない */
+    return '<li class="ab-item">'
+      +`<a class="ab-link" href="${esc(agentUrl(a,code,pos))}" target="_blank" rel="sponsored noopener noreferrer" data-agent="${esc(a.id)}" data-pos="${esc(pos)}" onclick="onAgentClick('${esc(a.id)}','${esc(pos)}','${esc(code)}')">`
+      +`<span class="ab-name">${esc(a.name)}</span>`
+      +(a.forWhom?`<span class="ab-for">${esc(a.forWhom)}</span>`:'')
+      +(a.meta?`<span class="ab-meta">${esc(a.meta)}</span>`:'')
+      +(note?`<span class="ab-note">${esc(note)}</span>`:'')
+      +'</a></li>';
+  }).join('');
+  const title=pos==='primary'?`${code} の次の一手`:'もう一度診断する前に';
+  const lead=pos==='primary'
+    ?'この診断でわかるのは働き方の傾向までです。実際の求人や選考の進め方は、就活の話ができる相手に一度あたってみるのが早いです。'
+    :'結果を見たあとに話を聞いてみたくなったら、こちらから。';
+  return '<section class="agent-block" id="agent-'+esc(pos)+'">'
+    +'<div class="ab-lbl">PR</div>'
+    +`<h3 class="ab-title">${esc(title)}</h3>`
+    +`<p class="ab-lead">${esc(lead)}</p>`
+    +`<ul class="ab-list">${items}</ul>`
+    +'<p class="ab-disc">当サイトは提携先から紹介料を受け取ることがあります。掲載は提携の有無で決めており、表示順のみタイプの傾向を参考にしています。</p>'
+    +'</section>';
+}
+
+function onAgentClick(id,pos,code){track('agent_click',{agent_id:id,position:pos,type_code:code});}
+
+/* 50%が1秒以上見えたら1回だけ agent_impression を送る */
+let agentIO=null;
+function observeAgentImpressions(){
+  if(agentIO){agentIO.disconnect();agentIO=null;}
+  if(!GA_ID||!AGENTS.length)return;
+  if(typeof IntersectionObserver!=='function')return;
+  const links=document.querySelectorAll('#screen-result .ab-link');
+  if(!links.length)return;
+  const timers=new Map();
+  agentIO=new IntersectionObserver(entries=>{
+    entries.forEach(en=>{
+      const el=en.target,key=el.dataset.agent+'|'+el.dataset.pos;
+      if(en.isIntersecting&&en.intersectionRatio>=.5){
+        if(timers.has(key))return;
+        timers.set(key,setTimeout(()=>{
+          timers.delete(key);
+          track('agent_impression',{agent_id:el.dataset.agent,position:el.dataset.pos});
+          agentIO.unobserve(el);
+        },1000));
+      }else{
+        const t=timers.get(key);if(t){clearTimeout(t);timers.delete(key);}
+      }
+    });
+  },{threshold:[0,.5,1]});
+  links.forEach(el=>agentIO.observe(el));
+}
+
+/* =========================================================================
+   ?type= / ?ref=share の入口
+   -------------------------------------------------------------------------
+   ref=share（＝他人がシェアしたリンク）を踏んだ人に結果全文を見せない。
+   拡散リンクの受け手は最も価値の高い「新規診断者候補」であり、先に結果を
+   見せると自分で20問答える動機が消えるため（§A-6）。
+   ref なしの ?type= は従来どおり結果を表示する（既存動作の非破壊）。
+   ========================================================================= */
+function renderSharedBanner(code){
+  const t=TD[code];if(!t)return;
+  const host=document.querySelector('#screen-title .hero-inner');
+  if(!host||document.querySelector('.shared-banner'))return;
+  const el=document.createElement('div');
+  el.className='shared-banner';
+  el.innerHTML='<div class="sb-lbl">友達から届いた診断結果</div>'
+    +'<div class="sb-body">'
+    +`<img class="sb-img" src="images/chars/${codeImg(code)}.webp" alt="${esc(code)} ${esc(t.name)}">`
+    +`<div class="sb-txt"><span class="sb-code">${esc(code)}</span><span class="sb-name">${esc(t.icon)} ${esc(t.name)}</span><span class="sb-tag">${esc(t.tag)}</span></div>`
+    +'</div>'
+    +'<button class="sb-cta" onclick="continueOrStart(&quot;shared&quot;)">自分のタイプを診断する →</button>';
+  host.insertBefore(el,host.firstChild);
+  updateCtas();
+}
 
 (function(){
-  const p=new URLSearchParams(location.search),tp=p.get('type');
-  if(tp&&TD[tp.toUpperCase()]){
-    const code=tp.toUpperCase();
-    scores[1]=code[0]==='H'?5:-5;
-    scores[2]=code[1]==='A'?5:-5;
-    scores[3]=code[2]==='L'?5:-5;
-    scores[4]=code[3]==='S'?5:-5;
-    showResult(true);
+  const p=new URLSearchParams(location.search),tp=p.get('type'),ref=p.get('ref');
+  if(!tp)return;
+  const code=tp.toUpperCase();
+  if(!TD[code])return;
+  if(ref==='share'){
+    track('shared_landing',{type_code:code});
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>renderSharedBanner(code));
+    else renderSharedBanner(code);
+    return;                                   /* 結果画面は出さず LP のまま */
   }
+  scores[1]=code[0]==='H'?5:-5;
+  scores[2]=code[1]==='A'?5:-5;
+  scores[3]=code[2]==='L'?5:-5;
+  scores[4]=code[3]==='S'?5:-5;
+  showResult(true,'shared');
 })();
 </script>
 </body>

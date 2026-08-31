@@ -1,0 +1,396 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
+<meta name="robots" content="noindex,nofollow">
+<title>e2e driver</title>
+<!-- 実ブラウザでの結合テスト用ドライバ。make e2e が一時的にサイト直下へ置いて実行し、終わったら消す。
+     index.html を iframe で読み込み、実際のDOM・CSS・タイマーの上で操作を再現する。 -->
+<style>body{font:12px/1.6 monospace;white-space:pre-wrap;margin:0;padding:8px}
+iframe{position:fixed;top:0;right:0;width:390px;height:844px;border:1px solid #ccc;background:#fff}
+pre{margin-right:400px}</style>
+</head><body>
+<pre id="out">running...</pre>
+<iframe id="f" src="about:blank"></iframe>
+<script>
+const OUT=[];const el=document.getElementById('out');
+const p=s=>{OUT.push(s);el.textContent=OUT.join('\n');};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const f=document.getElementById('f');
+function load(url){return new Promise(res=>{f.onload=()=>res();f.src=url;});}
+const CODES=['HALS','HALG','HAWS','HAWG','HBLS','HBLG','HBWS','HBWG','DALS','DALG','DAWS','DAWG','DBLS','DBLG','DBWS','DBWG'];
+// Qs の添字ごとの回答値（Qs は軸ごとに5問ずつのブロック配置）
+function ansFor(c){const s=[c[0]==='H'?1:-1,c[1]==='A'?1:-1,c[2]==='L'?1:-1,c[3]==='S'?1:-1];const o=[];for(let a=0;a<4;a++)for(let i=0;i<5;i++)o.push(s[a]*2);return o;}
+// 出題位置 p では Qs[Q_ORDER[p]] が出る。ansFor() は Qs の添字基準なので並べ替えて渡す。
+function inOrder(w,vals){const o=w.eval('Q_ORDER');return o.map(i=>vals[i]);}
+// 指定した spec-track の中から値 v のボタンを取る（LP と質問画面で2セットある）
+function dot(d,trackId,v){return [...d.querySelectorAll('#'+trackId+' .sdw')].find(x=>Number(x.dataset.v)===v);}
+let fail=0;
+const chk=(ok,msg)=>{if(!ok)fail++;p((ok?'OK  ':'NG  ')+msg);};
+
+(async()=>{
+try{
+  // ---------- A. LP が正常に読み込まれ、スクリプトが最後まで走ったか ----------
+  await load('index.html');
+  let w=f.contentWindow,d=f.contentDocument;
+  await sleep(1200);
+  chk(typeof w.showResult==='function' && typeof w.buildAgentBlock==='function','スクリプトが最後まで評価された（HTMLパース破壊なし）');
+  chk(d.querySelectorAll('#type-overview .tc').length===16,'16タイプグリッドが生成された: '+d.querySelectorAll('#type-overview .tc').length);
+  chk(d.body.dataset.screen==='screen-title','body[data-screen]=screen-title');
+  chk(d.getElementById('stat-count').textContent==='20','診断者数→質問数20 に差し替わった: '+d.getElementById('stat-count').textContent);
+  chk(!!d.querySelector('.ftr a[href="privacy.html"]'),'フッターに privacy.html へのリンクがある');
+  chk(getComputedStyle(d.querySelector('.ftr')).display!=='none','LPではフッターが表示されている');
+  chk(d.querySelectorAll('.drawer a[href^="privacy.html"]').length===2,'ドロワーに運営情報リンク2件');
+  chk(d.querySelectorAll('form,input[type=email]').length===0,'フォーム要素0件');
+  chk(!/SPI|診断者数|希少度|しかいない|12,847/.test(d.body.innerText),'LP本文に SPI/診断者数/希少度 が無い');
+  chk(/探し方のヒント/.test(d.body.innerText),'hero-sub が是正済み');
+  const head=d.head.innerHTML;
+  ['og:title','og:description','og:image','og:url','twitter:card'].forEach(k=>chk(head.indexOf(k)>=0,'head に '+k));
+  chk(head.indexOf('summary_large_image')>=0,'twitter:card=summary_large_image');
+
+  // og:image が実在するか
+  const ogi=d.querySelector('meta[property="og:image"]').content;
+  const r=await fetch(ogi.replace('https://w-t-n-b.github.io/syukatsushindan/',''));
+  chk(r.ok,'og:image が取得できる ('+r.status+') '+ogi);
+
+  // ---------- B. 20問通し × 16タイプ（実ブラウザ・実DOM） ----------
+  for(const want of CODES){
+    await load('index.html'); w=f.contentWindow; d=f.contentDocument;
+    await sleep(60);
+    w.startFresh('e2e');
+    chk(d.getElementById('screen-quiz').classList.contains('active'),want+': 診断画面に遷移');
+    if(want==='HALS'){
+      chk(getComputedStyle(d.querySelector('.ftr')).display==='none','診断中はフッター非表示');
+      chk(d.body.dataset.screen==='screen-quiz','body[data-screen]=screen-quiz');
+    }
+    const av=inOrder(w,ansFor(want));
+    for(let i=0;i<20;i++){
+      const sdw=dot(d,'spec-track',av[i]);
+      const qn=d.getElementById('prog-text').textContent;
+      if(qn!=='Q'+(i+1)+' / 20'){chk(false,want+': 進捗表示ずれ '+qn);break;}
+      if(i===6){
+        const done=d.querySelectorAll('#prog-seg .ps-cell.done').length;
+        const cur=d.querySelectorAll('#prog-seg .ps-cell.cur').length;
+        const grp=d.querySelectorAll('#prog-seg .ps-group').length;
+        const cell=d.querySelectorAll('#prog-seg .ps-cell').length;
+        chk(grp===4&&cell===20,'.prog-seg は4群×5セル: '+grp+'群 '+cell+'セル');
+        chk(done===6&&cur===1,'7問目の表示中に .ps-cell.done が6・.cur が1: done='+done+' cur='+cur);
+      }
+      w.pick(sdw);
+      await sleep(560);
+    }
+    // ローディング 3.6s
+    await sleep(6200);
+    const rc=d.querySelector('.res-code');
+    const got=rc?rc.textContent.trim():'(なし)';
+    const gotJs=w.getCode();
+    const nm=d.querySelector('.res-type-name');
+    chk(d.getElementById('screen-result').classList.contains('active') && got===want,
+        want+': 20問通しの判定 = '+got+'（getCode()='+gotJs+'）/ '+(nm?nm.textContent.trim():''));
+    chk(gotJs===want,want+': getCode() 一致');
+    if(want==='HALS'){
+      const t=d.body.innerText;
+      chk(!/希少度|診断者の|しかいない/.test(t),'結果画面に希少度/診断者%が無い');
+      chk(!/孫正義|マッキンゼー|サイバーエージェント|トヨタ自動車|三菱商事/.test(t),'結果画面に実在の人名・企業名が無い');
+      chk(/傾向の分類/.test(t),'「傾向の分類」の明示がある');
+      chk(/掲載順に優劣はなく/.test(d.getElementById('screen-result').innerHTML),'職種例の注記がある');
+      chk(d.querySelectorAll('.ab-link').length===0,'AGENTS が0件なので送客リンクは0件');
+      chk(d.querySelectorAll('#agent-primary,#agent-secondary').length===0,'送客ブロックは DOM ごと描画されない');
+      const rh=d.getElementById('screen-result').innerHTML;
+      chk(rh.indexOf('最適な')<0 && rh.indexOf('あなた専用')<0 && rh.indexOf('内定率')<0,'禁止語（最適な/あなた専用/内定率）0件');
+      chk(getComputedStyle(d.querySelector('.ftr')).display!=='none','結果画面ではフッター表示');
+    }
+  }
+
+  // ---------- C. シェア導線 ----------
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument;
+  await sleep(60);
+  // 以前は jumpToType('HALS')（scores を捏造して結果全文を出す）で状態を作っていた。
+  // C-6 でその経路を廃止したため、scores を直接置いて同じ状態を作る。
+  w.eval("scores={1:5,2:5,3:5,4:5}"); await sleep(60);
+  const SU=w.shareUrl('HALS');
+  chk(SU==='https://w-t-n-b.github.io/syukatsushindan/?type=HALS&ref=share','shareUrl(): '+SU);
+  chk(w.topUrl()==='https://w-t-n-b.github.io/syukatsushindan/','topUrl(): '+w.topUrl());
+  let opened=null; w.open=(u)=>{opened=u;return null;};
+  w.shareX();
+  chk(decodeURIComponent(opened).indexOf(SU)>=0,'shareX のツイートURLにサイトURLが入る');
+  chk(decodeURIComponent(opened).indexOf('希少')<0,'shareX から根拠なき統計が消えた');
+  p('     shareX -> '+decodeURIComponent(opened).slice(0,200));
+  w.shareLINE();
+  chk(decodeURIComponent(opened).indexOf(SU)>=0,'shareLINE の本文にサイトURLが入る');
+  p('     shareLINE -> '+decodeURIComponent(opened).slice(0,200));
+
+  // copyLink: ?type= 付きで来た第三者がコピーしても診断トップになる
+  await load('index.html?type=DBWG'); w=f.contentWindow; d=f.contentDocument;
+  await sleep(200);
+  chk(d.getElementById('screen-result').classList.contains('active'),'?type= 単体は従来どおり結果表示（非破壊）');
+  let copied=null;
+  Object.defineProperty(w.navigator,'clipboard',{configurable:true,value:{writeText:t=>{copied=t;return Promise.resolve();}}});
+  w.alert=()=>{};
+  w.copyLink(); await sleep(80);
+  chk(copied==='https://w-t-n-b.github.io/syukatsushindan/','copyLink は診断トップを配る（?type= を含まない）: '+copied);
+  w.copyResult(); await sleep(80);
+  chk(copied.indexOf('?type=DBWG&ref=share')>=0,'copyResult に結果URLが入る');
+
+  // ---------- D. ref=share 分岐 ----------
+  await load('index.html?type=HALS&ref=share'); w=f.contentWindow; d=f.contentDocument;
+  await sleep(300);
+  chk(d.getElementById('screen-title').classList.contains('active'),'ref=share: LP が active');
+  chk(!d.getElementById('screen-result').classList.contains('active'),'ref=share: 結果画面は非表示');
+  chk(d.getElementById('screen-result').innerHTML.trim()==='','ref=share: 結果DOMそのものが生成されていない');
+  const sb=d.querySelector('.shared-banner');
+  chk(!!sb,'ref=share: .shared-banner がある');
+  chk(sb && /HALS/.test(sb.innerText) && /オンオフのエース/.test(sb.innerText),'ref=share: HALS / オンオフのエース が出る');
+  chk(!!(sb&&sb.querySelector('.sb-cta')),'ref=share: 診断開始CTAがある');
+  sb.querySelector('.sb-cta').click(); await sleep(400);
+  // §A-6: 友達のリンクで来た人こそ段差なしで答え始めさせる。#screen-quiz には飛ばさない。
+  chk(!d.getElementById('screen-quiz').classList.contains('active'),'ref=share: CTAで #screen-quiz に飛ばない');
+  chk(d.getElementById('screen-title').classList.contains('active'),'ref=share: LPのまま');
+  chk(d.getElementById('lq-num').textContent==='Q1','ref=share: #lp-quiz の1問目に着地する');
+
+  // ---------- E. 送客ブロック（AGENTS に1件入れたときの描画） ----------
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument;
+  await sleep(60);
+  // const 宣言は window のプロパティにならないので eval 経由で触る
+  w.eval("AGENTS.push({id:'test-ca',name:'テストCA',url:'https://example.com/lp?a=1',forWhom:'まず何から始めるか決めきれていない人',meta:'無料／オンライン面談30分／連絡は原則メール・電話なし',company:'テスト株式会社',license:''})");
+  // 未診断者の経路では出ないこと（C-6：16タイプ一覧のタップは結果全文を出さなくなった）
+  d.querySelector('#type-overview .tc[data-code="HALS"]').click(); await sleep(300);
+  chk(d.querySelectorAll('.ab-link').length===0,'16タイプ一覧のタップでは送客リンクを描画しない');
+  chk(!d.getElementById('screen-result').classList.contains('active'),'16タイプ一覧のタップで結果画面に遷移しない');
+  await load('index.html?type=HALS'); const w2=f.contentWindow;
+  await sleep(250);
+  w2.eval("AGENTS.push({id:'t',name:'t',url:'https://e.com',forWhom:'x',meta:'電話なし'});showResult(true,'shared')");
+  await sleep(150);
+  chk(f.contentDocument.querySelectorAll('.ab-link').length===0,'?type= 来訪（未診断者）でも送客ブロックを描画しない');
+  // 20問回答した人にだけ出る
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(80);
+  w.eval("AGENTS.push({id:'test-ca',name:'テストCA',url:'https://example.com/lp?a=1',forWhom:'まず何から始めるか決めきれていない人',meta:'無料／オンライン面談30分／連絡は原則メール・電話なし',company:'テスト株式会社',license:''})");
+  w.startFresh('e2e');
+  { const av=inOrder(w,ansFor('HALS'));
+    for(let i=0;i<20;i++){ w.pick(dot(d,'spec-track',av[i])); await sleep(560); } }
+  await sleep(6200);
+  const ap=d.getElementById('agent-primary'), as=d.getElementById('agent-secondary');
+  chk(!!ap&&!!as,'1件入れると #agent-primary / #agent-secondary が出る');
+  chk(!!ap&&ap.querySelector('.ab-lbl').textContent==='PR','PR表記がブロック冒頭にある');
+  const lk=ap.querySelector('a.ab-link');
+  chk(lk.target==='_blank'&&/sponsored/.test(lk.rel)&&/noopener/.test(lk.rel),'rel/target: '+lk.rel+' / '+lk.target);
+  chk(/電話/.test(ap.querySelector('.ab-meta').textContent),'.ab-meta に連絡手段（電話の有無）');
+  chk(ap.querySelectorAll('.ab-note').length===1 && !/許可/.test(ap.querySelector('.ab-note').textContent),'許可番号が空なら出さない: '+ap.querySelector('.ab-note').textContent);
+  chk(lk.getAttribute('href').indexOf('utm_content=HALS-primary')>=0,'utm_content=<CODE>-<position>: '+lk.getAttribute('href'));
+  chk(!!ap.querySelector('.ab-disc'),'.ab-disc（紹介料の開示）がある');
+  // 「向いている職種」パネルの直後か
+  const panels=[...d.querySelectorAll('#screen-result .r-panel')];
+  const jobPanel=panels.find(x=>/向いている職種/.test(x.textContent));
+  chk(jobPanel && jobPanel.nextElementSibling===ap,'#agent-primary が「向いている職種」パネルの直後');
+  chk(d.querySelector('.retry-btn').previousElementSibling===as,'#agent-secondary が「もう一度診断する」の直前');
+  // タイプが変わっても掲載集合は同一
+  w.eval("scores={1:-5,2:-5,3:-5,4:-5};showResult(true,'quiz')"); await sleep(150);
+  chk([...d.querySelectorAll('#agent-primary .ab-name')].map(x=>x.textContent).join()==='テストCA','DBWG でも同じ掲載集合');
+  chk(d.querySelector('#agent-primary a.ab-link').getAttribute('href').indexOf('utm_content=DBWG-primary')>=0,'DBWG の utm_content');
+  // 許可番号があるときは .ab-note に出る
+  w.eval("AGENTS[0].license='13-ユ-000000';scores={1:5,2:5,3:5,4:5};showResult(true,'quiz')"); await sleep(150);
+  chk(/13-ユ-000000/.test(d.querySelector('#agent-primary .ab-note').textContent),'許可番号があれば .ab-note に出る: '+d.querySelector('#agent-primary .ab-note').textContent);
+  // 掲載を空に戻すと枠ごと消える
+  w.eval("AGENTS.length=0;showResult(true,'quiz')"); await sleep(150);
+  chk(d.querySelectorAll('#agent-primary,#agent-secondary,.ab-link').length===0,'掲載を0件に戻すと枠ごと消える');
+
+  // ---------- F. GA4 は測定IDが空なら一切読み込まれない ----------
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument;
+  await sleep(400);
+  chk(d.querySelectorAll('script[src*="googletagmanager"]').length===0,'GA_ID が空 → gtag.js を読み込まない');
+  chk(typeof w.gtag==='undefined','GA_ID が空 → gtag が定義されない');
+  chk(w.eval('GA_ID')==='','GA_ID は空文字');
+  chk(w.eval('SITE_BASE')==='https://w-t-n-b.github.io/syukatsushindan/','SITE_BASE');
+  chk(w.eval('AGENTS.length')===0,'出荷時の AGENTS は0件');
+
+  // ---------- G-0. 副CTA・ドロワーの導線 ----------
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(200);
+  chk(d.querySelectorAll('.btn-ghost').length===0,'副CTA（主CTAと同一動作だった）は削除された');
+  chk([...d.querySelectorAll('#screen-title button')].filter(x=>/continueOrStart/.test(x.getAttribute('onclick')||'')).length===2,
+      'LP上の診断CTAは2つで、いずれも continueOrStart（ヒーロー・16タイプ一覧の下）');
+  chk([...d.querySelectorAll('button')].filter(x=>/startFresh/.test(x.getAttribute('onclick')||'')).length===0,
+      '回答を全消去する startFresh() を直接呼ぶボタンは1つも残っていない');
+  // iframe 内ではスムーススクロールのアニメーションが走らないことがあるため、
+  // scrollTo の引数を捕まえて「どこへ飛ばそうとしたか」を検証する。
+  // 実ページでの実挙動は別途 CDP で確認済み。
+  let scrolledTo=null; const realScrollTo=w.scrollTo.bind(w);
+  w.scrollTo=(a,b)=>{scrolledTo=(a&&typeof a==='object')?a.top:b;return realScrollTo(a,b);};
+  chk(d.querySelectorAll('.drawer').length===1 && d.querySelectorAll('.drawer .d-cta').length===1,'ドロワーの主CTAは1つ');
+  chk([...d.querySelectorAll('.drawer button,.drawer a')].filter(x=>/診断をはじめる/.test(x.textContent)).length===1,'ドロワー内の「診断をはじめる」は1つに統合された');
+  const catBtns=[...d.querySelectorAll('.drawer button')].filter(x=>/系$|系/.test(x.querySelector('.d-icon')?x.querySelector('.d-icon').textContent:''));
+  chk(catBtns.length===4,'ドロワーの系統ボタン4つ');
+  chk(catBtns.every(b=>/scrollToTypes/.test(b.getAttribute('onclick'))),'系統ボタン4つすべてに遷移先がある');
+  for(const c of ['HA','HB','DA','DB'])chk(!!d.getElementById('type-cat-'+c),'アンカー #type-cat-'+c+' が存在');
+  scrolledTo=null;
+  catBtns[3].click(); await sleep(300);
+  const dbTop=d.getElementById('type-cat-DB').getBoundingClientRect().top+w.pageYOffset-70;
+  chk(scrolledTo!==null&&Math.abs(scrolledTo-dbTop)<2,'DB系ボタンはDB系の見出しへスクロールする: 指定y='+scrolledTo+' / 期待='+Math.round(dbTop));
+  w.scrollTo=realScrollTo;
+
+  // ---------- G. 途中復帰 ----------
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument;
+  await sleep(60);
+  w.startFresh('e2e');
+  for(let i=0;i<8;i++){w.pick(dot(d,'spec-track',2));await sleep(560);}
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(300);
+  chk(d.getElementById('cont-banner').style.display==='flex','途中離脱→リロードで #cont-banner が出る');
+  w.continueDiag(); await sleep(120);
+  chk(d.getElementById('prog-text').textContent==='Q8 / 20','質問画面まで進んだ人は #screen-quiz に復帰する（保存は加算前 curQ ＝既存仕様）: '+d.getElementById('prog-text').textContent);
+  w.clearSavedProgress();
+
+  // ---------- H. LP埋め込み質問（設計A）----------
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(400);
+  {
+    const lq=d.getElementById('lp-quiz');
+    chk(!!lq,'#lp-quiz が LP にある');
+    chk(d.getElementById('lq-card').style.display!=='none' && !d.getElementById('lq-done').classList.contains('on'),
+        '開いた直後は質問カードが1問だけ表示され、.lq-done は非表示');
+    chk(d.getElementById('lq-num').textContent==='Q1','LPは1問目から');
+    chk(d.querySelectorAll('#lq-spec-track .sdw').length===5,'LPの回答ドットは5段階');
+    chk(d.querySelectorAll('#lq-spec-track .sdw[data-v="0"]').length===1,'中央（どちらでもない）が存在し、無効化されていない');
+    chk(getComputedStyle(d.querySelector('#lq-spec-track .sdw[data-v="0"]')).pointerEvents!=='none','中央が押せる（強制二択の名残がない）');
+    chk(d.getElementById('lq-back').hidden===true,'1問目では「1つ前に戻る」は出ない');
+
+    // 高さは1問ぶんのまま増えないこと（§A-7 の破綻しない条件）
+    const h0=lq.getBoundingClientRect().height;
+    const y0=d.querySelector('.char-strip-outer').getBoundingClientRect().top;
+    const axes=[];
+    for(let i=0;i<5;i++){
+      axes.push(w.eval('qAt(curQ).ax'));
+      chk(d.getElementById('lq-num').textContent==='Q'+(i+1),'LP '+(i+1)+'問目を表示中');
+      w.pick(dot(d,'lq-spec-track',i===3?-1:2));
+      await sleep(560);
+      if(i<4){
+        chk(!d.getElementById('screen-quiz').classList.contains('active'),'LP回答'+(i+1)+'問目：画面遷移が起きない');
+        chk(d.querySelectorAll('#lq-prog-seg .ps-cell.done').length===i+1,'LPの .prog-seg の塗りが '+(i+1)+' 個');
+      }
+    }
+    chk(axes.join(',')==='1,2,3,4,1','LPに出る5問の軸が順に 1,2,3,4,1: '+axes.join(','));
+    chk(!d.getElementById('screen-quiz').classList.contains('active'),'5問目のあとも自動遷移しない（§A-5）');
+    chk(d.getElementById('lq-done').classList.contains('on'),'5問目のあと .lq-done に差し替わる');
+    chk(/残り15問/.test(d.getElementById('lq-continue').textContent),'#lq-continue に「残り15問」: '+d.getElementById('lq-continue').textContent);
+    chk(/残り15問を続ける/.test(d.getElementById('cta-hero').textContent),'ヒーローCTAの文言が「残り15問を続ける →」: '+d.getElementById('cta-hero').textContent);
+
+    const h1=lq.getBoundingClientRect().height;
+    chk(Math.abs(h1-h0)<2,'#lp-quiz の高さが回答で増えない: '+Math.round(h0)+'px → '+Math.round(h1)+'px');
+    chk(Math.abs(d.querySelector('.char-strip-outer').getBoundingClientRect().top-y0)<2,'下のキャラマーキーがせり上がらない');
+
+    d.getElementById('lq-continue').click(); await sleep(400);
+    chk(d.getElementById('screen-quiz').classList.contains('active'),'#lq-continue で質問画面へ');
+    chk(d.getElementById('prog-text').textContent==='Q6 / 20','質問画面は Q6 から: '+d.getElementById('prog-text').textContent);
+    chk(d.querySelectorAll('#prog-seg .ps-cell.done').length===5,'質問画面の .prog-seg が5つ塗られた状態で始まる');
+    // 位置0(軸1:+2) 1(軸2:+2) 2(軸3:+2) 3(軸4:-1) 4(軸1:+2)
+    chk(w.eval('JSON.stringify(scores)')==='{"1":4,"2":2,"3":2,"4":-1}','5問ぶんのスコアが保持されている: '+w.eval('JSON.stringify(scores)'));
+    chk(d.querySelectorAll('.q-card').length===2 && d.querySelectorAll('#lq-card.q-card,#q-card.q-card').length===2,
+        'LPと質問画面が同一 class（.q-card / .spec-track / .sdw）を使い回している');
+  }
+
+  // LPで3問答えてヒーローCTA → 回答が消えない
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(400);
+  {
+    for(let i=0;i<3;i++){w.pick(dot(d,'lq-spec-track',2));await sleep(560);}
+    const before=w.eval('JSON.stringify(scores)');
+    d.getElementById('cta-hero').click(); await sleep(500);
+    chk(w.eval('curQ')===3,'ヒーローCTAで curQ が 0 にリセットされない: '+w.eval('curQ'));
+    chk(w.eval('JSON.stringify(scores)')===before,'ヒーローCTAで回答が消えない: '+before);
+    chk(!d.getElementById('screen-quiz').classList.contains('active'),'質問画面には飛ばず LP のまま');
+    chk(d.getElementById('lq-num').textContent==='Q4','#lp-quiz の4問目に戻る');
+    chk(d.getElementById('lq-back').hidden===false,'2問目以降は「1つ前に戻る」が出る');
+    d.getElementById('lq-back').click(); await sleep(200);
+    chk(d.getElementById('lq-num').textContent==='Q3'&&w.eval('curQ')===2,'LPで1問戻れる');
+  }
+
+  // LPで2問答えてリロード → LPに復帰する
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(400);
+  for(let i=0;i<2;i++){w.pick(dot(d,'lq-spec-track',2));await sleep(560);}
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(400);
+  chk(d.getElementById('cont-banner').style.display==='flex','LPで2問→リロードで #cont-banner が出る');
+  d.getElementById('cont-banner').click(); await sleep(500);
+  chk(!d.getElementById('screen-quiz').classList.contains('active'),'LPで2問だけの人を質問画面に飛ばさない（§A-6）');
+  chk(d.getElementById('screen-title').classList.contains('active'),'LPのまま復帰する');
+  chk(d.getElementById('lq-num').textContent==='Q2','#lp-quiz に復帰する（保存は加算前 curQ ＝既存仕様）: '+d.getElementById('lq-num').textContent);
+  w.clearSavedProgress();
+
+  // 旧バージョンの保存データ（cq_p）は捨てる
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(200);
+  w.localStorage.setItem('cq_p',JSON.stringify({curQ:7,scores:{1:5,2:5,3:5,4:5},ans:[2,2,2,2,2,2,2],selectedIndustries:[]}));
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(400);
+  chk(w.localStorage.getItem('cq_p')===null,'旧キー cq_p は起動時に削除される');
+  chk(d.getElementById('cont-banner').style.display!=='flex','旧データでは #cont-banner を出さない');
+  chk(w.eval('curQ')===0&&d.getElementById('lq-num').textContent==='Q1','旧データがあっても1問目から始まる');
+
+  // ---------- I. C-6 タイプ紹介（.type-peek）----------
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(400);
+  {
+    const tc=d.querySelector('#type-overview .tc[data-code="DBWG"]');
+    chk(!!tc,'16タイプのカードに data-code がある');
+    tc.click(); await sleep(400);
+    const pk=d.querySelector('.type-peek');
+    chk(!!pk,'.type-peek が展開される');
+    chk(!d.getElementById('screen-result').classList.contains('active'),'結果画面に遷移しない');
+    chk(d.getElementById('screen-result').innerHTML.trim()==='','結果DOMそのものが生成されない');
+    chk(d.querySelectorAll('#agent-primary,#agent-secondary,.ab-link').length===0,'送客ブロックが出ない');
+    chk(d.querySelectorAll('.axis-viz,.av-track').length===0,'4軸スコアの棒グラフが出ない');
+    chk(!/判定理由/.test(d.body.innerText),'「判定理由」が出ない');
+    chk(/DBWG/.test(pk.innerText)&&/コツコツマイスター/.test(pk.innerText),'タイプコードと名前が出る');
+    chk(!!pk.querySelector('.tp-str-txt')&&pk.querySelector('.tp-str-txt').textContent.split('。').length===2,'強みは先頭1文だけ: '+pk.querySelector('.tp-str-txt').textContent);
+    chk(pk.parentElement===tc.parentElement,'押したカードと同じ .type-grid の中に展開される');
+    chk(w.eval("scores[1]")===0,'scores を捏造していない');
+    // もう一度押すと閉じる
+    tc.click(); await sleep(300);
+    chk(d.querySelectorAll('.type-peek').length===0,'同じカードをもう一度押すと閉じる');
+    // 同時に開くのは1枚
+    d.querySelector('#type-overview .tc[data-code="HALS"]').click(); await sleep(300);
+    d.querySelector('#type-overview .tc[data-code="HBLS"]').click(); await sleep(300);
+    chk(d.querySelectorAll('.type-peek').length===1,'同時に開くのは1枚まで');
+    d.querySelector('.tp-close').click(); await sleep(200);
+    chk(d.querySelectorAll('.type-peek').length===0,'✕ で閉じる');
+    // 紹介からの診断開始
+    d.querySelector('#type-overview .tc[data-code="HALS"]').click(); await sleep(300);
+    d.querySelector('.type-peek .tp-cta').click(); await sleep(500);
+    chk(d.getElementById('screen-quiz').classList.contains('active'),'タイプ紹介のCTAから診断が始まる');
+    chk(w.eval('curQ')===0,'未回答なら1問目から');
+  }
+
+  // ---------- J. C-7 回答ドットのキーボード操作 ----------
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(300);
+  {
+    const dots=[...d.querySelectorAll('#spec-track .sdw')];
+    chk(dots.length===5&&dots.every(x=>x.tagName==='BUTTON'),'回答ドットは <button>');
+    chk(dots.every(x=>x.getAttribute('role')==='radio'&&x.getAttribute('aria-checked')==='false'),'role="radio" と aria-checked がある');
+    chk(dots.every(x=>(x.getAttribute('aria-label')||'').length>0),'5段階それぞれに aria-label がある');
+    chk(dots.every(x=>x.tabIndex===0),'Tab で5段階すべてにフォーカスが移る（tabindex が負でない）');
+    chk(d.getElementById('spec-track').getAttribute('role')==='radiogroup','.spec-track は radiogroup');
+    chk(d.getElementById('spec-track').getAttribute('aria-describedby')==='q-a q-b','選択肢の実文が読み上げられる（aria-describedby）');
+    w.startFresh('e2e'); await sleep(120);
+    const d2=[...d.querySelectorAll('#spec-track .sdw')];
+    d2[0].focus();
+    chk(d.activeElement===d2[0],'キーボードフォーカスが当たる');
+    d2[0].click(); await sleep(80);
+    chk(d2[0].getAttribute('aria-checked')==='true','選択すると aria-checked が true');
+    await sleep(560);
+    chk(d.getElementById('prog-text').textContent==='Q2 / 20','Enter/Space 相当の活性化で回答できる');
+    chk([...d.querySelectorAll('#spec-track .sdw')].every(x=>x.getAttribute('aria-checked')==='false'),'次の問では選択状態がリセットされる');
+    w.clearSavedProgress();
+  }
+
+  // ---------- K. A-2 質問ごとの背景が変化しないこと ----------
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(200);
+  {
+    w.startFresh('e2e'); await sleep(150);
+    const bgs=new Set(),tops=new Set(),axs=new Set();
+    for(let i=0;i<4;i++){
+      bgs.add(getComputedStyle(d.getElementById('quiz-bg')).backgroundColor);
+      tops.add(getComputedStyle(d.getElementById('q-top')).backgroundColor);
+      axs.add(d.getElementById('q-card').dataset.ax);
+      w.pick(dot(d,'spec-track',2)); await sleep(560);
+    }
+    chk(axs.size===4,'4問連続で軸が変わっている（Q_ORDER が効いている）: '+[...axs].join(','));
+    chk(bgs.size===1,'#quiz-bg の背景が問ごとに変化しない: '+[...bgs].join(' / '));
+    chk(tops.size===1,'#q-top の背景が問ごとに変化しない: '+[...tops].join(' / '));
+    chk(d.getElementById('quiz-bg').getAttribute('style')===null||!/background/.test(d.getElementById('quiz-bg').getAttribute('style')||''),'インライン background の代入が残っていない');
+    w.clearSavedProgress();
+  }
+
+  p('\n===== '+(fail===0?'ALL PASS':fail+' FAILURES')+' =====');
+}catch(e){p('EXCEPTION: '+(e&&e.stack||e));p('\n===== EXCEPTION =====');}
+document.title='DONE';
+})();
+</script></body></html>

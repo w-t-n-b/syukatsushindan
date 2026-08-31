@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<!--
+  og:image（1200x630）の版下。images/ogp/default.png はこのファイルを
+  ヘッドレス Chrome でスクリーンショットして生成している。
+
+  再生成コマンド（リポジトリのルートで実行）:
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+      --headless=new --disable-gpu --hide-scrollbars \
+      --force-device-scale-factor=1 --allow-file-access-from-files \
+      --window-size=1200,630 --virtual-time-budget=4000 \
+      --screenshot=images/ogp/default.png \
+      images/ogp/_default.source.html
+
+  ・和文は macOS の Hiragino Sans を使用（Web フォントに依存しない＝オフラインで再現可能）
+  ・キャラクターは images/chars/ の既存素材（2:3・800x1200）をそのまま使用
+  ・タイプ別 OGP 16枚は未決事項 U-11 のため未着手
+-->
+<html lang="ja"><head><meta charset="UTF-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:1200px;height:630px;overflow:hidden;}
+body{
+  font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;
+  background:#132043; position:relative; display:flex; align-items:center;
+  -webkit-font-smoothing:antialiased;
+}
+/* 集中線 */
+body::before{
+  content:''; position:absolute; inset:0;
+  background-image:repeating-conic-gradient(from 0deg at 68% 46%,
+    rgba(255,255,255,.055) 0deg 1.05deg, transparent 1.05deg 3.6deg);
+}
+/* 下端の4色ルール（カテゴリの並び） */
+body::after{
+  content:''; position:absolute; left:0; right:0; bottom:0; height:11px;
+  background:linear-gradient(90deg,#1a56db 0 25%,#1d6b4c 25% 50%,#c8412e 50% 75%,#4b4483 75% 100%);
+}
+.ring{position:absolute;border-radius:50%;}
+.r1{width:360px;height:360px;border:26px solid rgba(255,255,255,.07);top:-150px;right:-90px;}
+.r2{width:200px;height:200px;border:22px solid rgba(207,154,36,.28);bottom:-84px;left:-60px;}
+
+.left{position:relative;z-index:2;width:598px;padding:0 0 0 58px;}
+.badge{
+  display:inline-block;background:#cf9a24;color:#111a30;
+  font-weight:800;font-size:21px;letter-spacing:.14em;
+  padding:9px 20px;border:3px solid #111a30;box-shadow:6px 6px 0 #c8412e;
+  margin-bottom:30px;
+}
+h1{
+  font-weight:900;font-size:60px;line-height:1.26;letter-spacing:-.045em;
+  color:#f2ece0;font-feature-settings:'palt' 1;
+  text-shadow:4px 4px 0 rgba(0,0,0,.45);
+}
+h1 em{
+  display:block;font-style:normal;margin-top:8px;color:#cf9a24;
+  text-shadow:
+    -2px 0 0 #111a30, 2px 0 0 #111a30, 0 -2px 0 #111a30, 0 2px 0 #111a30,
+    -1.5px -1.5px 0 #111a30, 1.5px -1.5px 0 #111a30,
+    -1.5px 1.5px 0 #111a30, 1.5px 1.5px 0 #111a30,
+    6px 6px 0 #c8412e;
+}
+.sub{margin-top:26px;font-size:25px;line-height:1.7;color:#c3cbdd;font-weight:600;}
+.url{margin-top:22px;font-size:19px;color:#8792a8;letter-spacing:.02em;font-weight:600;}
+
+.right{position:relative;z-index:2;flex:1;display:flex;gap:11px;justify-content:center;
+  align-items:center;padding-right:34px;}
+.card{
+  width:136px;height:204px;overflow:hidden;
+  border:4px solid #111a30;border-radius:6px;background:#f7f6f3;
+  position:relative;flex-shrink:0;
+}
+.card img{width:100%;height:100%;object-fit:cover;object-position:50% 4%;display:block;}
+.card::after{content:'';position:absolute;left:0;right:0;bottom:0;height:7px;}
+.c1{transform:rotate(-4deg) translateY(-16px);box-shadow:9px 9px 0 #1a56db;}
+.c1::after{background:#1a56db;}
+.c2{transform:rotate(2deg) translateY(16px);box-shadow:9px 9px 0 #1d6b4c;}
+.c2::after{background:#1d6b4c;}
+.c3{transform:rotate(-2deg) translateY(-14px);box-shadow:9px 9px 0 #c8412e;}
+.c3::after{background:#c8412e;}
+.c4{transform:rotate(4deg) translateY(18px);box-shadow:9px 9px 0 #4b4483;}
+.c4::after{background:#4b4483;}
+</style></head>
+<body>
+<div class="ring r1"></div><div class="ring r2"></div>
+<div class="left">
+  <div class="badge">就活キャリア診断</div>
+  <h1>あなたの仕事タイプ、<em>16Typesで判明。</em></h1>
+  <div class="sub">20問・約3分／登録不要・無料</div>
+  <div class="url">w-t-n-b.github.io/syukatsushindan/</div>
+</div>
+<div class="right">
+  <div class="card c1"><img src="../chars/a1.webp" alt=""></div>
+  <div class="card c2"><img src="../chars/b2.webp" alt=""></div>
+  <div class="card c3"><img src="../chars/c3.webp" alt=""></div>
+  <div class="card c4"><img src="../chars/d1.webp" alt=""></div>
+</div>
+</body></html>
