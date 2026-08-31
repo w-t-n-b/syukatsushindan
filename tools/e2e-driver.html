@@ -16,8 +16,10 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const f=document.getElementById('f');
 function load(url){return new Promise(res=>{f.onload=()=>res();f.src=url;});}
 const CODES=['HALS','HALG','HAWS','HAWG','HBLS','HBLG','HBWS','HBWG','DALS','DALG','DAWS','DAWG','DBLS','DBLG','DBWS','DBWG'];
-// Qs の添字ごとの回答値（Qs は軸ごとに5問ずつのブロック配置）
-function ansFor(c){const s=[c[0]==='H'?1:-1,c[1]==='A'?1:-1,c[2]==='L'?1:-1,c[3]==='S'?1:-1];const o=[];for(let a=0;a<4;a++)for(let i=0;i<5;i++)o.push(s[a]*2);return o;}
+// Qs の添字ごとの回答値（Qs は軸ごとに5問ずつのブロック配置）。6段階の端は ±3。
+function ansFor(c){const s=[c[0]==='H'?1:-1,c[1]==='A'?1:-1,c[2]==='L'?1:-1,c[3]==='S'?1:-1];const o=[];for(let a=0;a<4;a++)for(let i=0;i<5;i++)o.push(s[a]*3);return o;}
+// 軸ごとの5問ぶんの値を Qs の添字順（軸1→2→3→4のブロック）に並べる
+function byAxis(m){const o=[];for(let a=1;a<=4;a++)o.push(...m[a]);return o;}
 // 出題位置 p では Qs[Q_ORDER[p]] が出る。ansFor() は Qs の添字基準なので並べ替えて渡す。
 function inOrder(w,vals){const o=w.eval('Q_ORDER');return o.map(i=>vals[i]);}
 // 指定した spec-track の中から値 v のボタンを取る（LP と質問画面で2セットある）
@@ -243,9 +245,18 @@ try{
     chk(d.getElementById('lq-card').style.display!=='none' && !d.getElementById('lq-done').classList.contains('on'),
         '開いた直後は質問カードが1問だけ表示され、.lq-done は非表示');
     chk(d.getElementById('lq-num').textContent==='Q1','LPは1問目から');
-    chk(d.querySelectorAll('#lq-spec-track .sdw').length===5,'LPの回答ドットは5段階');
-    chk(d.querySelectorAll('#lq-spec-track .sdw[data-v="0"]').length===1,'中央（どちらでもない）が存在し、無効化されていない');
-    chk(getComputedStyle(d.querySelector('#lq-spec-track .sdw[data-v="0"]')).pointerEvents!=='none','中央が押せる（強制二択の名残がない）');
+    chk(d.querySelectorAll('#lq-spec-track .sdw').length===6,'LPの回答ドットは6段階');
+    chk(d.querySelectorAll('#lq-spec-track .sdw[data-v="0"]').length===0,'中央（どちらでもない）が存在しない');
+    chk([...d.querySelectorAll('#lq-spec-track .sdw')].map(x=>x.dataset.v).join(',')==='3,2,1,-1,-2,-3','LPの6段階の値: '+[...d.querySelectorAll('#lq-spec-track .sdw')].map(x=>x.dataset.v).join(','));
+    chk([...d.querySelectorAll('#lq-spec-track .sdw')].every(x=>getComputedStyle(x).pointerEvents!=='none'),'6段階すべてが押せる');
+    // 6個が横幅に収まっているか（390px/320px の実機幅は make shot で別途確認）
+    {
+      const tk=d.getElementById('lq-spec-track'),tb=tk.getBoundingClientRect();
+      const ds=[...tk.querySelectorAll('.sdw')].map(x=>x.getBoundingClientRect());
+      chk(ds[0].left>=tb.left-0.5&&ds[5].right<=tb.right+0.5,'6個の目盛がトラックの幅に収まっている: '+Math.round(ds[0].left-tb.left)+'px / '+Math.round(tb.right-ds[5].right)+'px');
+      chk(ds.every(r=>r.width>=24&&r.height>=24),'各目盛のタッチターゲットが24px以上（WCAG 2.5.8）: '+ds.map(r=>Math.round(r.width)+'x'+Math.round(r.height)).join(' '));
+      chk(d.getElementById('lq-card').scrollWidth<=d.getElementById('lq-card').clientWidth+1,'質問カードから横にはみ出していない');
+    }
     chk(d.getElementById('lq-back').hidden===true,'1問目では「1つ前に戻る」は出ない');
 
     // 高さは1問ぶんのまま増えないこと（§A-7 の破綻しない条件）
@@ -353,10 +364,12 @@ try{
   await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(300);
   {
     const dots=[...d.querySelectorAll('#spec-track .sdw')];
-    chk(dots.length===5&&dots.every(x=>x.tagName==='BUTTON'),'回答ドットは <button>');
+    chk(dots.length===6&&dots.every(x=>x.tagName==='BUTTON'),'回答ドットは <button>');
     chk(dots.every(x=>x.getAttribute('role')==='radio'&&x.getAttribute('aria-checked')==='false'),'role="radio" と aria-checked がある');
-    chk(dots.every(x=>(x.getAttribute('aria-label')||'').length>0),'5段階それぞれに aria-label がある');
-    chk(dots.every(x=>x.tabIndex===0),'Tab で5段階すべてにフォーカスが移る（tabindex が負でない）');
+    chk(dots.every(x=>(x.getAttribute('aria-label')||'').length>0),'6段階それぞれに aria-label がある');
+    chk(dots.filter(x=>/どちらかといえば/.test(x.getAttribute('aria-label')||'')).length===2,'内側2つの aria-label が「どちらかといえば」: '+dots.map(x=>x.getAttribute('aria-label')).join(' / '));
+    chk(!dots.some(x=>/どちらでもない/.test(x.getAttribute('aria-label')||'')),'「どちらでもない」の選択肢が無い');
+    chk(dots.every(x=>x.tabIndex===0),'Tab で6段階すべてにフォーカスが移る（tabindex が負でない）');
     chk(d.getElementById('spec-track').getAttribute('role')==='radiogroup','.spec-track は radiogroup');
     chk(d.getElementById('spec-track').getAttribute('aria-describedby')==='q-a q-b','選択肢の実文が読み上げられる（aria-describedby）');
     w.startFresh('e2e'); await sleep(120);
@@ -387,6 +400,280 @@ try{
     chk(tops.size===1,'#q-top の背景が問ごとに変化しない: '+[...tops].join(' / '));
     chk(d.getElementById('quiz-bg').getAttribute('style')===null||!/background/.test(d.getElementById('quiz-bg').getAttribute('style')||''),'インライン background の代入が残っていない');
     w.clearSavedProgress();
+  }
+
+  // ---------- L. C-4 軸名の非開示 ----------
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(300);
+  {
+    chk(d.querySelectorAll('#q-axis,#lq-axis,.q-ax,.spec-labels,.sl-a,.sl-b').length===0,
+        '#q-axis / .spec-labels が DOM に存在しない');
+    const AXW=w.eval('JSON.stringify([1,2,3,4].map(i=>[AX[i].l,AX[i].r]).flat())');
+    const axWords=JSON.parse(AXW);
+    // 見るのは「カードのラベル面」だけ。設問文と選択肢の実文は設問そのものなので
+    // 対象外にする（例: 軸2の選択肢Bは「…チームの動きを支えた場面」で、
+    // 軸名の「支え」と字面が重なるが、これは測定軸の開示ではない）。
+    const chrome=id=>{const c=d.getElementById(id).cloneNode(true);
+      c.querySelectorAll('.q-text,.choice-row').forEach(x=>x.remove());return c.textContent;};
+    const lpTxt=chrome('lq-card');
+    chk(!axWords.some(x=>lpTxt.indexOf(x)>=0),'LPの質問カードのラベル面に軸名（'+axWords.join('/')+'）が出ていない');
+    w.startFresh('e2e'); await sleep(150);
+    let leaked=[];
+    for(let i=0;i<6;i++){
+      const t=chrome('q-card');
+      axWords.forEach(x=>{if(t.indexOf(x)>=0&&leaked.indexOf(x)<0)leaked.push(x);});
+      w.pick(dot(d,'spec-track',3)); await sleep(560);
+    }
+    chk(leaked.length===0,'質問画面のラベル面にも軸名が1つも出ない'+(leaked.length?'（漏れ: '+leaked.join(',')+'）':''));
+    /* 「内側ほど『どちらかといえば』」の注記はオーナー判断で撤去した。目盛の意味は
+       aria-label（上のテストで担保）と、外側ほど大きい目盛の形で伝える。
+       画面上に残す文字は両端の A / B だけで、それが両端にあることをここで固定する。 */
+    {
+      const hint=d.querySelector('#spec-track').closest('.q-body').querySelector('.spec-hint');
+      const sp=hint?[...hint.querySelectorAll('span')].map(s=>s.textContent.trim()):[];
+      chk(sp.length===2&&sp[0]==='A'&&sp[1]==='B',
+          '.spec-hint は両端の A / B のみ（実際: '+sp.join(' / ')+'）');
+      chk(hint&&getComputedStyle(hint).justifyContent==='space-between',
+          '.spec-hint の A / B が両端に配置される');
+    }
+    chk(!/どちらでもない/.test(d.body.innerText),'画面のどこにも「どちらでもない」が無い');
+    w.clearSavedProgress();
+  }
+
+  // ---------- M. C-5 演出の整理（紙吹雪の撤廃・カウントアップの削除）----------
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument;
+  {
+    // 読み込み直後（アニメーションが走る前）から静止した 20 であること
+    chk(d.getElementById('stat-count').textContent==='20','#stat-count は最初から 20（数え上げない）: '+d.getElementById('stat-count').textContent);
+    await sleep(1500);
+    chk(d.getElementById('stat-count').textContent==='20','1.5秒後も 20 のまま');
+    chk(typeof w.animateCount==='undefined','animateCount() が存在しない');
+    chk(typeof w.launchConfetti==='undefined','launchConfetti() が存在しない');
+    chk(d.querySelectorAll('.conf-wrap,.conf').length===0,'紙吹雪のDOMが無い');
+    // 結果画面まで通しても紙吹雪が生成されないこと
+    w.eval("scores={1:15,2:15,3:15,4:15};ans=Array.from({length:20},()=>3);showResult(false,'quiz')");
+    await sleep(1400);
+    chk(d.querySelectorAll('.conf-wrap,.conf').length===0,'結果表示から1.4秒後も紙吹雪が発火しない');
+    chk(d.getElementById('screen-result').classList.contains('active'),'結果画面は従来どおり表示される');
+  }
+
+  // ---------- N. 6段階スケールとタイブレーカー（実ブラウザ・20問通し）----------
+  // 合計0の軸を意図的に作り、A側3・B側2 の多数決で決着することを確かめる。
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(80);
+  {
+    const ZA=[1,1,1,-1,-2];    // 合計0 / A側3・B側2
+    const ZB=[-1,-1,-1,1,2];   // 合計0 / A側2・B側3
+    w.startFresh('e2e');
+    const av=inOrder(w,byAxis({1:ZB,2:ZA,3:ZB,4:ZA}));
+    for(let i=0;i<20;i++){ w.pick(dot(d,'spec-track',av[i])); await sleep(560); }
+    await sleep(6200);
+    chk(w.eval('JSON.stringify(scores)')==='{"1":0,"2":0,"3":0,"4":0}','4軸すべての合計が0になった: '+w.eval('JSON.stringify(scores)'));
+    const rc=d.querySelector('.res-code');
+    chk(!!rc&&rc.textContent.trim()==='DAWS','合計0でも多数決で1つのタイプに決着する: '+(rc?rc.textContent.trim():'(なし)'));
+    chk(w.getCode()==='DAWS','getCode() = '+w.getCode());
+    // 「バランス型」ではなく、決着した向き＋僅差の但し書きを出す
+    const avr=[...d.querySelectorAll('.av-result')].map(x=>x.textContent.trim());
+    chk(avr.length===4&&avr.every(t=>/僅差/.test(t)),'診断スコアの4軸すべてに「僅差」の但し書き: '+avr.join(' / '));
+    chk(!/バランス型/.test(d.getElementById('screen-result').innerText),'タイプコードと食い違う「バランス型」を出さない');
+    // 判定理由のタグも同じ向きで出る（合計0でコードと逆を書かない）
+    const rbt=[...d.querySelectorAll('.rbt')].map(x=>x.textContent.trim());
+    chk(rbt.length===4&&/低/.test(rbt[0])&&/高/.test(rbt[1]),'判定理由のタグが判定と同じ向き: '+rbt.join(' / '));
+    w.clearSavedProgress();
+  }
+
+  // 6段階の各値が正しい重みで加算される（LP側で1問ずつ）
+  for(const v of [3,2,1,-1,-2,-3]){
+    await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(300);
+    const ax=w.eval('qAt(0).ax');
+    w.pick(dot(d,'lq-spec-track',v)); await sleep(560);
+    chk(w.eval('scores['+ax+']')===v,'値 '+(v>0?'+':'')+v+' が軸'+ax+'に加算される: '+w.eval('scores['+ax+']'));
+    w.clearSavedProgress();
+  }
+
+  // 旧スケールの保存データ（cq_p2）は黙って捨てる
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(200);
+  w.localStorage.setItem('cq_p2',JSON.stringify({curQ:7,scores:{1:5,2:5,3:5,4:5},ans:[2,2,2,2,2,2,2],selectedIndustries:[]}));
+  w.localStorage.setItem('cq_p',JSON.stringify({curQ:3,scores:{1:2,2:0,3:0,4:0},ans:[2,2,2],selectedIndustries:[]}));
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(400);
+  chk(w.localStorage.getItem('cq_p2')===null&&w.localStorage.getItem('cq_p')===null,'旧キー cq_p / cq_p2 は起動時に削除される');
+  chk(d.getElementById('cont-banner').style.display!=='flex','旧スケールのデータでは #cont-banner を出さない');
+  chk(w.eval('curQ')===0&&w.eval('JSON.stringify(scores)')==='{"1":0,"2":0,"3":0,"4":0}','旧データがあっても1問目・スコア0から始まる');
+
+  // ---------- O. キャラ画像の頭が切れていないこと ----------
+  // .tc img / .cc img は縦長画像を横長寄りの枠に object-fit:cover で嵌めるので縦が切れる。
+  // 全16体を実測し、頭頂（--head）が可視領域の内側に入っていることを確かめる。
+  // 枠幅が可変な .tc は、いちばん強く切り取る条件（f=0.397 / vw>=480）でも確かめる。
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(900);
+  {
+    const probe=(sel,imgSel,fMin)=>{
+      const out=[];
+      d.querySelectorAll(sel).forEach(card=>{
+        const im=card.querySelector(imgSel); if(!im)return;
+        const code=(im.src.match(/([a-d]\d)\.webp/)||[])[1]||'?';
+        if(out.some(o=>o.code===code))return;
+        const head=parseFloat(getComputedStyle(card).getPropertyValue('--head'));
+        const y=parseFloat(getComputedStyle(im).objectPosition.split(' ')[1]);
+        const b=im.getBoundingClientRect();
+        const fNow=b.height/(b.width*(im.naturalHeight/im.naturalWidth));
+        const marg=ff=>ff>=1?100:(head-y*(1-ff))/(100*ff)*100;
+        out.push({code,head,y,f:+fNow.toFixed(3),now:+marg(fNow).toFixed(1),min:+marg(fMin).toFixed(1)});
+      });
+      return out;
+    };
+    const tc=probe('#type-overview .tc','img',0.397);
+    const cc=probe('.char-strip-track .cc','img',0.772);
+    chk(tc.length===16&&tc.every(o=>!isNaN(o.head)),'16タイプ一覧の全16体に --head（実測の頭頂位置）が定義されている: '+tc.length);
+    chk(cc.length===16&&cc.every(o=>!isNaN(o.head)),'キャラマーキーの全16体に --head が定義されている: '+cc.length);
+    const badTc=tc.filter(o=>o.now<0||o.min<0);
+    const badCc=cc.filter(o=>o.now<0||o.min<0);
+    chk(badTc.length===0,'16タイプ一覧で頭が切れている体が0件'+(badTc.length?' → '+badTc.map(o=>o.code+'(余白'+Math.min(o.now,o.min)+'%)').join(','):''));
+    chk(badCc.length===0,'キャラマーキーで頭が切れている体が0件'+(badCc.length?' → '+badCc.map(o=>o.code+'(余白'+Math.min(o.now,o.min)+'%)').join(','):''));
+    // 頭頂がいちばん低い c4（実測9.2%）は固定値では必ず切れていた。個別に押さえる。
+    const c4=tc.find(o=>o.code==='c4'),c4c=cc.find(o=>o.code==='c4');
+    chk(!!c4&&c4.head===9.2&&c4.y>10,'DAWG(c4) は Y が引き下げられている: --head='+(c4&&c4.head)+' Y='+(c4&&c4.y)+'% 余白='+(c4&&c4.now)+'%');
+    chk(!!c4c&&c4c.y>20,'DAWG(c4) はマーキーでも引き下げられている: Y='+(c4c&&c4c.y)+'% 余白='+(c4c&&c4c.now)+'%');
+    p('     .tc 余白(%): '+tc.map(o=>o.code+':'+o.now).join(' '));
+    p('     .cc 余白(%): '+cc.map(o=>o.code+':'+o.now).join(' '));
+    // 結果画面のキャラ枠は縦の切り取りが起きない（f>=1）。ここを変えていないこと。
+    w.eval("scores={1:15,2:15,3:15,4:15};ans=Array.from({length:20},()=>3);showResult(true,'quiz')");
+    await sleep(600);
+    const rch=d.querySelector('.res-char');
+    const rb=rch.getBoundingClientRect();
+    const rf=rb.height/(rb.width*(rch.naturalHeight/rch.naturalWidth));
+    chk(rf>=1&&getComputedStyle(rch).objectPosition==='50% 50%',
+        '.res-char は f>=1（縦の切り取りなし）で 50% 50% のまま: f='+rf.toFixed(3)+' / '+getComputedStyle(rch).objectPosition);
+  }
+
+  // ---------- P. LPに不自然な空白帯ができていないこと ----------
+  // 実際に起きた不具合: .wrap の padding-bottom:100px が LP の中間セクションにも
+  // 効いていて、.steps の下端から .type-grid の上端までが 329px 空いていた。
+  // 「どこかのセクションが下に空白を抱えている」を一般化して押さえる。
+  //   帯の測り方: #screen-title 内の「中身のある末端要素」を上から並べ、
+  //   直前までの最下端と次の要素の上端の差＝どの要素も存在しない横帯の高さ。
+  // 閾値 120px の根拠: セクション間の意図した空きは 40px + 40px = 80px。
+  //   100px の死に領域が1つでも復活すると 180px になるので、その間に置く。
+  const BAND=`(()=>{
+    const root=document.getElementById('screen-title');
+    const boxes=[];
+    root.querySelectorAll('*').forEach(e=>{
+      if(e.children.length && !/^(BUTTON|IMG)$/.test(e.tagName)) return;   // 葉だけ見る
+      const cs=getComputedStyle(e);
+      if(cs.display==='none'||cs.visibility==='hidden'||parseFloat(cs.opacity)===0) return;
+      const r=e.getBoundingClientRect();
+      if(r.height<=0||r.width<=0) return;
+      boxes.push({t:r.top+scrollY,b:r.bottom+scrollY,
+        tag:e.tagName+(e.id?'#'+e.id:'')+(typeof e.className==='string'&&e.className?'.'+e.className.trim().split(/\\s+/)[0]:'')});
+    });
+    boxes.sort((a,b)=>a.t-b.t);
+    let maxB=null,prev='',worst={gap:0,after:'',before:''};
+    boxes.forEach(x=>{
+      if(maxB!==null && x.t-maxB>worst.gap) worst={gap:x.t-maxB,after:prev,before:x.tag};
+      if(maxB===null||x.b>maxB){maxB=x.b;prev=x.tag;}
+    });
+    worst.gap=Math.round(worst.gap);
+    return JSON.stringify(worst);
+  })()`;
+  for(const vw of [390,320]){
+    f.style.width=vw+'px';
+    await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(900);
+    const band=JSON.parse(w.eval(BAND));
+    chk(band.gap<=120,'LP('+vw+'px)に120pxを超える空白帯が無い: 最大 '+band.gap+'px（'+band.after+' → '+band.before+'）');
+    // 不具合そのものの再発も名指しで押さえる（.steps の直後に何も無い帯が続く）
+    const sb=d.querySelector('.steps').getBoundingClientRect().bottom;
+    const nx=d.querySelector('#type-section .sec-lbl').getBoundingClientRect().top;
+    chk(Math.round(nx-sb)<=120,'診断の流れ→全16タイプ の間隔('+vw+'px): '+Math.round(nx-sb)+'px');
+  }
+  f.style.width='390px';
+
+  // ---------- Q. 回答UI：A / B が画面上で示されていること ----------
+  // 軸名を出さない（C-4）まま「Aに強く近い」と言うには、A と B が
+  // 何を指すのかが画面に出ている必要がある。参考実装（nighttype_draft の
+  // quiz-vertical.js）と同じく、選択肢本文の接頭辞と目盛の両端で示す。
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(500);
+  {
+    for(const [box,key] of [['q-a','A.'],['q-b','B.'],['lq-a','A.'],['lq-b','B.']]){
+      const k=d.querySelector('#'+box+' .opt-key');
+      chk(!!k&&k.textContent===key,'#'+box+' に接頭辞「'+key+'」がある: '+(k?k.textContent:'なし'));
+    }
+    // 起動直後に描かれているのは LP 側。質問画面は startFresh() の後に描かれる。
+    chk(d.querySelectorAll('#q-a .opt-txt,#q-b .opt-txt').length===2
+      &&d.getElementById('lq-at').textContent.length>0
+      &&d.getElementById('lq-a').textContent.indexOf('A.')===0,
+      '選択肢の本文は .opt-txt に入り、接頭辞を消さない: '+d.getElementById('lq-a').textContent.slice(0,14)+'…');
+    w.startFresh('e2e'); await sleep(200);
+    chk(d.getElementById('q-at').textContent.length>0
+      &&d.getElementById('q-a').textContent.indexOf('A.')===0,
+      '質問画面でも本文が接頭辞を消さない: '+d.getElementById('q-a').textContent.slice(0,14)+'…');
+    for(const t of ['spec-track','lq-spec-track']){
+      const hint=d.getElementById(t).parentNode.querySelector('.spec-hint');
+      chk(hint.firstElementChild.textContent==='A'&&hint.lastElementChild.textContent==='B',
+          '#'+t+' の両端ラベルが A / B: '+[...hint.children].map(x=>x.textContent).join(' | '));
+    }
+    // 目盛は外側ほど大きい（±3 > ±2 > ±1）。強さが形で読める。
+    const sz=v=>{const b=dot(d,'spec-track',v).querySelector('.sd').getBoundingClientRect();return Math.round(b.width);};
+    const sizes=[3,2,1,-1,-2,-3].map(sz);
+    chk(sizes[0]>sizes[1]&&sizes[1]>sizes[2]&&sizes[5]>sizes[4]&&sizes[4]>sizes[3]
+      &&sizes[0]===sizes[5]&&sizes[2]===sizes[3],'目盛は外側ほど大きい（左右対称）: '+sizes.join(' / '));
+    // A側とB側で色が違う（未選択でも・選択時も）。
+    // .sd には transition:all .18s がある。e2e は --virtual-time-budget で走るため
+    // setTimeout を待っても遷移は完了しない（アニメーションの時計が進まない）。
+    // 遷移を切ってから読む＝「遷移し終わったときの色」を確定的に見る。
+    const noTr=d.createElement('style');
+    noTr.textContent='.sd{transition:none!important}';
+    d.head.appendChild(noTr);
+    const bgNow=v=>getComputedStyle(dot(d,'spec-track',v).querySelector('.sd')).backgroundColor;
+    const off={};[3,2,1,-1,-2,-3].forEach(v=>off[v]=bgNow(v));
+    chk(off[3]!==off[-3],'未選択でもA側とB側で色が違う: '+off[3]+' vs '+off[-3]);
+    chk(off[3]===off[1]&&off[-3]===off[-1],'未選択の同じ側は同色: A '+off[3]+' / B '+off[-3]);
+    [3,2,1,-1,-2,-3].forEach(v=>dot(d,'spec-track',v).classList.add('sel'));
+    const on={};[3,2,1,-1,-2,-3].forEach(v=>on[v]=bgNow(v));
+    [3,2,1,-1,-2,-3].forEach(v=>dot(d,'spec-track',v).classList.remove('sel'));
+    noTr.remove();
+    chk(on[3]!==off[3]&&on[-3]!==off[-3],'選択すると色が変わる: A '+off[3]+'→'+on[3]+' / B '+off[-3]+'→'+on[-3]);
+    chk(on[3]!==on[-3],'選択時もA側とB側で色が違う: '+on[3]+' vs '+on[-3]);
+    chk(on[3]===on[1]&&on[-3]===on[-1],'選択時の同じ側は同色（強さは大きさで示す）: A '+on[3]+' / B '+on[-3]);
+    // aria-label も A / B に対応する（読み上げと画面表示が食い違わない）
+    const labs=[...d.querySelectorAll('#spec-track .sdw')].map(x=>x.getAttribute('aria-label'));
+    chk(labs.slice(0,3).every(x=>x.indexOf('A')>=0&&x.indexOf('B')<0)
+      &&labs.slice(3).every(x=>x.indexOf('B')>=0&&x.indexOf('A')<0),
+      '目盛の aria-label が A側3つ / B側3つに分かれている: '+labs.join(' / '));
+    w.clearSavedProgress();
+  }
+
+  // ---------- Q-2. 目盛のタッチターゲット（WCAG 2.5.8 = 24x24）----------
+  // 外側を大きく内側を小さくしたぶん、いちばん小さい ±1 が基準を割らないこと。
+  // 実機幅で測る。LP埋め込みは .q-card がヒーローの列幅（340px上限）に入るので
+  // 質問画面より狭く、こちらが最小になる。
+  for(const vw of [390,320]){
+    f.style.width=vw+'px';
+    await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(700);
+    for(const [t,name] of [['lq-spec-track','LP埋め込み'],['spec-track','質問画面']]){
+      if(t==='spec-track'){ w.startFresh('e2e'); await sleep(200); }
+      const rs=[3,2,1,-1,-2,-3].map(v=>{const b=dot(d,t,v).getBoundingClientRect();
+        return {v,w:Math.round(b.width),h:Math.round(b.height)};});
+      const min=rs.reduce((a,b)=>Math.min(a,b.w,b.h),1e9);
+      chk(min>=24,name+'('+vw+'px)の目盛は全段階が24px以上: 最小 '+min+'px / '
+        +rs.map(o=>(o.v>0?'+':'')+o.v+':'+o.w+'x'+o.h).join(' '));
+    }
+    w.clearSavedProgress();
+  }
+  f.style.width='390px';
+
+  // ---------- R. サブタイプに説明が付いていること ----------
+  // 「サブタイプってなんのことだ」（オーナー）。コードとキャラだけでは伝わらない。
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(300);
+  {
+    // 僅差の軸を作る（軸1だけ ±1）。getSubCode() は軸1を反転したコードを返す。
+    w.eval("scores={1:1,2:9,3:9,4:9};ans=[3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,-3];showResult(false,'quiz')");
+    await sleep(700);
+    const card=d.querySelector('.subtype-card');
+    chk(!!card,'サブタイプのカードが出る');
+    const note=card&&card.querySelector('.sub-note');
+    chk(!!note&&note.textContent.trim().length>=30,'.sub-note に説明がある: '+(note?note.textContent.slice(0,24)+'…':'なし'));
+    chk(!!note&&/僅差/.test(note.textContent),'説明が「僅差だった軸を反転したもの」であることに触れている');
+    // 断定しない姿勢（診断で分かるのは傾向まで）と矛盾しないこと
+    chk(!!note&&!/必ず|断言|確実|あなたは.*です。/.test(note.textContent),'説明が断定表現を含まない');
+    chk(card.querySelector('.sub-head').compareDocumentPosition(note)&Node.DOCUMENT_POSITION_FOLLOWING,
+        '説明は見出し（.sub-head）の直後にある');
   }
 
   p('\n===== '+(fail===0?'ALL PASS':fail+' FAILURES')+' =====');

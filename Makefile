@@ -11,6 +11,7 @@
 #   make e2e     … 実ブラウザでの結合テスト（20問通し × 16タイプ）
 #   make serve   … 動作確認用のローカルサーバ
 #   make shot    … 実機幅（390/320）のスクリーンショットと寸法計測 → /tmp/shots
+#   make heads   … キャラ画像の頭頂位置を実測し、object-position 用のCSSを出力
 #   make ogp     … og:image（1200x630）の再生成
 #
 # 必要なもの: node（18以上）/ Google Chrome / python3（serve のみ）
@@ -19,7 +20,7 @@ SHELL := /bin/bash
 NODE  := node
 CHROME := /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
 
-.PHONY: check lint type typecheck test e2e serve shot ogp golden help
+.PHONY: check lint type typecheck test e2e serve shot heads ogp golden help
 
 check: lint typecheck test e2e
 	@echo ""
@@ -60,6 +61,13 @@ serve:
 shot:
 	@echo "── shot（実機幅のスクリーンショットと寸法）──"
 	@$(NODE) tools/shot.mjs
+
+# キャラ画像を差し替えたら必ず実行する。頭頂の位置（--head）を実測し、
+# .tc / .cc の object-position 用のCSSブロックを出力する。
+# index.html は書き換えないので、出力を見て手で反映すること。
+heads:
+	@echo "── heads（キャラ画像の頭頂位置の実測）──"
+	@$(NODE) tools/measure-heads.mjs
 
 ogp:
 	@"$(CHROME)" --headless=new --disable-gpu --hide-scrollbars \

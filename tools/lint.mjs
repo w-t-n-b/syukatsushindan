@@ -109,7 +109,6 @@ console.log('[lint] 診断体験の改訂：消したものが戻っていない
   const binPat = /bin-banner|bin-tog|bin-icon|binaryMode|toggleBinary|binary-on|binary_mode|強制二択/gi;
   const binHits = html.match(binPat) || [];
   check(binHits.length === 0, `強制二択モードの残骸が0件${binHits.length ? ' → ' + [...new Set(binHits)].join(', ') : ''}`);
-  check(html.includes('どちらでもない'), '.spec-hint の「どちらでもない」は残っている（5段階の中央の説明）');
 
   // C-6：scores を捏造して結果全文を出す経路
   const jt = (html.match(/jumpToType/g) || []).length;
@@ -128,11 +127,59 @@ console.log('[lint] 診断体験の改訂：消したものが戻っていない
 
   // C-7：回答ドットは <button> + role="radio"
   const sdwTags = [...html.matchAll(/<(\w+)[^>]*class="sdw"[^>]*>/g)].map(m => m[1]);
-  check(sdwTags.length === 10, `.sdw は10個（LP5 + 質問画面5）: ${sdwTags.length}`);
+  check(sdwTags.length === 12, `.sdw は12個（LP6 + 質問画面6）: ${sdwTags.length}`);
   check(sdwTags.every(t => t === 'button'), `.sdw はすべて <button>（${[...new Set(sdwTags)].join(',')}）`);
-  check((html.match(/class="sdw"[^>]*role="radio"/g) || []).length === 10, '.sdw すべてに role="radio"');
+  check((html.match(/class="sdw"[^>]*role="radio"/g) || []).length === 12, '.sdw すべてに role="radio"');
   check((html.match(/class="spec-track"[^>]*role="radiogroup"/g) || []).length === 2,
     '.spec-track は role="radiogroup"');
+
+  // 6段階スケール：中央値（どちらでもない）を廃止し、必ずどちらかに倒す
+  const vals = [...html.matchAll(/class="sdw" data-v="(-?\d+)"/g)].map(m => Number(m[1]));
+  check(vals.length === 12 && [0, 6].every(o => vals.slice(o, o + 6).join(',') === '3,2,1,-1,-2,-3'),
+    `回答値は LP・質問画面とも +3/+2/+1/-1/-2/-3（実際: ${vals.join(',')}）`);
+  check(!vals.includes(0), '中央値 data-v="0" が存在しない');
+  const chudemo = (live0 => (live0.match(/どちらでもない/g) || []).length)(
+    html.replace(/<!--[\s\S]*?-->/g, '').replace(/\/\*[\s\S]*?\*\//g, ''));
+  check(chudemo === 0, `画面に出る「どちらでもない」が0件（6段階化で廃止）${chudemo ? ` → ${chudemo}件` : ''}`);
+  check(/const AX_MAX=15/.test(html), '棒グラフのスケールが ±15（1軸5問 × 最大±3）に追従している');
+  check(/function axisIsPos\(/.test(html) && /function axisVotes\(/.test(html),
+    '軸の合計が0のときのタイブレーカー（多数決）が実装されている');
+
+  // C-4：測定軸の名前を回答前に見せない
+  for (const [pat, what] of [[/id="q-axis"/, '#q-axis'], [/id="lq-axis"/, '#lq-axis'],
+                             [/class="spec-labels"/, '.spec-labels'], [/class="sl-a"/, '.sl-a'],
+                             [/class="q-ax"/, '.q-ax']]) {
+    check(!pat.test(html), `${what} が0件（回答前に軸名を開示しない）`);
+  }
+  // 開示は結果側で担保する
+  check(/判定理由/.test(html) && /診断スコア/.test(html),
+    '軸の開示は結果画面（判定理由 / 診断スコア）に残っている');
+
+  // C-5：紙吹雪とカウントアップの撤廃
+  const fx = [['launchConfetti', '紙吹雪'], ['conf-wrap', '紙吹雪のDOM'],
+              ['confA', '紙吹雪のアニメーション'], ['animateCount', 'カウントアップ']];
+  const liveFx = html.replace(/<!--[\s\S]*?-->/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
+  for (const [w, why] of fx) {
+    const n = (liveFx.match(new RegExp(w, 'g')) || []).length;
+    check(n === 0, `${w}（${why}）が0件${n ? ` → ${n}件` : ''}`);
+  }
+  check(/id="stat-count">20</.test(html), '#stat-count は静的な 20（0からの数え上げをしない）');
+
+  // キャラ画像の頭が切れないようにする object-position（tools/measure-heads.mjs の実測駆動）
+  const IMG_CODES = ['a1','a2','a3','a4','b1','b2','b3','b4','c1','c2','c3','c4','d1','d2','d3','d4'];
+  const noHead = IMG_CODES.filter(c =>
+    !new RegExp(`\\.tc:has\\(img\\[src\\*="chars/${c}"\\]\\),\\.cc:has\\(img\\[src\\*="sm/${c}"\\]\\)\\{--head:`).test(html));
+  check(noHead.length === 0,
+    `全16体に --head（頭頂位置の実測値）が定義されている${noHead.length ? ' → 欠落: ' + noHead.join(',') : ''}`);
+  // 固定値に戻すと頭頂の低いキャラ（c4=9.2%）が切れる。--head 経由でしか指定させない。
+  for (const [sel, re] of [['.tc img', /\.tc img\{object-position:50% clamp\(0%,calc\(\(var\(--head/],
+                           ['.cc img', /\.cc img\{object-position:50% clamp\(0%,calc\(\(var\(--head/]]) {
+    check(re.test(html), `${sel} の object-position は --head から算出している（固定値に戻していない）`);
+  }
+  check(/\.res-char\{[^}]*object-position:50% 50%/.test(html),
+    '.res-char は 50% 50% のまま（f>=1 で縦の切り取りが起きないため対象外）');
+  check(fs.existsSync(path.join(ROOT, 'tools/measure-heads.mjs')),
+    '頭頂位置の再計測スクリプトがある（make heads。画像を差し替えたら実行する）');
 
   // A-5：既存CTAは startFresh() ではなく continueOrStart() を呼ぶ
   const rawStart = [...html.matchAll(/on\w+="[^"]*startFresh\(/g)].length;
@@ -141,9 +188,11 @@ console.log('[lint] 診断体験の改訂：消したものが戻っていない
     'continueOrStart() の呼び出しがヒーロー/16タイプ節/ドロワー/共有バナー/タイプ紹介にある');
   check(!html.includes('まず診断だけ受けてみる'), '「まず診断だけ受けてみる」（主CTAと同一動作の偽の選択肢）が0件');
 
-  // A-2：保存キーは cq_p2。旧 cq_p は起動時に捨てる
-  check(/const SAVE_KEY='cq_p2'/.test(html), '保存キーが cq_p2 に変わっている');
-  check(/function dropLegacyProgress\(\)/.test(html), '旧キー cq_p を削除する処理がある');
+  // A-2 / 6段階化：保存キーは cq_p3。旧 cq_p（旧出題順）と cq_p2（旧5段階）は起動時に捨てる
+  check(/const SAVE_KEY='cq_p3'/.test(html), '保存キーが cq_p3 に変わっている');
+  check(/const LEGACY_SAVE_KEYS=\['cq_p','cq_p2'\]/.test(html),
+    '旧キー cq_p / cq_p2 の両方を削除対象にしている');
+  check(/function dropLegacyProgress\(\)/.test(html), '旧キーを削除する処理がある');
 
   // A-2：質問ごとの全面グラデーション（軸別インライン背景）を廃止した
   check(!/quiz-bg'\)\.style\.background/.test(html) && !/q-top'\)\.style\.background/.test(html),
@@ -153,6 +202,55 @@ console.log('[lint] 診断体験の改訂：消したものが戻っていない
   for (const ev of ['lp_q_answer', 'lq_continue_click', 'type_peek']) {
     check(new RegExp(`track\\('${ev}'`).test(html), `${ev} は track() 経由で送る（GA_ID が空なら送信しない）`);
   }
+}
+
+// --- 回答UI：A / B が画面に出ていること（参考実装 quiz-vertical.js の構成）---
+// 軸名を出さない（C-4）まま「Aに強く近い」と言うには、A と B が
+// 何を指すのかが画面に出ている必要がある。ここが消えると目盛の文言が意味を失う。
+console.log('[lint] 回答UI：A / B の明示');
+{
+  const keys = [...html.matchAll(/<span class="opt-key">([AB])\.<\/span>/g)].map(m => m[1]);
+  check(keys.join('') === 'ABAB',
+    `選択肢に A. / B. の接頭辞がある（LP2 + 質問画面2）: ${keys.join(',') || 'なし'}`);
+  check((html.match(/class="opt-txt"/g) || []).length === 4,
+    '選択肢の本文は .opt-txt に入る（箱に直接書くと接頭辞が消える）');
+  check(/\$\(ids\.at\)\.textContent=q\.a/.test(html) && /\$\(ids\.bt\)\.textContent=q\.b/.test(html),
+    'renderQ() は .opt-txt（at / bt）に書き込む');
+  const ends = [...html.matchAll(/<span class="sh-([ab])">([AB])<\/span>/g)].map(m => m[2]);
+  check(ends.join('') === 'ABAB', `目盛の両端に A / B のラベルがある: ${ends.join(',') || 'なし'}`);
+  // 「左/右」に戻すと、画面に出ている A / B と読み上げが食い違う
+  const lr = (html.match(/aria-label="[^"]*[左右]の選択肢[^"]*"/g) || []).length;
+  check(lr === 0, `目盛の aria-label が「左/右」ではなく A / B${lr ? ` → ${lr}件` : ''}`);
+  const labs = [...html.matchAll(/class="sdw" data-v="(-?\d+)"[^>]*aria-label="([^"]+)"/g)];
+  check(labs.length === 12 && labs.every(([, v, l]) =>
+    Number(v) > 0 ? (l.includes('A') && !l.includes('B')) : (l.includes('B') && !l.includes('A'))),
+    'aria-label が符号どおり A側 / B側に対応している');
+}
+
+// --- レイアウト：セクションが下に空白を抱え込まないこと ---
+// .wrap の padding-bottom:100px が LP の中間セクションにも効いていて、
+// .steps の下端から .type-grid の上端まで 329px 空いていた（実測）。
+console.log('[lint] 余白の作り方');
+{
+  const wrap = html.match(/^\.wrap\{([^}]*)\}/m);
+  const pad = wrap && (wrap[1].match(/padding:([^;]*)/) || [])[1];
+  // padding は「左右だけ」＝値2つまで。3つ目（下）を足すと LP の中間セクションが
+  // 中身の下に空白を抱え、.steps → .type-grid の 329px が再発する。
+  check(!!pad && pad.trim().split(/\s+/).length <= 2,
+    `.wrap の padding は左右だけ（下方向を持たない）: padding:${pad || '（なし）'}`);
+}
+
+// --- サブタイプに説明があること（オーナー指摘「サブタイプってなんのことだ」）---
+console.log('[lint] サブタイプの説明');
+{
+  const note = html.match(/<div class="sub-note">([^<]+)<\/div>/);
+  check(!!note, 'サブタイプに .sub-note（説明文）がある');
+  if (note) {
+    check(note[1].length >= 30, `説明が1〜2文ある（${note[1].length}文字）`);
+    check(/僅差/.test(note[1]), '「最も僅差だった軸を反転したもの」であることに触れている');
+    check(!/必ず|断言|確実/.test(note[1]), '断定表現を含まない（分かるのは働き方の傾向まで）');
+  }
+  check(/\.sub-note\{/.test(html), '.sub-note のスタイルが定義されている');
 }
 
 // --- 自社で個人情報を取得しない設計（仕様 L-1 / 受け入れ基準）---

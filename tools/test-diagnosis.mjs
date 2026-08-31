@@ -56,12 +56,21 @@ function answerLp(S, v) {
 function boot(S) { S.__timers.splice(0).forEach(fn => fn()); }
 
 // 軸1〜4に5問ずつ。狙ったコードになる極端な回答列を作る。
+// 6段階スケールの端は ±3（±2 ではない）。
 function extremeFor(code) {
   const sign = [code[0] === 'H' ? 1 : -1, code[1] === 'A' ? 1 : -1,
                 code[2] === 'L' ? 1 : -1, code[3] === 'S' ? 1 : -1];
   const out = [];
-  for (let ax = 0; ax < 4; ax++) for (let i = 0; i < 5; i++) out.push(sign[ax] * 2);
+  for (let ax = 0; ax < 4; ax++) for (let i = 0; i < 5; i++) out.push(sign[ax] * 3);
   return out;
+}
+
+// 「軸の合計がちょうど0になる」回答列を Qs の添字基準で作る。
+// vals[ax] は 5問ぶんの配列。合計0・符号は必ず 3対2 以上に割れる。
+function byAxis(perAxis) {
+  const out = [];
+  for (let ax = 1; ax <= 4; ax++) out.push(...perAxis[ax]);
+  return out;   // Qs は軸ごとに5問ずつのブロック配置なのでこの順で対応する
 }
 
 const S = load(TARGET, '');
@@ -89,24 +98,102 @@ console.log('[test] 出題順 Q_ORDER（A-2）');
     'LPに出る5問の軸が順に 1,2,3,4,1（4軸すべてに触れ、5問目で2周目に入る）');
 }
 
+// ---- (0b) 6段階スケール ----
+// 「どちらでもない」を廃止し、必ずどちらかに倒す。中央値が無いことと、
+// 6つの値がそれぞれ正しい重みで加算されることを、採点の入口で押さえる。
+console.log('[test] 6段階スケール（+3/+2/+1/-1/-2/-3）');
+{
+  const T = load(TARGET, '');
+  boot(T);
+  const vals = T.__lpSdws.map(d => Number(d.dataset.v));
+  check(vals.join(',') === '3,2,1,-1,-2,-3', `目盛は6つで値は +3/+2/+1/-1/-2/-3: ${vals.join(',')}`);
+  check(!vals.includes(0), '中央値（0）が存在しない＝「どちらでもない」を選べない');
+
+  // 6つの値すべてを1問ずつ使い、加算結果が値そのものと一致するか
+  for (const v of vals) {
+    const U = load(TARGET, '');
+    boot(U);
+    answerLp(U, v);
+    const ax = U.__eval('qAt(0).ax');
+    check(U.__eval(`scores[${ax}]`) === v && U.__eval('ans[0]') === v,
+      `${v >= 0 ? '+' : ''}${v} を選ぶと軸${ax}に ${v} が加算される（scores=${U.__eval(`scores[${ax}]`)}）`);
+  }
+
+  // 1問戻すと、6段階のどの値でも正しく打ち消される
+  const B = load(TARGET, '');
+  boot(B);
+  answerLp(B, -3);
+  B.goBack();
+  check(B.__eval('JSON.stringify(scores)') === JSON.stringify({ 1: 0, 2: 0, 3: 0, 4: 0 }),
+    `-3 を戻すとスコアが元に戻る: ${B.__eval('JSON.stringify(scores)')}`);
+}
+
 // ---- (1) 16タイプ ----
 console.log('[test] 16タイプの判定と結果画面の生成');
+const reached = new Set();
 for (const want of CODES) {
   const r = answer(S, extremeFor(want));
   S.showResult(true, 'quiz');
   const html = S.__byId.get('screen-result').innerHTML;
+  reached.add(r.code);
   check(r.code === want && html.length > 5000,
     `${want}: getCode()=${r.code} sub=${r.sub} 結果HTML=${html.length}文字`);
+}
+check(reached.size === 16 && CODES.every(c => reached.has(c)),
+  `16タイプすべてが到達可能（到達 ${reached.size}/16）`);
+
+// ---- (1b) タイブレーカー：軸の合計が0のとき多数決で決める ----
+// 6段階でも合計0は普通に起こる（例: +1+1+1-1-2 = 0）。
+// 1軸5問・中央値なしなので符号は必ず 3対2 以上に割れ、引き分けは原理的に無い。
+console.log('[test] タイブレーカー（軸の合計が0のとき）');
+{
+  const ZERO_A = [1, 1, 1, -1, -2];    // 合計0 / A側3・B側2 → A側に倒れる
+  const ZERO_B = [-1, -1, -1, 1, 2];   // 合計0 / A側2・B側3 → B側に倒れる
+  const PLUS   = [3, 3, 3, 3, 3];      // 合計+15（対照用）
+
+  const cases = [
+    [{ 1: ZERO_A, 2: ZERO_A, 3: ZERO_A, 4: ZERO_A }, 'HALS', '4軸すべて合計0・A側が多数 → HALS'],
+    [{ 1: ZERO_B, 2: ZERO_B, 3: ZERO_B, 4: ZERO_B }, 'DBWG', '4軸すべて合計0・B側が多数 → DBWG'],
+    [{ 1: ZERO_B, 2: ZERO_A, 3: ZERO_B, 4: ZERO_A }, 'DAWS', '軸ごとに多数派が違っても軸単位で決まる'],
+    [{ 1: ZERO_B, 2: PLUS,   3: ZERO_A, 4: PLUS   }, 'DALS', '合計が0でない軸は従来どおり合計で決まる'],
+  ];
+  for (const [perAxis, want, label] of cases) {
+    const vals = byAxis(perAxis);
+    const r = answer(S, vals);
+    const sc = JSON.parse(r.scores);
+    const zeroAxes = [1, 2, 3, 4].filter(ax => sc[ax] === 0);
+    check(r.code === want,
+      `${label}: scores=${r.scores} 合計0の軸=[${zeroAxes.join(',')}] → ${r.code}`);
+  }
+
+  // 引き分けが原理的に起こらないこと（5は奇数）を、5問ぶんの全 6^5 通りで確かめる。
+  // ここが割れなくなる＝設問数を偶数に変えた、ということ。
+  const VALS6 = [3, 2, 1, -1, -2, -3];
+  let combos = 0, zeroSum = 0, tied = 0;
+  const walk = (acc) => {
+    if (acc.length === 5) {
+      combos++;
+      const sum = acc.reduce((a, b) => a + b, 0);
+      const votes = acc.reduce((a, b) => a + (b > 0 ? 1 : -1), 0);
+      if (sum === 0) zeroSum++;
+      if (votes === 0) tied++;
+      return;
+    }
+    for (const v of VALS6) walk(acc.concat(v));
+  };
+  walk([]);
+  check(combos === 6 ** 5 && tied === 0,
+    `1軸5問の全${combos}通りで多数決の引き分けが0件（合計0になるのは ${zeroSum} 通り＝${(zeroSum / combos * 100).toFixed(1)}%）`);
 }
 
 // ---- (2) 擬似ランダム200パターンの指紋 ----
 console.log('[test] 擬似ランダム200パターンの回帰（golden 突合）');
 let seed = 20260829;
 const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
-const VALS = [2, 1, 0, -1, -2];
+const VALS = [3, 2, 1, -1, -2, -3];
 const lines = [];
 for (let n = 0; n < 200; n++) {
-  const vals = Array.from({ length: 20 }, () => VALS[Math.floor(rnd() * 5)]);
+  const vals = Array.from({ length: 20 }, () => VALS[Math.floor(rnd() * VALS.length)]);
   const r = answer(S, vals);
   lines.push(`${vals.join(',')}|${r.code}|${r.sub}|${r.scores}`);
 }
@@ -267,13 +354,15 @@ console.log('[test] 途中復帰と保存キー（A-2 / A-6）');
   const T = load(TARGET, '');
   boot(T);
   answerLp(T, 2); answerLp(T, 2);
-  const saved = T.__eval("localStorage.getItem('cq_p2')");
-  check(typeof saved === 'string' && saved.length > 0, `保存キーは cq_p2（${saved}）`);
-  check(T.__eval("localStorage.getItem('cq_p')") === null, '旧キー cq_p には書き込まない');
+  const saved = T.__eval("localStorage.getItem('cq_p3')");
+  check(typeof saved === 'string' && saved.length > 0, `保存キーは cq_p3（${saved}）`);
+  check(T.__eval("localStorage.getItem('cq_p')") === null &&
+        T.__eval("localStorage.getItem('cq_p2')") === null,
+    '旧キー cq_p / cq_p2 には書き込まない');
 
   // 別セッションとして開き直し、保存内容だけを引き継ぐ
   const R = load(TARGET, '');
-  R.__eval(`localStorage.setItem('cq_p2',${JSON.stringify(saved)})`);
+  R.__eval(`localStorage.setItem('cq_p3',${JSON.stringify(saved)})`);
   boot(R);
   check(R.__byId.get('cont-banner').style.display === 'flex', '再訪で .cont-banner が出る');
   R.continueDiag();
@@ -285,20 +374,27 @@ console.log('[test] 途中復帰と保存キー（A-2 / A-6）');
 
   // 5問を超えた保存は質問画面へ
   const R2 = load(TARGET, '');
-  R2.__eval(`localStorage.setItem('cq_p2',JSON.stringify({curQ:8,scores:{1:2,2:0,3:0,4:0},ans:[],selectedIndustries:[]}))`);
+  R2.__eval(`localStorage.setItem('cq_p3',JSON.stringify({curQ:8,scores:{1:2,2:0,3:0,4:0},ans:[],selectedIndustries:[]}))`);
   boot(R2);
   R2.continueDiag();
   check(R2.__byId.get('screen-quiz').classList.contains('active') &&
     R2.__byId.get('prog-text').textContent === 'Q9 / 20',
     `8問ぶん進んだ人は #screen-quiz の9問目に復帰する: ${R2.__byId.get('prog-text').textContent}`);
 
-  // 旧キーは黙って捨てる（旧 ans は旧出題順で、復元すると別の設問の回答になる）
-  const L = load(TARGET, '');
-  L.__eval(`localStorage.setItem('cq_p',JSON.stringify({curQ:7,scores:{1:5,2:5,3:5,4:5},ans:[],selectedIndustries:[]}))`);
-  boot(L);
-  check(L.__eval("localStorage.getItem('cq_p')") === null, '旧キー cq_p は起動時に削除される');
-  check(L.__byId.get('cont-banner').style.display !== 'flex', '旧データでは .cont-banner を出さない');
-  check(L.__eval('curQ') === 0, '旧データがあっても診断は1問目から始まる');
+  // 旧キーは黙って捨てる。
+  //   cq_p  … 旧出題順の ans（復元すると別の設問の回答になる）
+  //   cq_p2 … 5段階（±2）で採点した ans / scores（6段階とは重みが違う）
+  for (const [key, why] of [['cq_p', '旧出題順'], ['cq_p2', '旧5段階スケール']]) {
+    const L = load(TARGET, '');
+    L.__eval(`localStorage.setItem('${key}',JSON.stringify({curQ:7,scores:{1:5,2:5,3:5,4:5},ans:[2,2,2,2,2,2,2],selectedIndustries:[]}))`);
+    boot(L);
+    check(L.__eval(`localStorage.getItem('${key}')`) === null,
+      `旧キー ${key}（${why}）は起動時に削除される`);
+    check(L.__byId.get('cont-banner').style.display !== 'flex',
+      `${key} のデータでは .cont-banner を出さない`);
+    check(L.__eval('curQ') === 0 && L.__eval('JSON.stringify(scores)') === JSON.stringify({ 1: 0, 2: 0, 3: 0, 4: 0 }),
+      `${key} のデータがあっても診断は1問目・スコア0から始まる`);
+  }
 }
 
 // ---- (8) 1問戻る（LP側）----

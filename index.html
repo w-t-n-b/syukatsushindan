@@ -51,7 +51,12 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .screen{display:none;min-height:100vh;}.screen.active{display:block;}
 .page-in{animation:pageIn .34s cubic-bezier(.33,1,.68,1) forwards;}
 @keyframes pageIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
-.wrap{max-width:480px;margin:0 auto;padding:0 16px 100px;}
+/* padding-bottom は持たせない。.wrap は「画面の最後の塊」だった頃の名残で
+   下に 100px を持っていたが、いまは LP の中間セクション（How it works /
+   全16タイプ）にも使われている。そこでは中身の下に 100px の空白が居座り、
+   .steps の下端から .type-grid の上端までが 329px 空く原因になっていた。
+   セクション間の空きは、各セクション側の padding（40px + 40px）で決める。 */
+.wrap{max-width:480px;margin:0 auto;padding:0 16px;}
 .rpl{position:relative;overflow:hidden;}
 .rpl-dot{position:absolute;border-radius:50%;background:rgba(255,255,255,.28);transform:scale(0);animation:rplA .55s linear;pointer-events:none;}
 @keyframes rplA{to{transform:scale(4);opacity:0;}}
@@ -83,10 +88,9 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .d-cta:hover{background:var(--blue);}
 .d-cta:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--navy);}
 
-/* CONFETTI */
-.conf-wrap{position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden;}
-.conf{position:absolute;opacity:0;animation:confA 2s ease-out forwards;}
-@keyframes confA{0%{opacity:1;transform:translateY(-10px) rotate(0deg);}100%{opacity:0;transform:translateY(100vh) rotate(720deg);}}
+/* 紙吹雪（.conf-wrap / .conf / @keyframes confA）は撤廃した。
+   就活の診断結果は当選ではなく、祝祭の演出は結果の受け取り方を歪める。
+   片数や色を削るのではなく機能ごと削除している（仕様 §C-5・オーナー判断）。 */
 
 /* HERO */
 .hero{min-height:100svh;background:#edf3fd;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 16px 60px;position:relative;overflow:hidden;}
@@ -193,27 +197,23 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .q-top::before{content:'';position:absolute;top:0;right:0;bottom:0;width:6px;background:rgba(255,255,255,.35);}
 .q-num-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
 .q-badge{background:var(--paper);color:var(--navy);font-family:var(--disp);font-size:.78rem;font-weight:700;padding:2px 10px;border-radius:2px;letter-spacing:2px;border:1.5px solid var(--navy);box-shadow:2px 2px 0 rgba(15,23,42,.35);}
-.q-ax{font-size:.65rem;color:rgba(255,255,255,.9);font-weight:700;letter-spacing:1px;}
 .q-text{font-size:.97rem;font-weight:700;color:#fff;line-height:1.8;text-shadow:none;}
 .q-body{padding:22px 20px 20px;background:var(--w);}
 .choice-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
 .choice-box{padding:14px 12px;border-radius:6px;font-size:.73rem;line-height:1.65;font-weight:500;border:1.5px solid var(--navy);}
 .cb-l{border-left:5px solid var(--blue2);background:var(--blue-l);color:var(--blue);}
 .cb-r{border-right:5px solid var(--lav);background:#f5f4fa;color:#584f86;}
-.spec-labels{display:flex;justify-content:space-between;margin-bottom:12px;}
-.sl-a{font-size:.75rem;font-weight:900;color:#fff;background:var(--blue2);padding:4px 10px;border-radius:3px;border:1.5px solid var(--navy);}
-.sl-b{font-size:.75rem;font-weight:900;color:#fff;background:var(--lav);padding:4px 10px;border-radius:3px;border:1.5px solid var(--navy);}
 .spec-track{display:flex;align-items:center;justify-content:space-around;padding:8px 0;margin-bottom:10px;position:relative;}
 .spec-track::before{content:'';position:absolute;left:32px;right:32px;top:50%;height:2px;background:var(--border2);border-radius:0;transform:translateY(-50%);}
 .sdw{display:flex;align-items:center;justify-content:center;padding:14px;cursor:pointer;position:relative;z-index:1;}
 .sd{border-radius:50%;border:2px solid var(--navy);background:var(--w);transition:all .18s ease;box-shadow:2px 2px 0 rgba(15,23,42,.14);pointer-events:none;}
-.sdw:nth-child(1) .sd,.sdw:nth-child(5) .sd{width:48px;height:48px;}
-.sdw:nth-child(2) .sd,.sdw:nth-child(4) .sd{width:40px;height:40px;}
-.sdw:nth-child(3) .sd{width:32px;height:32px;}
+/* 6段階（+3/+2/+1/-1/-2/-3）。中央値は無い。外側ほど大きい＝強さの手がかり。 */
+.sdw:nth-child(1) .sd,.sdw:nth-child(6) .sd{width:42px;height:42px;}
+.sdw:nth-child(2) .sd,.sdw:nth-child(5) .sd{width:35px;height:35px;}
+.sdw:nth-child(3) .sd,.sdw:nth-child(4) .sd{width:28px;height:28px;}
 .sdw:hover .sd{background:var(--blue-l);transform:translate(-1px,-1px);box-shadow:3px 3px 0 rgba(15,23,42,.2);}
 .sdw.sel .sd{background:var(--blue2);border-color:var(--navy);box-shadow:3px 3px 0 var(--navy);}
 .sdw.sel .sd::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.78rem;font-weight:900;}
-.sdw ~ .sdw.sel .sd{background:var(--lav);box-shadow:3px 3px 0 var(--navy);}
 .spec-hint{display:flex;justify-content:space-between;font-size:10px;color:var(--light);font-weight:700;letter-spacing:1px;}
 
 /* LOADING */
@@ -309,6 +309,11 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .stat-result{font-size:.65rem;text-align:right;font-weight:900;letter-spacing:1px;}
 .subtype-card{background:var(--paper);border:1.5px solid var(--navy);border-radius:8px;padding:14px 16px;box-shadow:3px 3px 0 rgba(139,132,182,.4);}
 .sub-head{font-family:var(--disp);font-size:10px;font-weight:700;letter-spacing:3px;color:var(--lav);text-transform:uppercase;margin-bottom:10px;}
+/* サブタイプが何なのかは、これまで画面のどこにも書いていなかった（コードと
+   キャラだけが出ていた）。getSubCode() は「いちばん僅差だった軸を1つだけ
+   反転したタイプ」を返す＝「あと少しでこちらだった」という情報なので、
+   その1点だけを添える。断定はしない（判定そのものは変えていない）。 */
+.sub-note{font-size:.72rem;line-height:1.8;color:var(--mid);margin-bottom:12px;}
 .sub-inner{display:flex;align-items:center;gap:14px;}
 .sub-img{width:60px;height:60px;object-fit:contain;border-radius:6px;background:var(--w);border:1.5px solid var(--navy);padding:3px;}
 .sub-code{font-family:var(--disp);font-size:1.5rem;font-weight:700;color:var(--navy);letter-spacing:3px;}
@@ -357,7 +362,9 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .sec-sub{font-size:.8rem;color:var(--mid);margin-bottom:24px;line-height:1.7;}
 .fade-in{animation:qIn .36s cubic-bezier(.33,1,.68,1) forwards;}
 .disabled{opacity:.4;pointer-events:none;}
-@media(max-width:360px){.sdw:nth-child(1) .sd,.sdw:nth-child(5) .sd{width:40px;height:40px;}.sdw:nth-child(2) .sd,.sdw:nth-child(4) .sd{width:33px;height:33px;}.sdw:nth-child(3) .sd{width:26px;height:26px;}.res-code{font-size:3.4rem;letter-spacing:5px;}}
+/* 320px幅では .spec-track の1セルが約43pxしかない。6段階ぶんの目盛を
+   はみ出させず、かつタッチターゲットを潰さない値に落とす（実測は make shot）。 */
+@media(max-width:360px){.sdw:nth-child(1) .sd,.sdw:nth-child(6) .sd{width:36px;height:36px;}.sdw:nth-child(2) .sd,.sdw:nth-child(5) .sd{width:30px;height:30px;}.sdw:nth-child(3) .sd,.sdw:nth-child(4) .sd{width:25px;height:25px;}.res-code{font-size:3.4rem;letter-spacing:5px;}}
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;}}
 
 /* ==========================================================================
@@ -539,8 +546,10 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .cc:has(img[src*="sm/b"]){--cat:#1d6b4c;--cat-ink:#14523a;}
 .cc:has(img[src*="sm/c"]){--cat:#c8412e;--cat-ink:#a4301f;}
 .cc:has(img[src*="sm/d"]){--cat:#4b4483;--cat-ink:#3d376c;}
-.cc img{width:100%;height:132px;object-fit:cover;object-position:50% 5%;
+.cc img{width:100%;height:132px;object-fit:cover;
   display:block;margin:0 0 7px;border-bottom:var(--bd) solid var(--navy);}
+/* object-position は下の「キャラ画像の頭が切れないようにする」ブロックで
+   キャラごとに算出している（固定値にすると頭頂の低いキャラが切れる）。 */
 .cc::before,.cc:nth-child(4n)::before,.cc:nth-child(4n+2)::before,.cc:nth-child(4n+3)::before{
   top:auto;bottom:0;left:0;right:auto;width:100%;height:4px;background:var(--cat);}
 .cc-code{color:var(--cat-ink);font-size:13px;}
@@ -556,7 +565,7 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .tc:has(img[src*="chars/b"]){--cat:#1d6b4c;--cat-ink:#14523a;}
 .tc:has(img[src*="chars/c"]){--cat:#c8412e;--cat-ink:#a4301f;}
 .tc:has(img[src*="chars/d"]){--cat:#4b4483;--cat-ink:#3d376c;}
-.tc img{width:100%;height:128px;object-fit:cover;object-position:50% 6%;
+.tc img{width:100%;height:128px;object-fit:cover;
   display:block;margin:0 0 8px;border-bottom:var(--bd) solid var(--navy);transition:none;}
 .tc:hover img{transform:none;}
 .tc::after{top:auto;bottom:0;left:0;width:100%;height:4px;background:var(--cat);}
@@ -567,6 +576,45 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
   box-shadow:var(--sh-1);padding:6px 13px;font-size:12px;}
 .pa{background:#1a56db;}.pb{background:#1d6b4c;}.pc{background:#c8412e;}.pd{background:#4b4483;}
 .tc-line{background:var(--border);height:2px;}
+
+/* --- キャラ画像の頭が切れないようにする（object-position を実測から出す）---
+   .tc img / .cc img は縦長画像（800x1200）を横長寄りの枠に object-fit:cover で
+   嵌めるため、縦が切り取られる。切り取り位置を全16体で固定していた（50% 6%）が、
+   頭頂の位置は 1.2%〜9.2% とばらついており、固定値では両端のどちらかが必ず切れる。
+   実際 DAWG(c4) / DALG(c2) / DBLG(d2) などで頭が枠外に出ていた。
+
+   --head = その画像でキャラの頭頂が始まる縦位置（画像高さに対する%・単位なし）。
+   ★実測値。画像を差し替えたら `make heads` で取り直してここを更新すること。
+
+   Y = (--head − 100·m·f) / (1 − f)      m = 頭の上に残す余白率
+     f = 枠高 / (枠幅 × 1.5)   縦の可視率。f が小さいほど強く切り取る。
+     m = 0.04
+     .tc img … 枠幅は可変（vw=480 で 215px 〜 vw=320 で 135px）。f は 0.397〜0.632。
+               最も強く切り取る f=0.397 で決める。f が大きい幅では頭の上の余白が
+               増えるだけなので、この1式で全幅をカバーできる。
+               → 定数: 100·m·f = 1.588 / (1 − f) = 0.603
+     .cc img … 枠 114x132 固定。f=0.772
+               → 定数: 100·m·f = 3.088 / (1 − f) = 0.228
+   .res-char（262x396）/ .tp-img（96x144）/ .sb-img（64x96）は f>=1 で
+   縦の切り取りが起きないため対象外。触らないこと。 */
+.tc:has(img[src*="chars/a1"]),.cc:has(img[src*="sm/a1"]){--head:3.5;}
+.tc:has(img[src*="chars/a2"]),.cc:has(img[src*="sm/a2"]){--head:1.7;}
+.tc:has(img[src*="chars/a3"]),.cc:has(img[src*="sm/a3"]){--head:2.7;}
+.tc:has(img[src*="chars/a4"]),.cc:has(img[src*="sm/a4"]){--head:3.2;}
+.tc:has(img[src*="chars/b1"]),.cc:has(img[src*="sm/b1"]){--head:7;}
+.tc:has(img[src*="chars/b2"]),.cc:has(img[src*="sm/b2"]){--head:4.3;}
+.tc:has(img[src*="chars/b3"]),.cc:has(img[src*="sm/b3"]){--head:3.2;}
+.tc:has(img[src*="chars/b4"]),.cc:has(img[src*="sm/b4"]){--head:1.5;}
+.tc:has(img[src*="chars/c1"]),.cc:has(img[src*="sm/c1"]){--head:3;}
+.tc:has(img[src*="chars/c2"]),.cc:has(img[src*="sm/c2"]){--head:5.5;}
+.tc:has(img[src*="chars/c3"]),.cc:has(img[src*="sm/c3"]){--head:2.5;}
+.tc:has(img[src*="chars/c4"]),.cc:has(img[src*="sm/c4"]){--head:9.2;}
+.tc:has(img[src*="chars/d1"]),.cc:has(img[src*="sm/d1"]){--head:3;}
+.tc:has(img[src*="chars/d2"]),.cc:has(img[src*="sm/d2"]){--head:1.2;}
+.tc:has(img[src*="chars/d3"]),.cc:has(img[src*="sm/d3"]){--head:3;}
+.tc:has(img[src*="chars/d4"]),.cc:has(img[src*="sm/d4"]){--head:5.3;}
+.tc img{object-position:50% clamp(0%,calc((var(--head,6) * 1% - 1.588%) / 0.603),100%);}
+.cc img{object-position:50% clamp(0%,calc((var(--head,5) * 1% - 3.088%) / 0.228),100%);}
 
 /* --- 診断画面：軸の色手がかり（JS inline）は残し、枠とタイポだけ担当 ----- */
 .prog-area{background:var(--paper);border-bottom:var(--bd-heavy) solid var(--navy);}
@@ -678,8 +726,10 @@ body[data-screen="screen-loading"] .ftr{display:none;}
 .q-top::before{content:none;}                       /* 暗い面前提の白ハイライト */
 .q-text{color:var(--navy);text-shadow:none;font-size:.97rem;line-height:1.7;min-height:5.1em;}
 .q-text:focus{outline:none;}                        /* 回答後の programmatic focus 用 */
-/* #q-axis は C-4（今回スコープ外）で削除予定。それまでは暖色紙の上で読める色にする */
-.q-ax{color:var(--mid);font-size:.66rem;}
+/* C-4: #q-axis（「軸1：対人 or 対課題」）と .spec-labels（「← 対人寄り / 対課題寄り →」）は
+   DOMごと削除した。測定軸の名前を回答前に見せると社会的望ましさバイアスを誘発する。
+   軸の名称・向き・強度は結果画面の「判定理由」と「診断スコア」で全部開示する。
+   デッドCSSになった .q-ax / .spec-labels / .sl-a / .sl-b も併せて削除済み。 */
 .q-body{background:var(--paper);padding:18px 18px 16px;}
 
 /* 軸の手がかりは .q-badge の影の色に限定する（面積の大きい背景では表現しない） */
@@ -696,14 +746,32 @@ body[data-screen="screen-loading"] .ftr{display:none;}
 .choice-row{gap:10px;margin-bottom:14px;min-height:106px;}
 .choice-box{padding:12px 11px;border:var(--bd) solid var(--navy);
   border-radius:var(--r-1);font-size:.73rem;line-height:1.65;}
-.cb-l{border-left:6px solid var(--blue2);background:#e6edfb;color:#123c9b;}
-.cb-r{border-right:6px solid var(--lav-ink);background:#eeecf6;color:var(--lav-ink);}
-.spec-labels{margin-bottom:10px;}
+
+/* --- A / B の色分け（参考実装 quiz-vertical.js の .opt-a/.opt-b + .qv-hlabels）--
+   軸名を出さない以上、A と B が何を指すかは選択肢の本文でしか示せない。
+   そこで本文に「A.」「B.」の接頭辞を付け、同じ色を目盛と両端ラベルにも回す。
+
+   色は既存パレットから2色。カテゴリ4色（#1a56db / #1d6b4c / #c8412e / #4b4483）
+   とは別系統にする必要がある。同じ質問カード上で .q-badge の影と .prog-seg が
+   その4色を「軸」の意味で使っており、目盛にも同系色を置くと
+   「青い目盛＝軸1のこと？」という誤読を作るため。
+     A側 = からし  --must #cf9a24（濃い側は #7a4a10。既存 .rbt2 / .rar-badge の色）
+     B側 = 墨      --navy #111a30
+   彩度ではなく明度でも離れている（両者のコントラスト比 6.8:1）ので、
+   色覚特性によらず区別できる。地色は #fdf0d0 / #f4f0e4 とほぼ同じ明るさに
+   そろえてある（0.874 / 0.877）。片方だけ目立つと選択そのものが歪むため。 */
+.cb-l{border-left:6px solid var(--must);background:#fdf0d0;color:#7a4a10;}
+.cb-r{border-right:6px solid var(--navy);background:#f4f0e4;color:var(--navy);}
+.opt-key{display:inline-block;margin-right:5px;
+  font-family:var(--lat);font-weight:700;font-size:.85rem;
+  letter-spacing:var(--ls-lat);}
+.cb-l .opt-key{color:#7a4a10;}                      /* 6.34:1 on #fdf0d0 */
+.cb-r .opt-key{color:var(--navy);}                  /* 14.9:1 on #f4f0e4 */
 
 /* --- C-7: .sdw を <button> にする。padding は残す（design §6-3 X-6）------
    padding:0 を当てると目盛の間隔とタッチターゲットが消える。
-   併せて、5つの目盛を「トラックを5等分したセル」にする。従来は固定 padding の
-   合計がトラック幅を超えており、5つ目のドットが .q-card の overflow:hidden で
+   併せて、6つの目盛を「トラックを6等分したセル」にする。従来は固定 padding の
+   合計がトラック幅を超えており、端のドットが .q-card の overflow:hidden で
    切れていた（375/390px で20px、320px で36px はみ出していた）。
    LPでは最初に触る操作がこれになるため、複製する前に直す。 */
 .sdw{-webkit-appearance:none;appearance:none;
@@ -713,7 +781,39 @@ body[data-screen="screen-loading"] .ftr{display:none;}
   cursor:pointer;position:relative;z-index:1;}
 .spec-track{padding:6px 0;margin-bottom:8px;}
 .sd{position:relative;}                     /* ✓ を .sd 基準に置く */
-.sdw:focus-visible{outline:3px solid var(--must);outline-offset:0;border-radius:50%;}
+/* フォーカスリングは --verm に変えた。A側の目盛が --must（からし）で塗られるので、
+   同じ色のリングを重ねると「今どこにフォーカスがあるか」が読めなくなるため。
+   #c8412e on #f2ece0 は 4.19:1 で、従来の --must（2.16:1）より強い。 */
+.sdw:focus-visible{outline:3px solid var(--verm);outline-offset:0;border-radius:50%;}
+/* 6段階化で1セルが狭くなるぶん、320px幅では .q-body の左右 padding を
+   トラックだけ食い込んで取り返す（他の要素の余白は変えない）。 */
+@media(max-width:360px){.spec-track{margin-left:-6px;margin-right:-6px;}}
+
+/* 目盛は「外側ほど大きい＝強い」に加えて、A側・B側を常時色分けする。
+   参考実装（nighttype_draft）はピンク／シアンの星で同じことをしている。
+   選択したときだけ色が付く旧仕様では、押す前に「どちら側か」が読めなかった。
+   旧 `.sdw ~ .sdw.sel .sd` は「1つ目以外すべて」に当たる general sibling で、
+   A側の2つ目まで紫に塗っていた（design §6-1 X-5）。:nth-child で塗り分け直す。 */
+.spec-track .sdw:nth-child(-n+3) .sd{background:#fdf0d0;border-color:#7a4a10;}
+.spec-track .sdw:nth-child(n+4)  .sd{background:#f4f0e4;border-color:var(--navy);}
+/* 上の2行は :hover 時の `.sdw:hover .sd{background:var(--blue-l)}`（209行）より
+   詳細度が高いので、ホバーで青に戻ることはない。浮き上がりと影だけが残る。 */
+.spec-track .sdw:nth-child(-n+3).sel .sd{background:var(--must);box-shadow:3px 3px 0 #7a4a10;}
+.spec-track .sdw:nth-child(n+4).sel  .sd{background:var(--navy);box-shadow:3px 3px 0 var(--navy);}
+.spec-track .sdw:nth-child(-n+3).sel .sd::after{color:var(--navy);}   /* 6.79:1 on #cf9a24 */
+.spec-track .sdw:nth-child(n+4).sel  .sd::after{color:var(--paper);}  /* 16.5:1 on #111a30 */
+
+/* .spec-hint：参考実装の .qv-hlabels（目盛の両端に A / B）を取り込む。
+   別行にすると .q-card が1行ぶん伸び、320px で LP のカードが収まらなくなるので、
+   もともとあった説明行の両端を A / B に置き換えて1行に統合した。
+   中央は「どちらでもない」（＝廃止した中央値の説明）ではなく、
+   内側2つの目盛が「どちらかといえば」であることの説明に変わっている。 */
+.spec-hint{font-size:11px;color:var(--light);letter-spacing:.02em;align-items:center;}
+.spec-hint .sh-a,.spec-hint .sh-b{
+  font-family:var(--lat);font-size:15px;font-weight:700;
+  letter-spacing:var(--ls-lat);line-height:1;}
+.spec-hint .sh-a{color:#7a4a10;}                    /* 6.34:1 on --paper */
+.spec-hint .sh-b{color:var(--navy);}                /* 15.7:1 on --paper */
 
 /* --- A-3 / C-1: 進捗の共通部品。#dot-prog と .ax-bars を統合して置き換える -
    4群（＝4軸）× 5目盛。基数は「間隔」、現在地は「高さ」で伝え、
@@ -894,8 +994,6 @@ body[data-screen="screen-loading"] .ftr{display:none;}
   <a class="d-link" href="privacy.html#operator"><div class="d-icon">🏢</div>運営者情報</a>
 </nav>
 
-<div class="conf-wrap" id="conf-wrap"></div>
-
 <!-- TITLE -->
 <div id="screen-title" class="screen active">
   <div class="hero">
@@ -903,7 +1001,9 @@ body[data-screen="screen-loading"] .ftr{display:none;}
     <img class="hero-sil" src="images/chars/a3.webp" alt="" aria-hidden="true">
     <div class="hero-inner">
       <div class="hero-stats">
-        <div class="hstat"><span class="hstat-num" id="stat-count">0</span><span class="hstat-lbl">質問数</span></div>
+        <!-- 20 は変動しない定数。0から数え上げる演出は「実績が積み上がっている」という
+             誤った含意を持つため、静的表示にした（仕様 §C-5 / design §6-1 X-7）。 -->
+        <div class="hstat"><span class="hstat-num" id="stat-count">20</span><span class="hstat-lbl">質問数</span></div>
         <div class="hstat-div"></div>
         <div class="hstat"><span class="hstat-num">16</span><span class="hstat-lbl">タイプ数</span></div>
         <div class="hstat-div"></div>
@@ -924,20 +1024,20 @@ body[data-screen="screen-loading"] .ftr{display:none;}
         <div class="lq-head"><span class="lq-lbl" id="lq-lbl">1問目です。答えた分はそのまま引き継がれます。</span></div>
         <div class="q-card qin" id="lq-card" data-ax="1" role="group" aria-labelledby="lq-num lq-text">
           <div class="q-top">
-            <div class="q-num-row"><div class="q-badge" id="lq-num">Q1</div><div class="q-ax" id="lq-axis"></div></div>
+            <div class="q-num-row"><div class="q-badge" id="lq-num">Q1</div></div>
             <div class="q-text" id="lq-text" tabindex="-1"></div>
           </div>
           <div class="q-body">
-            <div class="choice-row"><div class="choice-box cb-l" id="lq-a"></div><div class="choice-box cb-r" id="lq-b"></div></div>
-            <div class="spec-labels"><span class="sl-a" id="lq-sl-a">← A寄り</span><span class="sl-b" id="lq-sl-b">B寄り →</span></div>
-            <div class="spec-track" id="lq-spec-track" role="radiogroup" aria-label="5段階で選んでください" aria-describedby="lq-a lq-b">
-              <button type="button" class="sdw" data-v="2"  role="radio" aria-checked="false" aria-label="左の選択肢に強く近い" onclick="pick(this)"><span class="sd"></span></button>
-              <button type="button" class="sdw" data-v="1"  role="radio" aria-checked="false" aria-label="左の選択肢にやや近い" onclick="pick(this)"><span class="sd"></span></button>
-              <button type="button" class="sdw" data-v="0"  role="radio" aria-checked="false" aria-label="どちらでもない" onclick="pick(this)"><span class="sd"></span></button>
-              <button type="button" class="sdw" data-v="-1" role="radio" aria-checked="false" aria-label="右の選択肢にやや近い" onclick="pick(this)"><span class="sd"></span></button>
-              <button type="button" class="sdw" data-v="-2" role="radio" aria-checked="false" aria-label="右の選択肢に強く近い" onclick="pick(this)"><span class="sd"></span></button>
+            <div class="choice-row"><div class="choice-box cb-l" id="lq-a"><span class="opt-key">A.</span><span class="opt-txt" id="lq-at"></span></div><div class="choice-box cb-r" id="lq-b"><span class="opt-key">B.</span><span class="opt-txt" id="lq-bt"></span></div></div>
+            <div class="spec-track" id="lq-spec-track" role="radiogroup" aria-label="6段階で選んでください" aria-describedby="lq-a lq-b">
+              <button type="button" class="sdw" data-v="3"  role="radio" aria-checked="false" aria-label="Aに強く近い" onclick="pick(this)"><span class="sd"></span></button>
+              <button type="button" class="sdw" data-v="2"  role="radio" aria-checked="false" aria-label="Aに近い" onclick="pick(this)"><span class="sd"></span></button>
+              <button type="button" class="sdw" data-v="1"  role="radio" aria-checked="false" aria-label="どちらかといえばA" onclick="pick(this)"><span class="sd"></span></button>
+              <button type="button" class="sdw" data-v="-1" role="radio" aria-checked="false" aria-label="どちらかといえばB" onclick="pick(this)"><span class="sd"></span></button>
+              <button type="button" class="sdw" data-v="-2" role="radio" aria-checked="false" aria-label="Bに近い" onclick="pick(this)"><span class="sd"></span></button>
+              <button type="button" class="sdw" data-v="-3" role="radio" aria-checked="false" aria-label="Bに強く近い" onclick="pick(this)"><span class="sd"></span></button>
             </div>
-            <div class="spec-hint"><span>← Aに近い</span><span>どちらでもない</span><span>Bに近い →</span></div>
+            <div class="spec-hint"><span class="sh-a">A</span><span class="sh-b">B</span></div>
           </div>
         </div>
         <div class="lq-done" id="lq-done">
@@ -1042,20 +1142,20 @@ body[data-screen="screen-loading"] .ftr{display:none;}
       <button class="back-btn" id="back-btn" onclick="goBack()" style="display:none;">← 前の質問に戻る</button>
       <div class="q-card qin" id="q-card" data-ax="1" role="group" aria-labelledby="q-num q-text">
         <div class="q-top" id="q-top">
-          <div class="q-num-row"><div class="q-badge" id="q-num">Q1</div><div class="q-ax" id="q-axis"></div></div>
+          <div class="q-num-row"><div class="q-badge" id="q-num">Q1</div></div>
           <div class="q-text" id="q-text" tabindex="-1"></div>
         </div>
         <div class="q-body">
-          <div class="choice-row"><div class="choice-box cb-l" id="q-a"></div><div class="choice-box cb-r" id="q-b"></div></div>
-          <div class="spec-labels"><span class="sl-a" id="sl-a">← A寄り</span><span class="sl-b" id="sl-b">B寄り →</span></div>
-          <div class="spec-track" id="spec-track" role="radiogroup" aria-label="5段階で選んでください" aria-describedby="q-a q-b">
-            <button type="button" class="sdw" data-v="2"  role="radio" aria-checked="false" aria-label="左の選択肢に強く近い" onclick="pick(this)"><span class="sd"></span></button>
-            <button type="button" class="sdw" data-v="1"  role="radio" aria-checked="false" aria-label="左の選択肢にやや近い" onclick="pick(this)"><span class="sd"></span></button>
-            <button type="button" class="sdw" data-v="0"  role="radio" aria-checked="false" aria-label="どちらでもない" onclick="pick(this)"><span class="sd"></span></button>
-            <button type="button" class="sdw" data-v="-1" role="radio" aria-checked="false" aria-label="右の選択肢にやや近い" onclick="pick(this)"><span class="sd"></span></button>
-            <button type="button" class="sdw" data-v="-2" role="radio" aria-checked="false" aria-label="右の選択肢に強く近い" onclick="pick(this)"><span class="sd"></span></button>
+          <div class="choice-row"><div class="choice-box cb-l" id="q-a"><span class="opt-key">A.</span><span class="opt-txt" id="q-at"></span></div><div class="choice-box cb-r" id="q-b"><span class="opt-key">B.</span><span class="opt-txt" id="q-bt"></span></div></div>
+          <div class="spec-track" id="spec-track" role="radiogroup" aria-label="6段階で選んでください" aria-describedby="q-a q-b">
+            <button type="button" class="sdw" data-v="3"  role="radio" aria-checked="false" aria-label="Aに強く近い" onclick="pick(this)"><span class="sd"></span></button>
+            <button type="button" class="sdw" data-v="2"  role="radio" aria-checked="false" aria-label="Aに近い" onclick="pick(this)"><span class="sd"></span></button>
+            <button type="button" class="sdw" data-v="1"  role="radio" aria-checked="false" aria-label="どちらかといえばA" onclick="pick(this)"><span class="sd"></span></button>
+            <button type="button" class="sdw" data-v="-1" role="radio" aria-checked="false" aria-label="どちらかといえばB" onclick="pick(this)"><span class="sd"></span></button>
+            <button type="button" class="sdw" data-v="-2" role="radio" aria-checked="false" aria-label="Bに近い" onclick="pick(this)"><span class="sd"></span></button>
+            <button type="button" class="sdw" data-v="-3" role="radio" aria-checked="false" aria-label="Bに強く近い" onclick="pick(this)"><span class="sd"></span></button>
           </div>
-          <div class="spec-hint"><span>← Aに近い</span><span>どちらでもない</span><span>Bに近い →</span></div>
+          <div class="spec-hint"><span class="sh-a">A</span><span class="sh-b">B</span></div>
         </div>
       </div>
     </div>
@@ -1421,7 +1521,6 @@ let quizStarted=false;
 window.addEventListener('DOMContentLoaded',()=>{
   initGA();
   buildTypeOverview();
-  animateCount();
   dropLegacyProgress();
   checkSavedProgress();
   renderQ('lp');   /* LP埋め込みの1問目を描画する */
@@ -1432,13 +1531,10 @@ window.addEventListener('DOMContentLoaded',()=>{
   });
 });
 
-function animateCount(){
-  /* 架空の診断者数 12,847 を廃止し、検証可能な「質問数」に差し替えた。retro-restyle.md §10-1(3) */
-  const target=Qs.length,el=document.getElementById('stat-count');
-  if(!el)return;
-  let n=0,step=Math.ceil(target/60);
-  const t=setInterval(()=>{n=Math.min(n+step,target);el.textContent=n.toLocaleString();if(n>=target)clearInterval(t);},30);
-}
+/* animateCount() は削除した（仕様 §C-5）。
+   架空の診断者数を「質問数20」に差し替えた結果、変動しない定数を0から
+   数え上げる演出だけが残っていた。数字が増える動きは「実績が積み上がっている」
+   という誤った含意を持つ。#stat-count は HTML に静的な 20 を書いてある。 */
 
 const CODE_IMG={HALS:'a1',HALG:'a2',HAWS:'a3',HAWG:'a4',HBLS:'b1',HBLG:'b2',HBWS:'b3',HBWG:'b4',DALS:'c1',DALG:'c2',DAWS:'c3',DAWG:'c4',DBLS:'d1',DBLG:'d2',DBWS:'d3',DBWG:'d4'};
 function codeImg(code){return CODE_IMG[code]||code.toLowerCase();}
@@ -1458,13 +1554,18 @@ function buildTypeOverview(){
   if(el)el.innerHTML=h;
 }
 
-/* 保存キー。旧 cq_p は「軸ごとに5問ずつ」の旧出題順で ans を持っており、
-   Q_ORDER 導入後に復元すると別の設問の回答として加算されてしまう。
-   そのためキーを変え、旧キーは起動時に黙って削除する（§A-2）。 */
-const SAVE_KEY='cq_p2';
+/* 保存キー。中身の意味が変わったら必ずキーを変え、旧キーは起動時に黙って捨てる。
+     cq_p  … 「軸ごとに5問ずつ」の旧出題順。Q_ORDER 導入後に復元すると
+             別の設問の回答として加算されてしまう（§A-2）。
+     cq_p2 … 5段階（+2/+1/0/-1/-2）で採点した ans / scores。
+             6段階（+3/+2/+1/-1/-2/-3）に置き換えたため重みが違い、
+             復元すると別のスケールの値が混ざったまま集計される。
+   利用者に「前回の途中から続ける」を見せて、実は別の重みで足す方が害が大きい。 */
+const SAVE_KEY='cq_p3';
+const LEGACY_SAVE_KEYS=['cq_p','cq_p2'];
 function saveProgress(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({curQ,scores,ans,selectedIndustries}));}catch(e){}}
 function clearSavedProgress(){try{localStorage.removeItem(SAVE_KEY);}catch(e){}}
-function dropLegacyProgress(){try{localStorage.removeItem('cq_p');}catch(e){}}
+function dropLegacyProgress(){try{LEGACY_SAVE_KEYS.forEach(k=>localStorage.removeItem(k));}catch(e){}}
 function checkSavedProgress(){
   try{
     const s=localStorage.getItem(SAVE_KEY);if(!s)return;
@@ -1569,9 +1670,13 @@ function toggleDrawer(){document.getElementById('ham').classList.toggle('open');
 function closeDrawer(){document.getElementById('ham').classList.remove('open');document.getElementById('drawer').classList.remove('open');}
 
 /* LP と質問画面で id の接頭辞だけが違う。描画関数は1つしか作らない（仕様 §A-4） */
+/* at / bt は選択肢の本文だけを入れる span。box（a / b）には「A.」「B.」の
+   接頭辞が入っているので、box に直接 textContent を書くと接頭辞ごと消える。
+   aria-describedby は box 側（q-a / q-b）を指したままにする＝読み上げは
+   「A. 〈本文〉」になり、目盛の aria-label（「Aに強く近い」）と対応する。 */
 const Q_IDS={
-  quiz:{card:'q-card',num:'q-num',axis:'q-axis',text:'q-text',a:'q-a',b:'q-b',sla:'sl-a',slb:'sl-b',track:'spec-track',seg:'prog-seg'},
-  lp:  {card:'lq-card',num:'lq-num',axis:'lq-axis',text:'lq-text',a:'lq-a',b:'lq-b',sla:'lq-sl-a',slb:'lq-sl-b',track:'lq-spec-track',seg:'lq-prog-seg'}
+  quiz:{card:'q-card',num:'q-num',text:'q-text',a:'q-a',b:'q-b',at:'q-at',bt:'q-bt',track:'spec-track',seg:'prog-seg'},
+  lp:  {card:'lq-card',num:'lq-num',text:'lq-text',a:'lq-a',b:'lq-b',at:'lq-at',bt:'lq-bt',track:'lq-spec-track',seg:'lq-prog-seg'}
 };
 
 /* 進捗の共通部品。4群 × 5目盛で、塗り数＝回答済み数、.cur＝現在地。
@@ -1619,12 +1724,11 @@ function renderQ(target){
      出題順のローテーションにより1問ごとに激変するため廃止した（§A-2） */
   card.dataset.ax=String(ax);
   $(ids.num).textContent=`Q${curQ+1}`;
-  $(ids.axis).textContent=`軸${ax}：${AX[ax].l} or ${AX[ax].r}`;
+  /* C-4: 測定軸の名前は回答前に出さない。#q-axis と .spec-labels は DOM ごと削除し、
+     ここでの代入も無くした。軸の名称・向き・強度は結果画面で全部開示する。 */
   $(ids.text).textContent=q.t;
-  $(ids.a).textContent=q.a;
-  $(ids.b).textContent=q.b;
-  $(ids.sla).textContent=`← ${AX[ax].l}寄り`;
-  $(ids.slb).textContent=`${AX[ax].r}寄り →`;
+  $(ids.at).textContent=q.a;
+  $(ids.bt).textContent=q.b;
   const tk=$(ids.track);
   if(tk)tk.querySelectorAll('.sdw').forEach(d=>{d.classList.remove('sel');if(d.setAttribute)d.setAttribute('aria-checked','false');});
   renderProgSeg(ids.seg);
@@ -1701,26 +1805,67 @@ function goBack(){
   curQ--;scores[qAt(curQ).ax]-=ans[curQ];ans[curQ]=undefined;saveProgress();renderQ(qTarget);
 }
 
-/* ===== SCORING (same logic as ORIGINAL) ===== */
-function getCode(){
-  const h=scores[1]>=0?'H':'D';
-  const a=scores[2]>=0?'A':'B';
-  const l=scores[3]>=0?'L':'W';
-  const s=scores[4]>=0?'S':'G';
-  return h+a+l+s;
+/* =========================================================================
+   SCORING — 6段階スケール（+3/+2/+1/-1/-2/-3・中央値なし）
+   -------------------------------------------------------------------------
+   「どちらでもない」を廃止した。自己分析が済んでいないまま中央に逃げるのではなく、
+   その場で「どちらかといえば」の結論を出してもらうための設計である（オーナー判断）。
+   1軸あたりの合計は -15〜+15 の範囲を取る。
+   ========================================================================= */
+
+/* 軸ごとの「A側（正）を選んだ数 − B側（負）を選んだ数」。
+   ans は出題位置（curQ）基準なので、実際の軸は qAt(i).ax で引く。
+   未回答（undefined / null）は数えない。 */
+const AXIS_LETTERS={1:['H','D'],2:['A','B'],3:['L','W'],4:['S','G']};
+function axisVotes(){
+  const v={1:0,2:0,3:0,4:0};
+  for(let i=0;i<Qs.length;i++){
+    const a=ans[i];
+    if(typeof a!=='number'||a===0)continue;
+    v[qAt(i).ax]+=a>0?1:-1;
+  }
+  return v;
 }
+
+/* 軸 ax が A側（コードの1文字目側）に倒れたか。
+   -------------------------------------------------------------------------
+   ★タイブレーカー（これを消すと「拮抗を断定で出す」バグに戻る）
+   6段階にしても軸の合計が 0 になることは普通に起こる（例: +1+1+1-1-2 = 0）。
+   そのときは「A側を選んだ数」と「B側を選んだ数」の多数決で決める。
+   1軸5問・中央値なしなので、5個の符号は必ず 3対2 以上に割れる。
+   5 は奇数であり、A側とB側が同数になることは原理的に起こらない。
+   ★この保証は「1軸あたりの設問数が奇数であること」に依存している。
+     設問数を偶数（例: 1軸4問）に変えると 2対2 が発生し、保証は壊れる。 */
+function axisIsPos(ax,votes){
+  const s=scores[ax];
+  if(s!==0)return s>0;
+  const n=(votes||axisVotes())[ax];
+  if(n!==0)return n>0;
+  /* ここに来るのは票が1つも無いときだけ（未回答、または ?type= のように
+     scores を外から与えた場合）。判定不能なので従来どおり A側に倒す。 */
+  return true;
+}
+
+function getCode(){
+  const v=axisVotes();
+  let c='';
+  for(let ax=1;ax<=4;ax++)c+=AXIS_LETTERS[ax][axisIsPos(ax,v)?0:1];
+  return c;
+}
+
+/* 「いちばん僅差だった軸」を1本だけ反転させたタイプ。
+   スケールが ±10 → ±15 に広がっても、比べているのは |score| どうしなので
+   アルゴリズムは変わらない。反転は必ず1文字なので、primary とは必ず異なる。 */
 function getSubCode(){
-  const primary=getCode();
-  const ns={...scores};
+  const v=axisVotes();
   const absS=[Math.abs(scores[1]),Math.abs(scores[2]),Math.abs(scores[3]),Math.abs(scores[4])];
   const minAx=absS.indexOf(Math.min(...absS))+1;
-  ns[minAx]=-ns[minAx];
-  const h2=ns[1]>=0?'H':'D';
-  const a2=ns[2]>=0?'A':'B';
-  const l2=ns[3]>=0?'L':'W';
-  const s2=ns[4]>=0?'S':'G';
-  const sub=h2+a2+l2+s2;
-  return sub===primary?null:sub;
+  let sub='';
+  for(let ax=1;ax<=4;ax++){
+    const pos=axisIsPos(ax,v);
+    sub+=AXIS_LETTERS[ax][(ax===minAx?!pos:pos)?0:1];
+  }
+  return sub===getCode()?null:sub;
 }
 
 function showLoading(){
@@ -1730,32 +1875,35 @@ function showLoading(){
   setTimeout(showResult,3600);
 }
 
-function launchConfetti(){
-  const wrap=document.getElementById('conf-wrap');
-  const colors=['#2563eb','#818cf8','#f59e0b','#10b981','#ef4444','#ec4899','#fcd34d'];
-  for(let i=0;i<80;i++){
-    const c=document.createElement('div');c.className='conf';
-    c.style.cssText=`left:${Math.random()*100}vw;top:${-Math.random()*20}vh;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>.5?'50%':'2px'};width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;animation-duration:${1.5+Math.random()*1.5}s;animation-delay:${Math.random()*.8}s;`;
-    wrap.appendChild(c);
-  }
-  setTimeout(()=>wrap.innerHTML='',4000);
-}
+/* launchConfetti() は削除した（仕様 §C-5・オーナー判断）。
+   .conf-wrap / .conf / @keyframes confA / 呼び出し（showResult）もすべて撤去済み。
+   就活の診断結果は当選ではないので、祝祭の演出そのものを置かない。 */
 
+/* 1軸5問 × 最大±3 = ±15。スケールが ±10 から広がったので、
+   マーカー位置・棒の幅・強度%（AX_MAX で割る）をすべて追従させている。
+   ここを ±10 のままにすると、棒が中央に寄って実際より弱い結果に見える。 */
+const AX_MAX=15;
 function buildAxisViz(sc){
   const axes=[
-    {l:AX[1].l,r:AX[1].r,s:sc[1],ca:AX[1].ca,cb:AX[1].cb},
-    {l:AX[2].l,r:AX[2].r,s:sc[2],ca:AX[2].ca,cb:AX[2].cb},
-    {l:AX[3].l,r:AX[3].r,s:sc[3],ca:AX[3].ca,cb:AX[3].cb},
-    {l:AX[4].l,r:AX[4].r,s:sc[4],ca:AX[4].ca,cb:AX[4].cb}
+    {ax:1,l:AX[1].l,r:AX[1].r,s:sc[1],ca:AX[1].ca,cb:AX[1].cb},
+    {ax:2,l:AX[2].l,r:AX[2].r,s:sc[2],ca:AX[2].ca,cb:AX[2].cb},
+    {ax:3,l:AX[3].l,r:AX[3].r,s:sc[3],ca:AX[3].ca,cb:AX[3].cb},
+    {ax:4,l:AX[4].l,r:AX[4].r,s:sc[4],ca:AX[4].ca,cb:AX[4].cb}
   ];
+  const votes=axisVotes();
   let h='<div class="axis-viz">';
   axes.forEach(ax=>{
-    const pct=Math.round(((10-ax.s)/20)*100);
-    const str=Math.min(100,Math.round((Math.abs(ax.s)/10)*100));
-    const isL=ax.s>=0;
+    const clamped=Math.max(-AX_MAX,Math.min(AX_MAX,ax.s));
+    const pct=Math.round(((AX_MAX-clamped)/(AX_MAX*2))*100);
+    const str=Math.min(100,Math.round((Math.abs(ax.s)/AX_MAX)*100));
+    /* 向きは判定と同じ根拠で決める。合計0のときに `s>=0` で左に倒すと、
+       タイプコードが多数決でB側に決まっているのに棒だけA側の色になる。 */
+    const isL=axisIsPos(ax.ax,votes);
     const col=isL?ax.ca:ax.cb;
-    const lbl=ax.s===0?'バランス型':(isL?ax.l:ax.r);
-    const leftW=Math.round(((10+ax.s)/20)*100);
+    /* 合計0でも判定は多数決で片側に決まっている。「バランス型」と出すと
+       タイプコードと食い違うので、向きは出したうえで僅差だったことを添える。 */
+    const lbl=(isL?ax.l:ax.r)+(ax.s===0?'（僅差）':'');
+    const leftW=Math.round(((AX_MAX+clamped)/(AX_MAX*2))*100);
     const rightW=100-leftW;
     h+=`<div class="av-row">
       <div class="av-labels"><span class="av-l" style="color:${ax.ca}">${ax.l}</span><span class="av-l" style="color:${ax.cb}">${ax.r}</span></div>
@@ -1765,7 +1913,7 @@ function buildAxisViz(sc){
         <div class="av-center"></div>
         <div class="av-marker" style="left:${pct}%;background:${col};border-color:${col};box-shadow:0 2px 10px ${col}55"></div>
       </div>
-      <div class="av-result" style="color:${col}">${lbl} ${str}%</div>
+      <div class="av-result" style="color:${col}">${lbl}${ax.s===0?'':` ${str}%`}</div>
     </div>`;
   });
   h+='</div>';
@@ -1862,16 +2010,22 @@ function countUpCode(el,code){
 }
 
 /* ===== SHOW RESULT ===== */
-function showResult(skipConfetti=false,source='quiz'){
+/* 第1引数は旧 skipConfetti。紙吹雪を撤廃したので現在は何もしない（§C-5）。
+   呼び出し側（?type= 来訪・テスト）が位置引数で source を渡しているため、
+   引数の位置だけ残してある。 */
+function showResult(_unusedSkipIntro=false,source='quiz'){
   const code=getCode(),t=TD[code],subCode=getSubCode();
   const cat=code.slice(0,2),sub=code.slice(2,4);
   const inds=selectedIndustries.length>0?selectedIndustries:Object.keys(CD);
   const r=REASON[cat],rl=REASON_L[sub];
-  const h=scores[1]>=0,a=scores[2]>=0,l=scores[3]>=0,s=scores[4]>=0;
-  const s1=Math.min(100,Math.round(Math.abs(scores[1]/10)*100));
-  const s2=Math.min(100,Math.round(Math.abs(scores[2]/10)*100));
-  const s3=Math.min(100,Math.round(Math.abs(scores[3]/10)*100));
-  const s4=Math.min(100,Math.round(Math.abs(scores[4]/10)*100));
+  /* 判定理由のタグは getCode() と同じ根拠で向きを出す。scores>=0 のままだと、
+     合計0の軸でタイプコード（多数決）と逆向きの「高/低」が並ぶ。 */
+  const _v=axisVotes();
+  const h=axisIsPos(1,_v),a=axisIsPos(2,_v),l=axisIsPos(3,_v),s=axisIsPos(4,_v);
+  const s1=Math.min(100,Math.round(Math.abs(scores[1]/AX_MAX)*100));
+  const s2=Math.min(100,Math.round(Math.abs(scores[2]/AX_MAX)*100));
+  const s3=Math.min(100,Math.round(Math.abs(scores[3]/AX_MAX)*100));
+  const s4=Math.min(100,Math.round(Math.abs(scores[4]/AX_MAX)*100));
   const avgStr=Math.round((s1+s2+s3+s4)/4);
   const varMsg=avgStr>=70?'回答が一貫しており、診断精度が高い結果です。':avgStr>=40?'バランス型の回答で、多面的な魅力を持つタイプです。':'各軸が接近しており、状況適応型の柔軟さを持ちます。';
 
@@ -1888,7 +2042,7 @@ function showResult(skipConfetti=false,source='quiz'){
   let subH='';
   if(subCode&&TD[subCode]){
     const st=TD[subCode];
-    subH=`<div class="r-panel fade-in"><div class="r-ph" onclick="toggleAcc(this)"><div class="r-pi">🔮</div><div class="r-pt">サブタイプ</div><span class="r-tog">▼</span></div><div class="r-pb"><div class="subtype-card"><div class="sub-head">あなたのサブタイプ</div><div class="sub-inner"><img class="sub-img" src="images/chars/sm/${codeImg(subCode)}.webp" alt="${subCode}"><div><div class="sub-code">${subCode}</div><div class="sub-name">${st.icon} ${st.name}</div><div class="sub-tag">${st.tag}</div><span class="sub-pct">2番目に近いタイプ</span></div></div></div></div></div>`;
+    subH=`<div class="r-panel fade-in"><div class="r-ph" onclick="toggleAcc(this)"><div class="r-pi">🔮</div><div class="r-pt">サブタイプ</div><span class="r-tog">▼</span></div><div class="r-pb"><div class="subtype-card"><div class="sub-head">あなたのサブタイプ</div><div class="sub-note">4つの軸のうち、いちばん僅差だった1つが逆に出ていれば、こちらのタイプでした。それだけ差が小さかったということなので、こちらの傾向も併せて見ておくと、自分の振れ幅がつかみやすくなります。</div><div class="sub-inner"><img class="sub-img" src="images/chars/sm/${codeImg(subCode)}.webp" alt="${subCode}"><div><div class="sub-code">${subCode}</div><div class="sub-name">${st.icon} ${st.name}</div><div class="sub-tag">${st.tag}</div><span class="sub-pct">2番目に近いタイプ</span></div></div></div></div></div>`;
   }
 
   const indChips=Object.keys(CD).map(ind=>`<div class="ind-sm${selectedIndustries.includes(ind)?' sel':''}" onclick="toggleIndSm(this,'${ind}')">${ind}</div>`).join('');
@@ -1939,7 +2093,6 @@ function showResult(skipConfetti=false,source='quiz'){
   track('result_view',{type_code:code,source:source});
   observeAgentImpressions();
   setTimeout(()=>{const el=document.getElementById('res-code-el');if(el)countUpCode(el,code);},600);
-  if(!skipConfetti)setTimeout(launchConfetti,800);
   clearSavedProgress();
 }
 

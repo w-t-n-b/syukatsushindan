@@ -48,22 +48,28 @@ class El {
 function build(){
   const byId = new Map();
   const mk = id => { const e = new El('div', id); byId.set(id, e); return e; };
-  ['quiz-bg','q-top','prog-text','prog-msg','prog-seg','q-num','q-axis','q-text','q-a','q-b',
-   'sl-a','sl-b','back-btn','spec-track','q-card','stat-count','cont-banner','cont-sub',
-   'type-overview','screen-result','conf-wrap','l-bar','hdr','drawer','ham',
+  /* #q-axis / .sl-a / .sl-b（軸名の開示）と #conf-wrap（紙吹雪）は
+     実ファイルから削除済みなので、スタブ側にも置かない。
+     置いたままにすると「消したはずの id を参照している」コードを見逃す。 */
+  /* q-a / q-b は「A.」「B.」の接頭辞を含む箱、q-at / q-bt はその中の本文用 span。
+     renderQ() は本文だけを書き換える（箱に直接書くと接頭辞が消える）。 */
+  ['quiz-bg','q-top','prog-text','prog-msg','prog-seg','q-num','q-text','q-a','q-b','q-at','q-bt',
+   'back-btn','spec-track','q-card','stat-count','cont-banner','cont-sub',
+   'type-overview','screen-result','l-bar','hdr','drawer','ham',
    'screen-title','screen-quiz','screen-loading','char-strip-track','company-list','res-code-el',
    /* LP埋め込み質問（設計A）。質問画面と同じ部品を lq- 接頭辞で持つ */
-   'lp-quiz','lq-lbl','lq-card','lq-num','lq-axis','lq-text','lq-a','lq-b','lq-sl-a','lq-sl-b',
+   'lp-quiz','lq-lbl','lq-card','lq-num','lq-text','lq-a','lq-b','lq-at','lq-bt',
    'lq-spec-track','lq-prog-seg','lq-done','lq-back','lq-continue',
    'cta-hero','cta-grid','cta-drawer'
   ].forEach(mk);
 
   const screens = ['screen-title','screen-quiz','screen-loading','screen-result'].map(i=>byId.get(i));
   screens[0].classList.add('active');
-  const mkSdws = () => [2,1,0,-1,-2].map(v=>{ const e=new El('button'); e.dataset.v=String(v); return e; });
+  // 6段階（+3/+2/+1/-1/-2/-3）。中央値（0）は無い。
+  const mkSdws = () => [3,2,1,-1,-2,-3].map(v=>{ const e=new El('button'); e.dataset.v=String(v); return e; });
   const sdws = mkSdws();          // #spec-track（質問画面）
   const lpSdws = mkSdws();        // #lq-spec-track（LP埋め込み）
-  // renderQ()/pick() は track.querySelectorAll('.sdw') で自分の5個だけを触る
+  // renderQ()/pick() は track.querySelectorAll('.sdw') で自分の6個だけを触る
   byId.get('spec-track').querySelectorAll = sel => (sel === '.sdw' ? sdws : []);
   byId.get('lq-spec-track').querySelectorAll = sel => (sel === '.sdw' ? lpSdws : []);
   const heroInner = new El('div'); heroInner.classList.add('hero-inner');
