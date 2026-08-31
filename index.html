@@ -546,8 +546,7 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .cc:has(img[src*="sm/b"]){--cat:#1d6b4c;--cat-ink:#14523a;}
 .cc:has(img[src*="sm/c"]){--cat:#c8412e;--cat-ink:#a4301f;}
 .cc:has(img[src*="sm/d"]){--cat:#4b4483;--cat-ink:#3d376c;}
-/* .tc と同じ理由で 2:3。マーキーでも下端で切れないようにする。 */
-.cc img{width:100%;aspect-ratio:2/3;height:auto;object-fit:cover;
+.cc img{width:100%;height:132px;object-fit:cover;
   display:block;margin:0 0 7px;border-bottom:var(--bd) solid var(--navy);}
 /* object-position は下の「キャラ画像の頭が切れないようにする」ブロックで
    キャラごとに算出している（固定値にすると頭頂の低いキャラが切れる）。 */
@@ -566,11 +565,25 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .tc:has(img[src*="chars/b"]){--cat:#1d6b4c;--cat-ink:#14523a;}
 .tc:has(img[src*="chars/c"]){--cat:#c8412e;--cat-ink:#a4301f;}
 .tc:has(img[src*="chars/d"]){--cat:#4b4483;--cat-ink:#3d376c;}
-/* 枠を素材と同じ 2:3 にする。cover でも切り取りが発生しないので、全身が入り
-   下端で腕や脚が切れない（オーナー判断: 下が切れるのは不可）。高さ固定を捨てた
-   ぶんセクションは縦に伸びるが、キャラを見せることが目的なので許容する。 */
-.tc img{width:100%;aspect-ratio:2/3;height:auto;object-fit:cover;
+/* 高さ固定のバストアップ。全身表示（2:3）も試したが、スマホでセクションが
+   長くなりすぎるため戻した（オーナー判断）。 */
+.tc img{width:100%;height:128px;object-fit:cover;
   display:block;margin:0 0 8px;border-bottom:var(--bd) solid var(--navy);transition:none;}
+/* DAWG(c4) だけの例外。しゃがみ姿勢で身体が横に広がっているため、他と同じ
+   切り取り（画像高さの約40%）では頭と肩までしか入らず、手の途中で切れる。
+
+   枠の高さは変えない（変えるとその行だけ背が伸びて隣のカードが間延びする）。
+   contain で全身を出すと他と比べて極端に小さくなる。そこで左右に padding を入れ、
+   描画幅だけを縮める（要素の幅は 100% のままなので下の区切り線は全幅に残る）。
+   padding 18.6% → 描画幅は枠の 62.8%、縦の可視率 0.632。
+   頭頂 9.1% から約 69% まで入り、左手（実測 66〜68.5%）が収まる。
+   地色は「実際に表示される範囲（縦 5.9〜69%）の左右端」の実測平均。四隅の色
+   （#f1e6d6）だと素材のグラデーションのぶん濃すぎて、継ぎ目が見える。 */
+.tc:has(img[src*="chars/c4"]) img,
+.cc:has(img[src*="sm/c4"]) img{
+  box-sizing:border-box;padding:0 18.6%;background:#f7efe2;
+  object-position:50% 16%;
+}
 .tc:hover img{transform:none;}
 .tc::after{top:auto;bottom:0;left:0;width:100%;height:4px;background:var(--cat);}
 .tc-code{color:var(--cat-ink)!important;font-size:13px;}  /* JSのinline styleを上書き */

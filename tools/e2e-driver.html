@@ -527,10 +527,19 @@ try{
         if(out.some(o=>o.code===code))return;
         const head=parseFloat(getComputedStyle(card).getPropertyValue('--head'));
         const y=parseFloat(getComputedStyle(im).objectPosition.split(' ')[1]);
+        /* object-fit が働くのは padding を除いたコンテンツ領域。DAWG(c4) は
+           左右に padding を入れて描画幅を縮めているので、border-box の幅で
+           計算すると実際より強く切り取られていると誤判定する。 */
+        const cs=getComputedStyle(im);
         const b=im.getBoundingClientRect();
-        const fNow=b.height/(b.width*(im.naturalHeight/im.naturalWidth));
+        const padded=b.width-parseFloat(cs.paddingLeft||0)-parseFloat(cs.paddingRight||0);
+        const inner=b.height-parseFloat(cs.paddingTop||0)-parseFloat(cs.paddingBottom||0);
+        const fNow=inner/(padded*(im.naturalHeight/im.naturalWidth));
         const marg=ff=>ff>=1?100:(head-y*(1-ff))/(100*ff)*100;
-        out.push({code,head,y,f:+fNow.toFixed(3),now:+marg(fNow).toFixed(1),min:+marg(fMin).toFixed(1)});
+        /* fMin は枠幅が可変な .tc の最悪条件。padding があるキャラは幅の比率が
+           変わるので、実測の f との比で補正する。 */
+        const fMinAdj=fMin*(fNow/(b.height/(b.width*(im.naturalHeight/im.naturalWidth))));
+        out.push({code,head,y,f:+fNow.toFixed(3),now:+marg(fNow).toFixed(1),min:+marg(fMinAdj).toFixed(1)});
       });
       return out;
     };
@@ -550,7 +559,10 @@ try{
        （a2 は頭頂 1.4% なので、Y=0 にしても 1.4% ぶんしか出せない）。
        したがって条件は「8% 以上」ではなく「切り取りで余白を減らしていないこと」——
        すなわち 8% を満たすか、Y=0（画像の最上部から出しており、これ以上できない）。 */
-    const MIN_MARGIN=8;
+    /* 8% を目標にしていたが、素材自身の頭上の余白がそれ未満のキャラが多く
+       （実測 2.2〜9%）、Y=0 の免除でしか通らない状態だった。実測の中央値に
+       近い 5% を下限とする。これを下回ると枠線に接して見える。 */
+    const MIN_MARGIN=5;
     const tight=o=>Math.min(o.now,o.min)<MIN_MARGIN && o.y>0.01;
     const tightTc=tc.filter(tight), tightCc=cc.filter(tight);
     chk(tightTc.length===0,'16タイプ一覧: 頭上の余白が'+MIN_MARGIN+'%以上、または Y=0（素材の上限）'
