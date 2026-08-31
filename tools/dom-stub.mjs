@@ -1,4 +1,12 @@
 // 診断ロジックの回帰検証ハーネス（index.html のインライン JS を最小DOMスタブ上で実行する）
+//
+// 1画面5問（quiz-five-per-page.md）にあたって、このスタブは作り直した。
+// 旧版は「質問カードが1枚しかない」前提で、q-num / q-text / spec-track などの id を
+// 固定で1つずつ持っていた。5問ずつになるとカードは JS が innerHTML で組み立てるので、
+//   ・innerHTML に入った文字列を要素ツリーとして持てること
+//   ・.sdw[data-pos="3"] のようなセレクタで引けること
+// の2つが必要になる。そのため最小のHTMLパーサとセレクタエンジンを持たせてある。
+// 「テストを緩める」方向ではなく、5問ずつの前提で同じことを検証できるようにするための変更。
 import fs from 'node:fs';
 import vm from 'node:vm';
 
@@ -15,34 +23,131 @@ class El {
   constructor(tag='div', id=''){
     this.tagName = (tag||'div').toUpperCase();
     this.id = id;
-    this.children = [];
+    this.parent = null;
+    this._nodes = [];            // 子ノード（El か文字列）
+    this.attrs = Object.create(null);
     this.classList = new ClassList(this);
     this.style = new Proxy({ cssText:'' }, { set(t,k,v){ t[k]=v; return true; }, get(t,k){ return t[k]===undefined?'':t[k]; } });
     this.dataset = {};
-    this.textContent = '';
     this._innerHTML = '';
     this.offsetWidth = 100; this.offsetHeight = 40;
   }
-  set innerHTML(v){ this._innerHTML = String(v); }
+  get children(){ return this._nodes.filter(n => n instanceof El); }
+  set innerHTML(v){ this._innerHTML = String(v); this._nodes = parseHTML(this._innerHTML, this); }
   get innerHTML(){ return this._innerHTML; }
+  set textContent(v){ this._innerHTML = ''; this._nodes = [String(v)]; }
+  get textContent(){ return this._nodes.map(n => typeof n === 'string' ? n : n.textContent).join(''); }
   set className(v){ this.classList.s = new Set(String(v).split(/\s+/).filter(Boolean)); }
   get className(){ return this.classList.value; }
-  appendChild(c){ this.children.push(c); return c; }
-  removeChild(c){ this.children = this.children.filter(x=>x!==c); }
-  remove(){}
+  appendChild(c){ this._nodes.push(c); c.parent = this; return c; }
+  removeChild(c){ this._nodes = this._nodes.filter(x => x !== c); }
+  remove(){ if(this.parent) this.parent.removeChild(this); }
   contains(){ return false; }
   addEventListener(){}
   getBoundingClientRect(){ return {left:0,top:0,width:100,height:40}; }
-  querySelector(){ return null; }
-  querySelectorAll(){ return []; }
+  querySelector(sel){ return findAll(this.children, sel)[0] || null; }
+  querySelectorAll(sel){ return findAll(this.children, sel); }
   focus(){}
-  setAttribute(k,v){ this[k]=v; }
-  getAttribute(k){ return this[k]; }
+  setAttribute(k,v){ this.attrs[k] = String(v); this[k] = v; }
+  getAttribute(k){ return this.attrs[k] !== undefined ? this.attrs[k] : (this[k] !== undefined ? this[k] : null); }
   insertAdjacentHTML(pos, html){ this._adjacent = (this._adjacent||'') + html; }
-  insertBefore(n, ref){ this.children.unshift(n); this._adjacent = (this._adjacent||'') + '<div class="'+n.className+'">' + n.innerHTML + '</div>'; return n; }
+  insertBefore(n, ref){ this._nodes.unshift(n); n.parent = this;
+    this._adjacent = (this._adjacent||'') + '<div class="'+n.className+'">' + n.innerHTML + '</div>'; return n; }
   get firstChild(){ return this.children[0] || null; }
   scrollIntoView(){}
   get nextElementSibling(){ return new El(); }
+}
+
+/* ---- 最小のHTMLパーサ -----------------------------------------------------
+   index.html が innerHTML に入れる範囲（div / span / button / ul / li / img）
+   だけを相手にする。汎用パーサではない。 */
+const VOID_TAGS = new Set(['img','br','hr','input','meta','link','source','path','circle','use']);
+const camel = s => s.replace(/-([a-z])/g, (_,c) => c.toUpperCase());
+
+function applyAttrs(el, src){
+  const re = /([^\s=]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g;
+  let m;
+  while((m = re.exec(src))){
+    const k = m[1];
+    const v = m[2] !== undefined ? m[2] : m[3] !== undefined ? m[3] : (m[4] || '');
+    el.attrs[k] = v;
+    if(k === 'class') el.className = v;
+    else if(k === 'id') el.id = v;
+    else if(k.startsWith('data-')) el.dataset[camel(k.slice(5))] = v;
+    else el[k] = v;
+  }
+}
+
+function parseHTML(html, parent){
+  const root = [];
+  const stack = [root];
+  const re = /<\/?([a-zA-Z][\w-]*)((?:\s+[^\s=>]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+))?)*)\s*(\/?)>/g;
+  let last = 0, m;
+  const push = n => stack[stack.length-1].push(n);
+  while((m = re.exec(html))){
+    if(m.index > last){ const t = html.slice(last, m.index); if(t) push(t); }
+    last = re.lastIndex;
+    const tag = m[1].toLowerCase();
+    if(m[0][1] === '/'){ if(stack.length > 1) stack.pop(); continue; }
+    const el = new El(tag);
+    applyAttrs(el, m[2] || '');
+    push(el);
+    if(!VOID_TAGS.has(tag) && m[3] !== '/') stack.push(el._nodes);
+  }
+  if(last < html.length){ const t = html.slice(last); if(t) push(t); }
+  const link = (list, p) => list.forEach(n => { if(n instanceof El){ n.parent = p; link(n._nodes, n); } });
+  link(root, parent);
+  return root;
+}
+
+/* ---- 最小のセレクタエンジン ------------------------------------------------
+   対応するのは index.html が実際に使う形だけ:
+     .cls / #id / tag / [attr="v"] / それらの複合 / 子孫（空白）区切り */
+function parseSel(sel){
+  return String(sel).trim().split(/\s+(?![^\[]*\])/).map(part => {
+    const o = { tag:null, id:null, cls:[], attrs:[] };
+    const re = /([.#]?[\w-]+)|\[([\w-]+)(?:=\s*"?([^\]"]*)"?)?\]/g;
+    let m;
+    while((m = re.exec(part))){
+      if(m[1]){
+        if(m[1][0] === '.') o.cls.push(m[1].slice(1));
+        else if(m[1][0] === '#') o.id = m[1].slice(1);
+        else o.tag = m[1].toLowerCase();
+      } else o.attrs.push([m[2], m[3]]);
+    }
+    return o;
+  });
+}
+
+function matchOne(el, o){
+  if(o.tag && el.tagName.toLowerCase() !== o.tag) return false;
+  if(o.id && el.id !== o.id) return false;
+  if(o.cls.some(c => !el.classList.contains(c))) return false;
+  return o.attrs.every(([k,v]) => {
+    const a = el.getAttribute(k);
+    return v === undefined ? a != null : String(a) === v;
+  });
+}
+
+function allEls(roots){
+  const out = [];
+  const walk = e => { out.push(e); e.children.forEach(walk); };
+  roots.forEach(walk);
+  return out;
+}
+
+function findAll(roots, sel){
+  const parts = parseSel(sel);
+  const last = parts[parts.length-1];
+  return allEls(roots).filter(el => {
+    if(!matchOne(el, last)) return false;
+    for(let i = parts.length-2; i >= 0; i--){
+      let p = el.parent, found = false;
+      while(p){ if(matchOne(p, parts[i])){ found = true; p = p.parent; break; } p = p.parent; }
+      if(!found) return false;
+    }
+    return true;
+  });
 }
 
 function build(){
@@ -50,29 +155,25 @@ function build(){
   const mk = id => { const e = new El('div', id); byId.set(id, e); return e; };
   /* #q-axis / .sl-a / .sl-b（軸名の開示）と #conf-wrap（紙吹雪）は
      実ファイルから削除済みなので、スタブ側にも置かない。
-     置いたままにすると「消したはずの id を参照している」コードを見逃す。 */
-  /* q-a / q-b は「A.」「B.」の接頭辞を含む箱、q-at / q-bt はその中の本文用 span。
-     renderQ() は本文だけを書き換える（箱に直接書くと接頭辞が消える）。 */
-  ['quiz-bg','q-top','prog-text','prog-msg','prog-seg','q-num','q-text','q-a','q-b','q-at','q-bt',
-   'back-btn','spec-track','q-card','stat-count','cont-banner','cont-sub',
+     置いたままにすると「消したはずの id を参照している」コードを見逃す。
+     1問ずつ時代の q-num / q-text / q-a / q-b / spec-track / q-card と
+     その lq- 版も同じ理由で置かない。いまはカードごと JS が組み立てる。 */
+  ['quiz-bg','prog-text','prog-msg','prog-seg','back-btn','q-list','q-next','q-remain',
+   'cont-banner','cont-sub',
    'type-overview','screen-result','l-bar','hdr','drawer','ham',
    'screen-title','screen-quiz','screen-loading','char-strip-track','company-list','res-code-el',
-   /* LP埋め込み質問（設計A）。質問画面と同じ部品を lq- 接頭辞で持つ */
-   'lp-quiz','lq-lbl','lq-card','lq-num','lq-text','lq-a','lq-b','lq-at','lq-bt',
-   'lq-spec-track','lq-prog-seg','lq-done','lq-back','lq-continue',
+   /* LP埋め込み質問。診断画面と同じ部品を lq- 接頭辞で持つ */
+   'lp-quiz','lq-lbl','lq-list','lq-prog-seg','lq-done','lq-continue','lq-remain',
    'cta-hero','cta-grid','cta-drawer'
   ].forEach(mk);
 
   const screens = ['screen-title','screen-quiz','screen-loading','screen-result'].map(i=>byId.get(i));
   screens[0].classList.add('active');
-  // 6段階（+3/+2/+1/-1/-2/-3）。中央値（0）は無い。
-  const mkSdws = () => [3,2,1,-1,-2,-3].map(v=>{ const e=new El('button'); e.dataset.v=String(v); return e; });
-  const sdws = mkSdws();          // #spec-track（質問画面）
-  const lpSdws = mkSdws();        // #lq-spec-track（LP埋め込み）
-  // renderQ()/pick() は track.querySelectorAll('.sdw') で自分の6個だけを触る
-  byId.get('spec-track').querySelectorAll = sel => (sel === '.sdw' ? sdws : []);
-  byId.get('lq-spec-track').querySelectorAll = sel => (sel === '.sdw' ? lpSdws : []);
   const heroInner = new El('div'); heroInner.classList.add('hero-inner');
+  const footer = new El('footer'); footer.classList.add('ftr');
+
+  // document 直下の探索対象。byId の各要素は独立した根として扱う。
+  const roots = () => [...byId.values(), heroInner, footer];
 
   const document = {
     body: new El('body'),
@@ -80,21 +181,18 @@ function build(){
     getElementById: id => byId.get(id) || null,
     querySelector: sel => {
       if(sel === '.hero-inner' || sel === '#screen-title .hero-inner') return heroInner;
-      if(sel === '.shared-banner') return heroInner.children.find(c=>c.classList.contains('shared-banner')) || null;
-      if(sel === '.ftr') return new El('footer');
-      const m = /^#(.+)$/.exec(sel); if(m) return byId.get(m[1]) || null;
-      return null;
+      if(sel === '.ftr') return footer;
+      return findAll(roots(), sel)[0] || null;
     },
     querySelectorAll: sel => {
       if(sel === '.screen') return screens;
-      if(sel === '.sdw') return sdws.concat(lpSdws);
-      return [];
+      return findAll(roots(), sel);
     },
     createElement: t => new El(t),
     addEventListener(){},
     fonts: { ready: Promise.resolve() }
   };
-  return { document, byId, sdws, lpSdws, heroInner };
+  return { document, byId, heroInner };
 }
 
 function load(htmlPath, search){
@@ -102,14 +200,14 @@ function load(htmlPath, search){
   const m = html.match(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/);
   if(!m) throw new Error('no inline script');
   const code = m[1];
-  const { document, byId, sdws, lpSdws, heroInner } = build();
+  const { document, byId, heroInner } = build();
   const store = new Map();
   const timers = [];
   const sandbox = {
     document,
     console,
     Math, JSON, Date, Object, Array, String, Number, Boolean, Promise, Set, Map, RegExp, Error,
-    encodeURIComponent, decodeURIComponent, parseInt, parseFloat, isNaN,
+    encodeURIComponent, decodeURIComponent, parseInt, parseFloat, isNaN, isFinite,
     URLSearchParams,
     localStorage: {
       getItem: k => (store.has(k) ? store.get(k) : null),
@@ -125,13 +223,22 @@ function load(htmlPath, search){
     IntersectionObserver: function(){ this.observe=()=>{}; this.disconnect=()=>{}; },
     addEventListener(ev, fn){ if(ev==='DOMContentLoaded') timers.push(fn); },
     removeEventListener(){},
-    __timers: timers, __byId: byId, __sdws: sdws, __lpSdws: lpSdws, __heroInner: heroInner
+    __timers: timers, __byId: byId, __heroInner: heroInner
   };
   sandbox.window = sandbox;
   sandbox.globalThis = sandbox;
   vm.createContext(sandbox);
   vm.runInContext(code, sandbox, { filename: htmlPath });
   sandbox.__eval = expr => vm.runInContext(expr, sandbox);
+  /* 出題位置 pos の目盛（.sdw）を面ごとに引くヘルパ。テスト側の定型を1箇所に集める。
+       face … 'q'（診断画面）/ 'lq'（LP埋め込み）*/
+  sandbox.__dot = (face, pos, v) =>
+    document.querySelectorAll(`.sdw[data-pos="${pos}"]`)
+      .find(b => b.dataset.face === face && Number(b.dataset.v) === v) || null;
+  /* 面 face のページに出ている出題位置の一覧 */
+  sandbox.__positions = face =>
+    document.querySelectorAll(`#${face === 'lq' ? 'lq-list' : 'q-list'} .q-card`)
+      .map(c => Number(c.dataset.pos));
   return sandbox;
 }
 

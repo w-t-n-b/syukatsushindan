@@ -28,7 +28,8 @@ const MEASURE = `(()=>{
     docH:Math.round(document.documentElement.scrollHeight),
     hscroll:document.documentElement.scrollWidth>innerWidth,
     scrollW:document.documentElement.scrollWidth};
-  ['.hero','.hero-title','.hero-title em','.hero-sub','#lp-quiz','#lq-card','.lq-foot','.char-strip-outer','.btn-wrap','.hero-stats'].forEach(s=>{
+  ['.hero','.hero-title','.hero-title em','.hero-sub','#lp-quiz-sec','#lp-quiz','#lq-list',
+   '.lq-foot','.char-strip-outer','.btn-wrap','.steps','#type-section'].forEach(s=>{
     const el=q(s); if(el)o[s]=r(el);
   });
   const em=q('.hero-title em');
@@ -36,12 +37,25 @@ const MEASURE = `(()=>{
          o.emFont=getComputedStyle(em).fontSize;}
   const sub=q('.hero-sub');
   if(sub)o.subLines=Math.round(sub.getBoundingClientRect().height/parseFloat(getComputedStyle(sub).lineHeight));
-  // ファーストビューに何が入るか
-  const dots=q('#lq-spec-track');
-  if(dots)o.dotsBottomVsFold=Math.round(dots.getBoundingClientRect().bottom-innerHeight);
-  const card=q('#lq-card');
-  if(card)o.cardTopVsFold=Math.round(card.getBoundingClientRect().top-innerHeight);
+  // #lp-quiz はヒーローの外（3ステップの直後）に出したので、
+  // ファーストビューではなく「そこへ到達するまでのスクロール量」を見る
+  const lq=q('#lp-quiz');
+  if(lq)o.lpQuizScrollToReach=Math.round(lq.getBoundingClientRect().top+scrollY);
   return JSON.stringify(o);
+})()`;
+
+// 1ページぶんの縦の内訳（5問を積んだときにどこが効いているか）
+const PAGE = `(()=>{
+  const H=el=>el?Math.round(el.getBoundingClientRect().height):0;
+  const cards=[...document.querySelectorAll('#q-list .q-card')].map(H);
+  return JSON.stringify({
+    page:H(document.querySelector('.quiz-inner'))+H(document.querySelector('.prog-area')),
+    progArea:H(document.querySelector('.prog-area')),
+    cards, cardMax:Math.max(...cards), cardMin:Math.min(...cards),
+    prog:document.getElementById('prog-text').textContent,
+    remain:document.getElementById('q-remain').textContent,
+    next:document.getElementById('q-next').textContent
+  });
 })()`;
 
 for(const [w,h] of [[390,844],[320,568]]){
@@ -53,21 +67,29 @@ for(const [w,h] of [[390,844],[320,568]]){
     await evalJS(`(()=>{const e=document.getElementById('lp-quiz');scrollTo(0,Math.max(0,e.getBoundingClientRect().top+scrollY-80));return 1;})()`);
     await new Promise(r=>setTimeout(r,700));
     await screenshot(`/tmp/shots/lp-${w}-quiz.png`);
-    // LPで5問答える → .lq-done
-    const beforeH = await evalJS(`document.getElementById('lp-quiz').getBoundingClientRect().height`);
-    for(let i=0;i<5;i++){
-      await evalJS(`pick(document.querySelector('#lq-spec-track .sdw[data-v="2"]'))`);
-      await new Promise(r=>setTimeout(r,650));
+    console.log(`#lp-quiz（5問）の高さ: ${Math.round(await evalJS(`document.getElementById('lp-quiz').getBoundingClientRect().height`))}px`);
+    // LPで5問答える → .lq-done が下に出る
+    for(const pos of [0,1,2,3,4]){
+      await evalJS(`pick(document.querySelector('#lq-list .sdw[data-pos="${pos}"][data-v="2"]'))`);
+      await new Promise(r=>setTimeout(r,80));
     }
-    const afterH = await evalJS(`document.getElementById('lp-quiz').getBoundingClientRect().height`);
-    console.log(`#lp-quiz の高さ: 回答前 ${Math.round(beforeH)}px → 5問後 ${Math.round(afterH)}px`);
+    console.log(`5問回答後の #lp-quiz: ${Math.round(await evalJS(`document.getElementById('lp-quiz').getBoundingClientRect().height`))}px`
+      + ` / .lq-done 表示: ${await evalJS(`document.getElementById('lq-done').classList.contains('on')`)}`);
     console.log(`ページ全体の高さ: ${await evalJS('document.documentElement.scrollHeight')}px / 横スクロール: ${await evalJS('document.documentElement.scrollWidth>innerWidth')}`);
+    await evalJS(`(()=>{const e=document.getElementById('lq-done');scrollTo(0,Math.max(0,e.getBoundingClientRect().top+scrollY-120));return 1;})()`);
+    await new Promise(r=>setTimeout(r,600));
     await screenshot(`/tmp/shots/lp-${w}-done.png`);
-    // 質問画面
+    // 診断画面（2ページ目から始まる）
     await evalJS(`document.getElementById('lq-continue').click()`);
     await new Promise(r=>setTimeout(r,900));
-    console.log(`質問画面 横スクロール: ${await evalJS('document.documentElement.scrollWidth>innerWidth')} / prog: ${await evalJS("document.getElementById('prog-text').textContent")}`);
+    console.log(`診断画面: ${await evalJS(PAGE)}`);
+    console.log(`横スクロール: ${await evalJS('document.documentElement.scrollWidth>innerWidth')}`);
     await screenshot(`/tmp/shots/quiz-${w}.png`);
+    // 1ページの下端（「次へ」まで）も撮る
+    // .q-nav は LP 側にもあるので、診断画面のほうを名指しで取る
+    await evalJS(`scrollTo(0,document.querySelector('.quiz-inner .q-nav').getBoundingClientRect().bottom+scrollY-innerHeight+20)`);
+    await new Promise(r=>setTimeout(r,600));
+    await screenshot(`/tmp/shots/quiz-${w}-bottom.png`);
   });
 }
 

@@ -28,32 +28,37 @@ const ok = m => console.log(`  ok   ${m}`);
 const bad = m => { ng++; console.log(`  NG   ${m}`); };
 const check = (c, m) => (c ? ok(m) : bad(m));
 
-// 20問を実際に1問ずつ回答する。pick() の setTimeout はテスト側で手動で流す。
+// 20問を実際に回答する。1画面5問・全4ページなので、5問答えては nextPage() で送る。
 //
 // ★ values は「Qs の添字」で並んでいる（values[k] を Qs[k] に与える）。
-//    Q_ORDER 導入後は出題順と Qs の添字が一致しないため、出題位置 p では
+//    Q_ORDER により出題順と Qs の添字は一致しないため、出題位置 p では
 //    values[Q_ORDER[p]] を答える。こうすると「設問と値の対応」が改修前と同一になり、
 //    golden（20値の並び → コード・サブコード・4軸スコア）が1文字も変わらないことが
-//    「出題順を変えても採点結果は不変」の証明になる。golden 側は一切書き換えない。
+//    「見せ方を変えても採点は不変」の証明になる。golden 側は一切書き換えない。
 function answer(S, values) {
   S.startFresh('test');
   const order = S.__eval('Q_ORDER');
-  for (let p = 0; p < order.length; p++) {
-    const v = values[order[p]];
-    const el = S.__sdws.find(d => Number(d.dataset.v) === v);
-    S.pick(el);
-    S.__timers.splice(0).forEach(fn => fn());
+  const pages = S.__eval('PAGE_COUNT'), size = S.__eval('PAGE_SIZE');
+  for (let p = 0; p < pages; p++) {
+    for (const pos of S.__eval(`pagePositions(${p})`)) {
+      S.pick(S.__dot('q', pos, values[order[pos]]));
+    }
+    if (p < pages - 1) S.nextPage();          // 最終ページの「次へ」はローディングに入るので押さない
   }
   return { code: S.getCode(), sub: S.getSubCode(), scores: JSON.stringify(S.__eval('scores')) };
 }
 
-// LP埋め込み（#lq-spec-track）側で1問答える
-function answerLp(S, v) {
-  S.pick(S.__lpSdws.find(d => Number(d.dataset.v) === v));
-  S.__timers.splice(0).forEach(fn => fn());
-}
+// LP埋め込み（#lq-list）側で、出題位置 pos に値 v を入れる
+function answerLp(S, pos, v) { S.pick(S.__dot('lq', pos, v)); }
+// 診断画面（#q-list）側で、いま出ているページの出題位置 pos に値 v を入れる
+function answerQuiz(S, pos, v) { S.pick(S.__dot('q', pos, v)); }
 // DOMContentLoaded を流す（load() 直後は登録されただけで走っていない）
 function boot(S) { S.__timers.splice(0).forEach(fn => fn()); }
+// 面 face に出ているカードの Q番号（.q-badge の文字列）
+function badges(S, face) {
+  return S.document.querySelectorAll(`#${face === 'lq' ? 'lq-list' : 'q-list'} .q-badge`)
+    .map(b => b.textContent).join(',');
+}
 
 // 軸1〜4に5問ずつ。狙ったコードになる極端な回答列を作る。
 // 6段階スケールの端は ±3（±2 ではない）。
@@ -105,7 +110,8 @@ console.log('[test] 6段階スケール（+3/+2/+1/-1/-2/-3）');
 {
   const T = load(TARGET, '');
   boot(T);
-  const vals = T.__lpSdws.map(d => Number(d.dataset.v));
+  const vals = T.document.querySelectorAll('#lq-list .q-card[data-pos="0"] .sdw')
+    .map(d => Number(d.dataset.v));
   check(vals.join(',') === '3,2,1,-1,-2,-3', `目盛は6つで値は +3/+2/+1/-1/-2/-3: ${vals.join(',')}`);
   check(!vals.includes(0), '中央値（0）が存在しない＝「どちらでもない」を選べない');
 
@@ -113,19 +119,55 @@ console.log('[test] 6段階スケール（+3/+2/+1/-1/-2/-3）');
   for (const v of vals) {
     const U = load(TARGET, '');
     boot(U);
-    answerLp(U, v);
+    answerLp(U, 0, v);
     const ax = U.__eval('qAt(0).ax');
     check(U.__eval(`scores[${ax}]`) === v && U.__eval('ans[0]') === v,
       `${v >= 0 ? '+' : ''}${v} を選ぶと軸${ax}に ${v} が加算される（scores=${U.__eval(`scores[${ax}]`)}）`);
   }
+}
 
-  // 1問戻すと、6段階のどの値でも正しく打ち消される
-  const B = load(TARGET, '');
-  boot(B);
-  answerLp(B, -3);
-  B.goBack();
-  check(B.__eval('JSON.stringify(scores)') === JSON.stringify({ 1: 0, 2: 0, 3: 0, 4: 0 }),
-    `-3 を戻すとスコアが元に戻る: ${B.__eval('JSON.stringify(scores)')}`);
+// ---- (0c) 二重加算をしないこと（仕様 §B-3）----
+// 5問を同時に出す以上、同じ設問を選び直せる。旧実装の `scores[ax]+=v` は
+// 2回選ぶと2回足された。scores は ans[] から毎回作り直すので、
+// 何度選び直しても最後の1回ぶんしか入らない。
+console.log('[test] 選び直しても二重加算しない（§B-3）');
+{
+  // LP側で同じ設問を選び直す
+  const T = load(TARGET, '');
+  boot(T);
+  const ax = T.__eval('qAt(0).ax');
+  [3, 2, 1, -1, -2, -3, 2].forEach(v => answerLp(T, 0, v));
+  check(T.__eval(`scores[${ax}]`) === 2 && T.__eval('ans[0]') === 2,
+    `LPで7回選び直しても最後の +2 だけが入る（scores[${ax}]=${T.__eval(`scores[${ax}]`)}）`);
+  check(T.__eval('curQ') === 1, `回答済みの問数は1のまま（${T.__eval('curQ')}）`);
+
+  // 診断画面側で同じ設問を選び直す
+  const U = load(TARGET, '');
+  boot(U);
+  U.startFresh('test');
+  const ax2 = U.__eval('qAt(2).ax');
+  [-3, 3, -1].forEach(v => answerQuiz(U, 2, v));
+  check(U.__eval(`scores[${ax2}]`) === -1 && U.__eval('ans[2]') === -1,
+    `診断画面で3回選び直しても最後の -1 だけが入る（scores[${ax2}]=${U.__eval(`scores[${ax2}]`)}）`);
+
+  // 選び直しを挟んでも、最終的な20問の判定は選び直し後の値だけで決まる
+  const V = load(TARGET, '');
+  boot(V);
+  const straight = answer(V, extremeFor('HALS'));
+  const W = load(TARGET, '');
+  boot(W);
+  W.startFresh('test');
+  const order = W.__eval('Q_ORDER'), want = extremeFor('HALS');
+  for (let p = 0; p < W.__eval('PAGE_COUNT'); p++) {
+    for (const pos of W.__eval(`pagePositions(${p})`)) {
+      answerQuiz(W, pos, -want[order[pos]]);          // いったん逆を選び
+      answerQuiz(W, pos, want[order[pos]]);           // 選び直す
+    }
+    if (p < 3) W.nextPage();
+  }
+  check(W.getCode() === straight.code &&
+        JSON.stringify(W.__eval('scores')) === straight.scores,
+    `全20問を一度逆に選んでから選び直しても結果が同じ（${W.getCode()} / ${JSON.stringify(W.__eval('scores'))}）`);
 }
 
 // ---- (1) 16タイプ ----
@@ -281,22 +323,143 @@ console.log('[test] シェアURL');
   check(decodeURIComponent(opened).includes(T.shareUrl('HALS')), 'shareLINE の本文にサイトURLが含まれる');
 }
 
-// ---- (6) LP埋め込み質問（設計A）----
-console.log('[test] LP埋め込み質問（設計A）');
+// ---- (6) 1画面5問・全4ページ（仕様 §A-1 / §B）----
+console.log('[test] 1画面5問・全4ページ');
 {
   const T = load(TARGET, '');
   boot(T);
-  check(T.__eval('qTarget') === 'lp', '起動直後の描画先は LP（#lp-quiz）');
-  check(T.__byId.get('lq-num').textContent === 'Q1', 'LPに1問目が描画されている');
-  check(T.__byId.get('lq-text').textContent.length > 0, 'LPの質問文が入っている');
+  T.startFresh('test');
+  check(T.__eval('PAGE_SIZE') === 5 && T.__eval('PAGE_COUNT') === 4,
+    `20問 = 5問 × 4ページ（PAGE_SIZE=${T.__eval('PAGE_SIZE')} PAGE_COUNT=${T.__eval('PAGE_COUNT')}）`);
+  check(T.__positions('q').join(',') === '0,1,2,3,4', `1ページ目に出るのは出題位置 0-4: ${T.__positions('q').join(',')}`);
+  check(badges(T, 'q') === 'Q1,Q2,Q3,Q4,Q5', `1ページ目は Q1〜Q5: ${badges(T, 'q')}`);
+  check(T.document.querySelectorAll('#q-list .q-card').length === 5, 'カードは5枚');
+  check(T.document.querySelectorAll('#q-list .spec-track').length === 5,
+    '5問ぶんのラジオグループが独立して並ぶ');
+  check(T.__byId.get('prog-text').textContent === '1 / 4 ページ（Q1-5）',
+    `進捗はページ単位: ${T.__byId.get('prog-text').textContent}`);
+  check(T.__byId.get('back-btn').style.display === 'none', '1ページ目では「前のページに戻る」を出さない（§B-4）');
+  check(T.__byId.get('q-next').textContent === '次へ →', `最終ページ以外は「次へ」: ${T.__byId.get('q-next').textContent}`);
+  check(T.__byId.get('q-remain').textContent === 'あと5問', `残数を常時出す: ${T.__byId.get('q-remain').textContent}`);
 
+  // 未回答があるうちは進めない（§B-2）
+  [0, 1, 2].forEach(pos => answerQuiz(T, pos, 2));
+  check(T.__byId.get('q-remain').textContent === 'あと2問', `残数が減る: ${T.__byId.get('q-remain').textContent}`);
+  T.nextPage();
+  check(T.__eval('curPage') === 0, '未回答が2問あるうちは次のページへ進まない');
+  check(T.__byId.get('q-remain').classList.contains('warn'), '残数が警告状態になる');
+  check(/未回答が2問/.test(T.__byId.get('q-remain').textContent),
+    `何問残っているかを画面に出す: ${T.__byId.get('q-remain').textContent}`);
+  check(T.__byId.get('q-next').getAttribute('disabled') == null,
+    '「次へ」は disabled にしない（押せないボタンは理由を説明できない）');
+
+  // 5問そろえば進める
+  [3, 4].forEach(pos => answerQuiz(T, pos, 2));
+  check(T.__byId.get('q-remain').textContent === '5問すべて回答済み',
+    `そろったことを出す: ${T.__byId.get('q-remain').textContent}`);
+  T.nextPage();
+  check(T.__eval('curPage') === 1, '5問そろえば次のページへ進む');
+  check(T.__positions('q').join(',') === '5,6,7,8,9', `2ページ目は出題位置 5-9: ${T.__positions('q').join(',')}`);
+  check(T.__byId.get('prog-text').textContent === '2 / 4 ページ（Q6-10）',
+    `進捗表示が追従する: ${T.__byId.get('prog-text').textContent}`);
+  check(T.__byId.get('back-btn').style.display === 'flex', '2ページ目からは「前のページに戻る」が出る');
+
+  // ページを戻っても回答は消えない（§B-4）
+  const before = T.__eval('JSON.stringify(scores)');
+  T.goBack();
+  check(T.__eval('curPage') === 0, '1ページ戻る');
+  check(T.__eval('JSON.stringify(scores)') === before,
+    `戻っても回答が消えない: ${T.__eval('JSON.stringify(scores)')}`);
+  check(T.document.querySelectorAll('#q-list .sdw.sel').length === 5,
+    '戻ったページの5問が選択済みの状態で表示される');
+  check(T.__byId.get('q-remain').textContent === '5問すべて回答済み', '戻ったページの残数表示も正しい');
+
+  // 最終ページの「次へ」は結果へ進む
+  const L = load(TARGET, '');
+  boot(L);
+  L.startFresh('test');
+  for (let p = 0; p < 4; p++) {
+    L.__eval(`pagePositions(${p})`).forEach(pos => answerQuiz(L, pos, 3));
+    if (p < 3) L.nextPage();
+  }
+  check(L.__byId.get('q-next').textContent === '結果を見る →',
+    `最終ページのボタンは「結果を見る」: ${L.__byId.get('q-next').textContent}`);
+  L.nextPage();
+  L.__timers.splice(0).forEach(fn => fn());
+  check(L.__byId.get('screen-result').classList.contains('active'), '最終ページの「次へ」で結果へ進む');
+}
+
+// ---- (6b) 進捗の4群＝4ページ（§B-5）----
+console.log('[test] 進捗の4群がページと一致する');
+{
+  const T = load(TARGET, '');
+  boot(T);
+  T.startFresh('test');
+  const seg = T.__byId.get('prog-seg');
+  check(seg.querySelectorAll('.ps-group').length === 4 && seg.querySelectorAll('.ps-cell').length === 20,
+    '4群 × 5セル');
+  check(seg.querySelectorAll('.ps-cell.cur').length === 0,
+    'セル単位の現在地表示は無い（5問同時表示に「現在の1問」は存在しない）');
+  check(seg.querySelectorAll('.ps-group.cur').length === 1 &&
+        seg.children[0].classList.contains('cur'),
+    '現在地は群（＝ページ）で示す。1ページ目なら1群目');
+  // 歯抜けに答えても、塗られるのは答えた位置だけ
+  [1, 3].forEach(pos => answerQuiz(T, pos, 2));
+  const cells = T.__byId.get('prog-seg').querySelectorAll('.ps-cell');
+  const done = cells.map((c, i) => c.classList.contains('done') ? i : -1).filter(i => i >= 0);
+  check(done.join(',') === '1,3', `塗りは回答した出題位置と一致する（歯抜けでも正しい）: ${done.join(',')}`);
+  // 2ページ目へ行くと現在地の群が移る
+  [0, 2, 4].forEach(pos => answerQuiz(T, pos, 2));
+  T.nextPage();
+  check(T.__byId.get('prog-seg').children[1].classList.contains('cur'), '2ページ目では2群目が現在地');
+}
+
+// ---- (6c) Q1-5 は2つの入口を持ち、相互に反映される（§A-2 / §A-3）----
+console.log('[test] LP埋め込みと診断画面1ページ目の相互反映');
+{
+  const T = load(TARGET, '');
+  boot(T);
+  check(T.__positions('lq').join(',') === '0,1,2,3,4', `LPにも出題位置 0-4 が並ぶ: ${T.__positions('lq').join(',')}`);
+  check(badges(T, 'lq') === 'Q1,Q2,Q3,Q4,Q5', `LPは Q1〜Q5: ${badges(T, 'lq')}`);
+  check(T.document.querySelectorAll('#lq-list .q-card').length === 5, 'LPのカードも5枚');
+  check(T.__byId.get('lq-remain').textContent === 'あと5問', 'LPにも残数が出る');
+
+  // LPで答える → 診断画面1ページ目にも反映される
+  answerLp(T, 0, 3);
+  answerLp(T, 2, -2);
+  check(T.__dot('q', 0, 3).classList.contains('sel') && T.__dot('q', 2, -2).classList.contains('sel'),
+    'LPで答えた値が診断画面1ページ目の目盛にも入っている');
+  check(T.__dot('q', 0, 3).getAttribute('aria-checked') === 'true',
+    '反映は aria-checked にも及ぶ（読み上げでも選択済みと分かる）');
+
+  // 診断画面で選び直す → LPにも反映される
+  answerQuiz(T, 0, -1);
+  check(T.__dot('lq', 0, -1).classList.contains('sel') && !T.__dot('lq', 0, 3).classList.contains('sel'),
+    '診断画面で選び直すとLP側の目盛も入れ替わる');
+  check(T.__eval('ans[0]') === -1 && T.__eval('curQ') === 2,
+    `二重加算されない（ans[0]=${T.__eval('ans[0]')} 回答数=${T.__eval('curQ')}）`);
+
+  // 選んだ側の選択肢が視覚的に分かる（§D-2）
+  const card = T.document.querySelector('#lq-list .q-card[data-pos="2"]');
+  check(card.querySelector('.opt-b').classList.contains('on') &&
+        !card.querySelector('.opt-a').classList.contains('on'),
+    'B側を選んだのでB行が強調され、A行は強調されない');
+}
+
+// ---- (6d) LPで5問答えたあと（§A-2 の遷移表 / §C-3）----
+console.log('[test] LPで5問答えたあとの接続');
+{
+  const T = load(TARGET, '');
+  boot(T);
   // 出題位置 0..4 = Qs[0](軸1) / Qs[5](軸2) / Qs[10](軸3) / Qs[15](軸4) / Qs[1](軸1)
-  [2, 1, 2, -1, 1].forEach(v => answerLp(T, v));
+  [2, 1, 2, -1, 1].forEach((v, pos) => answerLp(T, pos, v));
 
-  check(T.__eval('curQ') === 5, `5問回答して curQ=5（${T.__eval('curQ')}）`);
+  check(T.__eval('curQ') === 5, `5問回答して回答数=5（${T.__eval('curQ')}）`);
   check(!T.__byId.get('screen-quiz').classList.contains('active'),
-    '5問目の回答で #screen-quiz へ自動遷移しない（§A-5）');
-  check(T.__byId.get('lq-done').classList.contains('on'), '.lq-done に差し替わる');
+    '5問目の回答で #screen-quiz へ自動遷移しない（§B-1）');
+  check(T.__byId.get('lq-done').classList.contains('on'), '.lq-done が出る');
+  check(T.document.querySelectorAll('#lq-list .q-card').length === 5,
+    '.lq-done を出しても5問のカードは消えない（選び直せる。§C-3）');
   const sc = T.__eval('JSON.stringify(scores)');
   check(sc === JSON.stringify({ 1: 3, 2: 1, 3: 2, 4: -1 }),
     `5問ぶんが4軸に正しく加算されている: ${sc}`);
@@ -304,26 +467,35 @@ console.log('[test] LP埋め込み質問（設計A）');
     `ヒーローCTAの文言が残数と一致: ${T.__byId.get('cta-hero').textContent}`);
 
   T.lqContinue();
-  check(T.__byId.get('screen-quiz').classList.contains('active'), '#lq-continue で質問画面へ進む');
-  check(T.__byId.get('prog-text').textContent === 'Q6 / 20',
-    `質問画面は Q6 から始まる: ${T.__byId.get('prog-text').textContent}`);
+  check(T.__byId.get('screen-quiz').classList.contains('active'), '#lq-continue で診断画面へ進む');
+  check(T.__eval('curPage') === 1 && T.__byId.get('prog-text').textContent === '2 / 4 ページ（Q6-10）',
+    `診断画面は2ページ目から始まる: ${T.__byId.get('prog-text').textContent}`);
   check(T.__eval('JSON.stringify(scores)') === sc, '続行してもスコアが保持されている');
-  check(T.__eval('qTarget') === 'quiz', '描画先が quiz に切り替わる');
+
+  // LPが埋まっていなければ進めない
+  const U = load(TARGET, '');
+  boot(U);
+  [0, 1].forEach(pos => answerLp(U, pos, 2));
+  U.lqContinue();
+  check(!U.__byId.get('screen-quiz').classList.contains('active'),
+    'LPに未回答があるうちは「残り15問を続ける」で進まない（§B-2）');
+  check(U.__byId.get('lq-remain').classList.contains('warn'), 'LP側も残数が警告状態になる');
 }
 
-// LPで3問だけ答えてヒーローCTAを押しても回答が消えないこと（§A-5 の中核）
+// 既存CTAの行き先（§A-2 の遷移表）
 console.log('[test] 既存CTAの付け替え（continueOrStart）');
 {
   const T = load(TARGET, '');
   boot(T);
-  [2, 2, 2].forEach(v => answerLp(T, v));
+  [0, 1, 2].forEach(pos => answerLp(T, pos, 2));
   const before = T.__eval('JSON.stringify(scores)');
   T.continueOrStart('hero');
-  check(T.__eval('curQ') === 3, `ヒーローCTAで curQ が 0 に戻らない（${T.__eval('curQ')}）`);
+  check(T.__eval('curQ') === 3, `ヒーローCTAで回答数が 0 に戻らない（${T.__eval('curQ')}）`);
   check(T.__eval('JSON.stringify(scores)') === before, `回答が消えない: ${before}`);
-  check(!T.__byId.get('screen-quiz').classList.contains('active'),
-    'curQ < LP_Q_COUNT なので質問画面へは飛ばさない');
-  check(T.__byId.get('lq-num').textContent === 'Q4', '#lp-quiz の4問目に戻る');
+  check(T.__byId.get('screen-quiz').classList.contains('active') && T.__eval('curPage') === 0,
+    'LPで1〜4問の人は診断画面の1ページ目へ（答えた分が反映済みで選び直せる）');
+  check(T.document.querySelectorAll('#q-list .sdw.sel').length === 3,
+    'その3問が選択済みの状態で表示される');
   check(T.__byId.get('cta-hero').textContent === '残り17問を続ける →',
     `CTA文言が実際の残数と一致: ${T.__byId.get('cta-hero').textContent}`);
 
@@ -333,29 +505,38 @@ console.log('[test] 既存CTAの付け替え（continueOrStart）');
   check(T.__eval('curQ') === 3 && T.__eval('JSON.stringify(scores)') === before,
     '16タイプ節CTA / ドロワーCTA でも回答が保持される');
 
-  // 5問を超えていれば質問画面へ
-  T.__eval('curQ=8');
-  T.continueOrStart('hero');
-  check(T.__byId.get('screen-quiz').classList.contains('active') &&
-    T.__byId.get('prog-text').textContent === 'Q9 / 20',
-    `curQ >= LP_Q_COUNT なら質問画面の続きから: ${T.__byId.get('prog-text').textContent}`);
+  // 1ページ目が埋まっていれば2ページ目へ
+  const P = load(TARGET, '');
+  boot(P);
+  [0, 1, 2, 3, 4].forEach(pos => answerLp(P, pos, 2));
+  P.continueOrStart('hero');
+  check(P.__eval('curPage') === 1,
+    'LPで5問すべて答えた人がCTAを押すと2ページ目（1ページ目は完了しているため）');
 
-  // 1問も答えていない人は従来どおり（§A-5）
+  // 1問も答えていない人は診断画面の1ページ目へ
   const F = load(TARGET, '');
   boot(F);
   F.continueOrStart('hero');
-  check(F.__byId.get('screen-quiz').classList.contains('active') && F.__eval('curQ') === 0,
-    '未回答なら従来どおり質問画面を1問目から開く');
+  check(F.__byId.get('screen-quiz').classList.contains('active') &&
+        F.__eval('curQ') === 0 && F.__eval('curPage') === 0,
+    '未回答なら診断画面を1ページ目から開く');
+
+  // 共有リンクで来た人は #lp-quiz へ（現状維持）
+  const S2 = load(TARGET, '');
+  boot(S2);
+  S2.continueOrStart('shared');
+  check(!S2.__byId.get('screen-quiz').classList.contains('active'),
+    '共有リンクで来た人は診断画面に飛ばさず #lp-quiz へ送る');
 }
 
-// ---- (7) 途中復帰と保存キー ----
-console.log('[test] 途中復帰と保存キー（A-2 / A-6）');
+// ---- (7) 途中復帰と保存キー（§E）----
+console.log('[test] 途中復帰と保存キー（§E）');
 {
   const T = load(TARGET, '');
   boot(T);
-  answerLp(T, 2); answerLp(T, 2);
+  answerLp(T, 0, 2); answerLp(T, 1, 2);
   const saved = T.__eval("localStorage.getItem('cq_p3')");
-  check(typeof saved === 'string' && saved.length > 0, `保存キーは cq_p3（${saved}）`);
+  check(typeof saved === 'string' && saved.length > 0, `保存キーは cq_p3 のまま（${saved}）`);
   check(T.__eval("localStorage.getItem('cq_p')") === null &&
         T.__eval("localStorage.getItem('cq_p2')") === null,
     '旧キー cq_p / cq_p2 には書き込まない');
@@ -367,19 +548,36 @@ console.log('[test] 途中復帰と保存キー（A-2 / A-6）');
   check(R.__byId.get('cont-banner').style.display === 'flex', '再訪で .cont-banner が出る');
   R.continueDiag();
   check(!R.__byId.get('screen-quiz').classList.contains('active'),
-    'LPで2問だけの人を #screen-quiz に飛ばさない（§A-6）');
+    '回答が5問未満の人を診断画面に飛ばさない（§E-2）');
   check(R.__byId.get('screen-title').classList.contains('active'), 'LPのまま復帰する');
-  check(R.__byId.get('lq-num').textContent === 'Q2',
-    `#lp-quiz に復帰する（保存は加算前 curQ ＝既存仕様）: ${R.__byId.get('lq-num').textContent}`);
+  check(R.__eval('curQ') === 2 && R.__eval('JSON.stringify(scores)') === T.__eval('JSON.stringify(scores)'),
+    `回答数とスコアが保存時と一致する: ${R.__eval('JSON.stringify(scores)')}`);
+  check(R.document.querySelectorAll('#lq-list .sdw.sel').length === 2,
+    'LPの2問が選択済みの状態で復帰する');
 
-  // 5問を超えた保存は質問画面へ
+  // 8問ぶん進んだ人は2ページ目（最初の未完了ページ）へ
   const R2 = load(TARGET, '');
-  R2.__eval(`localStorage.setItem('cq_p3',JSON.stringify({curQ:8,scores:{1:2,2:0,3:0,4:0},ans:[],selectedIndustries:[]}))`);
+  const ans8 = [2,2,2,2,2,2,2,2];
+  R2.__eval(`localStorage.setItem('cq_p3',JSON.stringify({curQ:8,scores:{1:0,2:0,3:0,4:0},ans:${JSON.stringify(ans8)},selectedIndustries:[]}))`);
   boot(R2);
   R2.continueDiag();
   check(R2.__byId.get('screen-quiz').classList.contains('active') &&
-    R2.__byId.get('prog-text').textContent === 'Q9 / 20',
-    `8問ぶん進んだ人は #screen-quiz の9問目に復帰する: ${R2.__byId.get('prog-text').textContent}`);
+    R2.__eval('curPage') === 1 &&
+    R2.__byId.get('prog-text').textContent === '2 / 4 ページ（Q6-10）',
+    `8問ぶん進んだ人は2ページ目に復帰する: ${R2.__byId.get('prog-text').textContent}`);
+  check(R2.__eval('curQ') === 8, `回答数が復元される（${R2.__eval('curQ')}）`);
+
+  // 1問ずつ時代に保存された cq_p3（連続した ans・scores 同梱）もそのまま復元できる（§E-1）
+  const OLD = load(TARGET, '');
+  const oldAns = [3,-2,1,-1,2,3,-3];
+  OLD.__eval(`localStorage.setItem('cq_p3',JSON.stringify({curQ:7,scores:{1:99,2:99,3:99,4:99},ans:${JSON.stringify(oldAns)},selectedIndustries:[]}))`);
+  boot(OLD);
+  OLD.continueDiag();
+  const want = { 1: 0, 2: 0, 3: 0, 4: 0 };
+  oldAns.forEach((v, i) => { want[OLD.__eval(`qAt(${i}).ax`)] += v; });
+  check(OLD.__eval('curQ') === 7 && OLD.__eval('JSON.stringify(scores)') === JSON.stringify(want),
+    `旧データは ans[] から組み立て直される（保存された壊れた scores を採用しない）: ${OLD.__eval('JSON.stringify(scores)')}`);
+  check(OLD.__eval('curPage') === 1, '7問答えた人は2ページ目（最初の未完了ページ）へ');
 
   // 旧キーは黙って捨てる。
   //   cq_p  … 旧出題順の ans（復元すると別の設問の回答になる）
@@ -397,18 +595,30 @@ console.log('[test] 途中復帰と保存キー（A-2 / A-6）');
   }
 }
 
-// ---- (8) 1問戻る（LP側）----
-console.log('[test] LPの1問戻る（.lq-back）');
+// ---- (8) 「戻る」は1ページ戻る。LPの1問戻る（.lq-back）は廃止（§B-4）----
+console.log('[test] 戻るの意味（1問 → 1ページ）');
 {
   const T = load(TARGET, '');
   boot(T);
-  answerLp(T, 2); answerLp(T, 1);
-  const mid = T.__eval('JSON.stringify(scores)');
+  check(T.__byId.get('lq-back') == null, 'LPの「1つ前の質問に戻る」は存在しない（5問同時表示なので選び直しで足りる）');
+
+  T.startFresh('test');
   T.goBack();
-  check(T.__eval('curQ') === 1, '1問戻って curQ=1');
-  check(T.__eval('JSON.stringify(scores)') === JSON.stringify({ 1: 2, 2: 0, 3: 0, 4: 0 }),
-    `戻した1問ぶんのスコアが取り消される（戻す前: ${mid} → 戻した後: ${T.__eval('JSON.stringify(scores)')}）`);
-  check(T.__byId.get('lq-num').textContent === 'Q2', 'LPのカードが2問目に戻る');
+  check(T.__eval('curPage') === 0, '1ページ目で goBack() を呼んでも何も起きない');
+
+  // 3ページ目まで進んでから2回戻る
+  for (let p = 0; p < 3; p++) {
+    T.__eval(`pagePositions(${p})`).forEach(pos => answerQuiz(T, pos, p + 1));
+    T.nextPage();
+  }
+  check(T.__eval('curPage') === 3, '3回進んで4ページ目');
+  const before = T.__eval('JSON.stringify(scores)');
+  T.goBack(); T.goBack();
+  check(T.__eval('curPage') === 1, `2回戻って2ページ目（${T.__eval('curPage')}）`);
+  check(T.__eval('JSON.stringify(scores)') === before,
+    `ページを戻っても回答は取り消されない: ${T.__eval('JSON.stringify(scores)')}`);
+  check(T.__positions('q').join(',') === '5,6,7,8,9', '2ページ目の出題位置に戻っている');
+  check(T.document.querySelectorAll('#q-list .sdw.sel').length === 5, '5問とも選択済みのまま');
 }
 
 console.log(ng === 0 ? '\n[test] PASS' : `\n[test] FAIL: ${ng} 件`);

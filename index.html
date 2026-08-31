@@ -104,12 +104,8 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .hero-inner{position:relative;z-index:1;width:100%;}
 
 /* Stats */
-.hero-stats{display:flex;justify-content:center;margin-bottom:22px;background:var(--paper);border:1.5px solid var(--navy);border-radius:6px;padding:12px 0;box-shadow:3px 3px 0 rgba(15,23,42,.14);max-width:340px;margin-left:auto;margin-right:auto;position:relative;}
-.hero-stats::before{content:'';position:absolute;top:-1.5px;left:18px;width:44px;height:4px;background:var(--verm);}
-.hstat{flex:1;text-align:center;padding:0 12px;}
-.hstat-num{font-family:var(--disp);font-size:1.25rem;font-weight:700;color:var(--blue2);display:block;line-height:1;letter-spacing:.5px;}
-.hstat-lbl{font-size:8px;color:var(--mid);font-weight:700;letter-spacing:1px;margin-top:4px;display:block;}
-.hstat-div{width:1px;background:var(--border2);}
+/* .hero-stats（20 質問数 / 16 タイプ数 / 3分 所要時間 の3連カード）は削除した。
+   「20問・約3分」は .hero-sub が同じことを文章で言っており、情報の重複だった。 */
 
 .hero-badge{display:inline-flex;align-items:center;gap:7px;background:var(--navy);border:none;color:#fff;font-family:var(--disp);font-size:.76rem;font-weight:700;letter-spacing:3px;padding:7px 16px 7px 12px;border-radius:3px;margin-bottom:20px;box-shadow:3px 3px 0 var(--must);position:relative;}
 .hero-badge::before{content:'';width:8px;height:8px;background:var(--verm);animation:dp 2.6s infinite;}
@@ -195,14 +191,14 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .q-top{padding:16px 20px;position:relative;overflow:hidden;border-bottom:1.5px solid var(--navy);}
 .q-top::after{content:none;}
 .q-top::before{content:'';position:absolute;top:0;right:0;bottom:0;width:6px;background:rgba(255,255,255,.35);}
-.q-num-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
 .q-badge{background:var(--paper);color:var(--navy);font-family:var(--disp);font-size:.78rem;font-weight:700;padding:2px 10px;border-radius:2px;letter-spacing:2px;border:1.5px solid var(--navy);box-shadow:2px 2px 0 rgba(15,23,42,.35);}
 .q-text{font-size:.97rem;font-weight:700;color:#fff;line-height:1.8;text-shadow:none;}
 .q-body{padding:22px 20px 20px;background:var(--w);}
-.choice-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
-.choice-box{padding:14px 12px;border-radius:6px;font-size:.73rem;line-height:1.65;font-weight:500;border:1.5px solid var(--navy);}
-.cb-l{border-left:5px solid var(--blue2);background:var(--blue-l);color:var(--blue);}
-.cb-r{border-right:5px solid var(--lav);background:#f5f4fa;color:#584f86;}
+/* 選択肢は枠付きボックス2つ横並び（.choice-row / .choice-box / .cb-l / .cb-r）から
+   テキスト2行（.choice-list / .opt-line）に置き換えた。5問を縦に積むと
+   ボックス方式の 108px が5倍になり、1ページが2.7画面ぶんになるため（仕様 §D-1）。
+   配色は下の「5問ずつ」ブロックにまとめてある。 */
+.choice-list{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
 .spec-track{display:flex;align-items:center;justify-content:space-around;padding:8px 0;margin-bottom:10px;position:relative;}
 .spec-track::before{content:'';position:absolute;left:32px;right:32px;top:50%;height:2px;background:var(--border2);border-radius:0;transform:translateY(-50%);}
 .sdw{display:flex;align-items:center;justify-content:center;padding:14px;cursor:pointer;position:relative;z-index:1;}
@@ -406,7 +402,7 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 
 /* --- #5 #6 和文タイポグラフィ：面積の大きい文字に表示用書体を当てる ------- */
 .hero-title,.res-type-name,.sec-title,.q-text,.btn,.d-cta,.retry-btn,
-.hero-badge,.rb-title,.sub-head,.ca-lbl,.hstat-num,.tc-pill,.av-result,.sh{
+.hero-badge,.rb-title,.sub-head,.ca-lbl,.tc-pill,.av-result,.sh{
   font-family:var(--jp-disp);font-weight:900;
   font-feature-settings:'palt' 1;font-kerning:normal;
 }
@@ -461,12 +457,6 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .hero-badge{background:var(--must);color:var(--navy);border:var(--bd) solid var(--navy);
   border-radius:var(--r-0);padding:8px 16px 8px 12px;box-shadow:4px 4px 0 var(--verm);font-size:.8rem;}
 .hero-badge::before{background:var(--verm);width:9px;height:9px;}
-.hero-stats{background:var(--paper);border:var(--bd) solid var(--navy);
-  border-radius:var(--r-1);box-shadow:var(--sh-2);}
-.hero-stats::before{background:var(--verm);height:5px;}
-.hstat-num{color:var(--navy);font-size:1.4rem;}
-.hstat-lbl{font-size:11px;letter-spacing:.06em;}      /* 8px は小さすぎた */
-.hstat-div{background:var(--border2);}
 .cont-banner{background:var(--paper);border:var(--bd) solid var(--navy);
   border-radius:var(--r-1);box-shadow:4px 4px 0 var(--forest);}
 
@@ -749,7 +739,9 @@ body[data-screen="screen-loading"] .ftr{display:none;}
   border-radius:var(--r-1);box-shadow:var(--sh-3);margin-bottom:10px;}
 .q-top{background:var(--paper2);border-bottom:var(--bd) solid var(--navy);padding:14px 18px;}
 .q-top::before{content:none;}                       /* 暗い面前提の白ハイライト */
-.q-text{color:var(--navy);text-shadow:none;font-size:.97rem;line-height:1.7;min-height:5.1em;}
+/* min-height:5.1em（3行ぶんの床）は外した。カードを差し替えなくなったので
+   「20問すべてが同一高さ」である必要が消え、床のぶんがそのまま5倍の無駄になる（仕様 §D-1）。 */
+.q-text{color:var(--navy);text-shadow:none;font-size:.97rem;line-height:1.7;}
 .q-text:focus{outline:none;}                        /* 回答後の programmatic focus 用 */
 /* C-4: #q-axis（「軸1：対人 or 対課題」）と .spec-labels（「← 対人寄り / 対課題寄り →」）は
    DOMごと削除した。測定軸の名前を回答前に見せると社会的望ましさバイアスを誘発する。
@@ -766,12 +758,6 @@ body[data-screen="screen-loading"] .ftr{display:none;}
   border:var(--bd) solid var(--navy);border-radius:var(--r-0);
   box-shadow:2px 2px 0 var(--ax);}
 
-/* 質問文と選択肢の行数が揺れてもカードの高さが変わらないようにする（X-11）。
-   LPでは「回答しても #lp-quiz が伸びない」ことが破綻しない条件そのもの。 */
-.choice-row{gap:10px;margin-bottom:14px;min-height:106px;}
-.choice-box{padding:12px 11px;border:var(--bd) solid var(--navy);
-  border-radius:var(--r-1);font-size:.73rem;line-height:1.65;}
-
 /* --- A / B の色分け（参考実装 quiz-vertical.js の .opt-a/.opt-b + .qv-hlabels）--
    軸名を出さない以上、A と B が何を指すかは選択肢の本文でしか示せない。
    そこで本文に「A.」「B.」の接頭辞を付け、同じ色を目盛と両端ラベルにも回す。
@@ -783,15 +769,10 @@ body[data-screen="screen-loading"] .ftr{display:none;}
      A側 = からし  --must #cf9a24（濃い側は #7a4a10。既存 .rbt2 / .rar-badge の色）
      B側 = 墨      --navy #111a30
    彩度ではなく明度でも離れている（両者のコントラスト比 6.8:1）ので、
-   色覚特性によらず区別できる。地色は #fdf0d0 / #f4f0e4 とほぼ同じ明るさに
-   そろえてある（0.874 / 0.877）。片方だけ目立つと選択そのものが歪むため。 */
-.cb-l{border-left:6px solid var(--must);background:#fdf0d0;color:#7a4a10;}
-.cb-r{border-right:6px solid var(--navy);background:#f4f0e4;color:var(--navy);}
+   色覚特性によらず区別できる。 */
 .opt-key{display:inline-block;margin-right:5px;
   font-family:var(--lat);font-weight:700;font-size:.85rem;
   letter-spacing:var(--ls-lat);}
-.cb-l .opt-key{color:#7a4a10;}                      /* 6.34:1 on #fdf0d0 */
-.cb-r .opt-key{color:var(--navy);}                  /* 14.9:1 on #f4f0e4 */
 
 /* --- C-7: .sdw を <button> にする。padding は残す（design §6-3 X-6）------
    padding:0 を当てると目盛の間隔とタッチターゲットが消える。
@@ -871,10 +852,14 @@ body[data-screen="screen-loading"] .ftr{display:none;}
 /* --- 設計A: LPに埋め込む質問カード ---------------------------------------
    中身の .q-card は質問画面と完全に同一の class / 同一の CSS を使う。
    LP専用の質問カードデザインは作らない（仕様 §A-4）。 */
+/* ヒーローの外（「診断の流れ」の直後）に置く独立セクション（仕様 §C-2）。
+   面の色は診断画面と同じ暗い面にする。.lq-lbl / .prog-seg / 目盛の既存の配色が
+   そのまま成立し、かつ「LPと診断画面が同じ体験である」ことが面のレベルで伝わる。 */
+#lp-quiz-sec{background:var(--ink-field);padding:32px 0 36px;}
 #lp-quiz{
-  width:100%;max-width:340px;                /* .hero-stats / .cont-banner と同じ列幅 */
-  margin:0 auto 22px;
-  text-align:left;                           /* .hero は center。カード内は左揃えに戻す */
+  width:100%;
+  margin:0 auto;
+  text-align:left;
 }
 .lq-head{margin-bottom:10px;}
 .lq-lbl{
@@ -887,23 +872,16 @@ body[data-screen="screen-loading"] .ftr{display:none;}
   content:'';flex:0 0 auto;width:9px;height:9px;margin-top:3px;
   background:var(--verm);border:var(--bd-hair) solid var(--navy);
 }
-.lq-foot{display:flex;align-items:center;gap:10px;margin-top:0;}
+.lq-foot{display:flex;align-items:center;gap:10px;margin-top:10px;}
 .lq-foot .prog-seg{flex:1 1 auto;min-width:0;}
-.lq-back{
-  flex:0 0 auto;width:44px;height:32px;
-  background:none;border:var(--bd-hair) solid rgba(255,255,255,.35);
-  border-radius:var(--r-0);
-  font-size:13px;line-height:1;color:#c3cbdd;cursor:pointer;  /* 9.81:1 */
-}
-.lq-back:hover{border-color:var(--must);color:var(--must);}
-.lq-back[hidden]{display:none;}
+/* .lq-back（1つ前の質問に戻る）は削除した。5問が同時に見えているので、
+   戻る操作ではなく目盛の選び直しで足りる（仕様 §B-4）。 */
 
-/* 5問回答後に #lq-card と差し替わる面。高さは .q-card に合わせて JS が固定する
-   （差し替えの瞬間に下の要素がせり上がると、指の下に別のボタンが来る。X-9） */
+/* 5問そろったときにリストの下へ追加で出る面。質問カードとは差し替えない（§C-3）。
+   差し替えないので min-height による高さ合わせ（旧 X-9）は不要になった。 */
 .lq-done{
   display:none;
-  min-height:404px;
-  flex-direction:column;justify-content:space-between;
+  flex-direction:column;gap:14px;
   background:var(--paper);
   border:var(--bd-heavy) solid var(--navy);
   border-radius:var(--r-1);
@@ -936,7 +914,94 @@ body[data-screen="screen-loading"] .ftr{display:none;}
 }
 .lq-done-meta{
   font-size:11px;font-weight:700;letter-spacing:.06em;
-  color:var(--mid);text-align:center;margin-bottom:10px;
+  color:var(--mid);text-align:center;
+}
+
+/* =========================================================================
+   5問ずつ（1画面5問・全4ページ）— 仕様 quiz-five-per-page.md
+   -------------------------------------------------------------------------
+   LP埋め込み（#lq-list）と診断画面（#q-list）は同じ組み立て関数・同じ class を使う。
+   ここに置く指定はすべて「5枚を縦に積む」ことから来ている。
+   ========================================================================= */
+.quiz-inner{padding:20px 16px 40px;max-width:480px;margin:0 auto;}
+.q-list{display:flex;flex-direction:column;gap:10px;}
+.q-list .q-card{margin-bottom:0;}          /* 間隔は gap が持つ */
+
+/* 5枚ぶんの縦を詰める。1枚 403px のままだと 390px 幅で1ページ 2,242px
+   （2.7画面）になる（仕様 §D）。
+   いちばん効くのは見出し帯で、Q番号を独立した行から質問文と同じ行に移すと
+   バッジ1行ぶん（約31px）× 5枚が丸ごと消える。 */
+.q-top{padding:10px 16px 11px;display:flex;align-items:flex-start;gap:9px;}
+.q-badge{flex:0 0 auto;margin-top:1px;}
+.q-text{font-size:.94rem;line-height:1.55;}
+.q-body{padding:12px 16px 10px;}
+.spec-track{padding:0;margin-bottom:2px;}
+.sdw{padding:5px 0;}
+/* 目盛は 320px 幅の寸法を全幅で使う。5枚積むと1枚あたり6pxの差が30pxになり、
+   大きさの差（強さの手がかり）は 36/30/25 でも十分に読める。 */
+.sdw:nth-child(1) .sd,.sdw:nth-child(6) .sd{width:36px;height:36px;}
+.sdw:nth-child(2) .sd,.sdw:nth-child(5) .sd{width:30px;height:30px;}
+.sdw:nth-child(3) .sd,.sdw:nth-child(4) .sd{width:25px;height:25px;}
+
+/* --- 選択肢：枠付きボックス2つ横並び → テキスト2行（仕様 §D-1）-------------
+   A / B の手がかりは3つで担保する（§D-2）:
+     1. 行頭の縦帯（A側＝からし / B側＝墨）
+     2. 「A.」「B.」の接頭辞を同じ色で出す
+     3. 選んだ側の行に地色を付ける（.on）。従来のボックス方式では
+        「どちらを選んだか」は目盛でしか読めなかったので、手がかりが1つ増える。 */
+.opt-line{
+  padding:2px 0 2px 9px;
+  border-left:4px solid transparent;
+  font-size:.78rem;line-height:1.5;color:var(--ink);
+  transition:background .18s ease;
+}
+.opt-a{border-left-color:var(--must);}
+.opt-b{border-left-color:var(--navy);}
+.opt-a .opt-key{color:#7a4a10;}             /* 6.34:1 on --paper */
+.opt-b .opt-key{color:var(--navy);}         /* 15.7:1 on --paper */
+.opt-a.on{background:#fdf0d0;color:#7a4a10;}    /* 6.34:1 */
+.opt-b.on{background:#f4f0e4;color:var(--navy);} /* 14.9:1 */
+
+/* --- ページの下の操作列 ---------------------------------------------------
+   「次へ」は常に押せる状態にする（disabled にしない。仕様 §B-2）。
+   押せないボタンは理由を説明できず、フォーカスも当たらない。
+   未回答があるまま押したら、進まずに残数を警告して最初の未回答へ送る。 */
+.q-nav{margin-top:16px;}
+/* LP埋め込みも診断画面も、載る面は同じ暗い面（--ink-field）。
+   --mid（暖色グレー）は明るい面用でここでは読めないので、明るい側の色を使う。 */
+.q-remain{
+  font-size:12px;font-weight:700;letter-spacing:.04em;
+  text-align:center;margin-bottom:10px;
+  color:#c3cbdd;                            /* on --ink-field = 9.81:1 */
+}
+.q-remain.done{color:#7fd6a8;}              /* on --ink-field = 8.6:1 */
+.q-remain.warn{
+  color:#ffc0b3;background:rgba(200,65,46,.22);
+  border:var(--bd-hair) solid var(--verm);
+  border-radius:var(--r-0);padding:7px 10px;
+  animation:qIn .28s cubic-bezier(.33,1,.68,1) forwards;
+}
+
+/* 未回答のカードへ送ったときの当たり先。枠が一瞬強く光る */
+.q-card.seek{animation:seekPulse 1.1s ease-out 1;}
+@keyframes seekPulse{
+  0%,100%{box-shadow:var(--sh-3);}
+  25%,75%{box-shadow:0 0 0 3px var(--verm),var(--sh-3);}
+}
+
+/* --- 進捗：群＝ページ（仕様 §B-5）-----------------------------------------
+   5問を同時に出す以上「現在の1問」は存在しない。現在地はセルではなく群で示す。 */
+.ps-group{padding:2px;border-radius:var(--r-0);transition:background .25s ease;}
+.ps-group.cur{background:rgba(17,26,48,.16);box-shadow:inset 0 0 0 var(--bd-hair) var(--navy);}
+.lq-foot .ps-group.cur,.prog-area .ps-group.cur{background:rgba(17,26,48,.16);}
+
+/* 320px 幅：1ページが2画面を大きく超えないよう、さらに詰める */
+@media(max-width:360px){
+  .q-top{padding:9px 12px 10px;gap:7px;}
+  .q-body{padding:10px 12px 9px;}
+  .opt-line{font-size:.75rem;padding-left:7px;}
+  .q-text{font-size:.9rem;line-height:1.52;}
+  .quiz-inner{padding:16px 12px 32px;}
 }
 
 /* ヒーローの縦を締める（#lp-quiz のぶん伸びるため。design §6-3） */
@@ -1025,15 +1090,6 @@ body[data-screen="screen-loading"] .ftr{display:none;}
     <div class="hero-orb o1"></div><div class="hero-orb o2"></div><div class="hero-orb o3"></div>
     <img class="hero-sil" src="images/chars/a3.webp" alt="" aria-hidden="true">
     <div class="hero-inner">
-      <div class="hero-stats">
-        <!-- 20 は変動しない定数。0から数え上げる演出は「実績が積み上がっている」という
-             誤った含意を持つため、静的表示にした（仕様 §C-5 / design §6-1 X-7）。 -->
-        <div class="hstat"><span class="hstat-num" id="stat-count">20</span><span class="hstat-lbl">質問数</span></div>
-        <div class="hstat-div"></div>
-        <div class="hstat"><span class="hstat-num">16</span><span class="hstat-lbl">タイプ数</span></div>
-        <div class="hstat-div"></div>
-        <div class="hstat"><span class="hstat-num">3分</span><span class="hstat-lbl">所要時間</span></div>
-      </div>
       <div class="hero-badge">就活キャリア診断</div>
       <h1 class="hero-title">あなたの仕事タイプ、<em>16Typesから見つける。</em></h1>
       <p class="hero-sub">20問・約3分でわかる本格キャリアタイプ診断。<br>あなたに向いている仕事の傾向と、探し方のヒントまで。</p>
@@ -1041,49 +1097,6 @@ body[data-screen="screen-loading"] .ftr{display:none;}
         <div class="cont-icon">💾</div>
         <div class="cont-body"><span class="cont-title">前回の途中から続ける</span><span class="cont-sub" id="cont-sub">Q?まで回答済み</span></div>
         <span class="cont-arrow">→</span>
-      </div>
-
-      <!-- LP埋め込み質問（設計A）。中身の .q-card は #screen-quiz と完全に同一の class。
-           renderQ('lp') / renderQ('quiz') が同じ関数で両方を描画する。 -->
-      <div id="lp-quiz">
-        <div class="lq-head"><span class="lq-lbl" id="lq-lbl">1問目です。答えた分はそのまま引き継がれます。</span></div>
-        <div class="q-card qin" id="lq-card" data-ax="1" role="group" aria-labelledby="lq-num lq-text">
-          <div class="q-top">
-            <div class="q-num-row"><div class="q-badge" id="lq-num">Q1</div></div>
-            <div class="q-text" id="lq-text" tabindex="-1"></div>
-          </div>
-          <div class="q-body">
-            <div class="choice-row"><div class="choice-box cb-l" id="lq-a"><span class="opt-key">A.</span><span class="opt-txt" id="lq-at"></span></div><div class="choice-box cb-r" id="lq-b"><span class="opt-key">B.</span><span class="opt-txt" id="lq-bt"></span></div></div>
-            <div class="spec-track" id="lq-spec-track" role="radiogroup" aria-label="6段階で選んでください" aria-describedby="lq-a lq-b">
-              <button type="button" class="sdw" data-v="3"  role="radio" aria-checked="false" aria-label="Aに強く近い" onclick="pick(this)"><span class="sd"></span></button>
-              <button type="button" class="sdw" data-v="2"  role="radio" aria-checked="false" aria-label="Aに近い" onclick="pick(this)"><span class="sd"></span></button>
-              <button type="button" class="sdw" data-v="1"  role="radio" aria-checked="false" aria-label="どちらかといえばA" onclick="pick(this)"><span class="sd"></span></button>
-              <button type="button" class="sdw" data-v="-1" role="radio" aria-checked="false" aria-label="どちらかといえばB" onclick="pick(this)"><span class="sd"></span></button>
-              <button type="button" class="sdw" data-v="-2" role="radio" aria-checked="false" aria-label="Bに近い" onclick="pick(this)"><span class="sd"></span></button>
-              <button type="button" class="sdw" data-v="-3" role="radio" aria-checked="false" aria-label="Bに強く近い" onclick="pick(this)"><span class="sd"></span></button>
-            </div>
-            <div class="spec-hint"><span class="sh-a">A</span><span class="sh-b">B</span></div>
-          </div>
-        </div>
-        <div class="lq-done" id="lq-done">
-          <div class="lq-done-txt">ここまで5問。残りは15問、形式はまったく同じです。</div>
-          <div class="lq-next">
-            <span class="lq-next-lbl">20問すべてに答えると</span>
-            <ul class="lq-next-list">
-              <li>16タイプのうち、あなたに近い1つ</li>
-              <li>4つの軸それぞれの傾き</li>
-              <li>向いている職種の例</li>
-            </ul>
-          </div>
-          <div>
-            <div class="lq-done-meta">残り15問 / 約2分</div>
-            <button class="btn rpl" id="lq-continue" onclick="addRipple(event,this);lqContinue()">残り15問を続ける →</button>
-          </div>
-        </div>
-        <div class="lq-foot">
-          <div class="prog-seg" id="lq-prog-seg" role="progressbar" aria-label="回答の進捗" aria-valuemin="0" aria-valuemax="20" aria-valuenow="0" aria-valuetext="20問中0問に回答済み"></div>
-          <button class="lq-back" id="lq-back" hidden onclick="goBack()" aria-label="1つ前の質問に戻る"><span aria-hidden="true">↩</span></button>
-        </div>
       </div>
 
       <!-- CHAR STRIP with ORIGINAL type names -->
@@ -1144,6 +1157,41 @@ body[data-screen="screen-loading"] .ftr{display:none;}
     </div>
   </div>
 
+  <!-- LP埋め込み質問（仕様 §C）。Q1-5 は診断画面の1ページ目と同じ出題位置を共有し、
+       どちらの面で答えても同じ ans[] を更新する（§A-2 / §A-3）。
+       中身の .q-card は #screen-quiz と完全に同一の class で、
+       renderPage('lp') / renderPage('quiz') が同じ関数で両方を描画する。
+       設置場所は「診断の流れ」の直後・16タイプ一覧の直前（§C-2）。 -->
+  <div id="lp-quiz-sec">
+    <div class="wrap">
+      <div id="lp-quiz">
+        <div class="lq-head"><span class="lq-lbl" id="lq-lbl">最初の5問です。ここで答えた分はそのまま引き継がれます。</span></div>
+        <div class="q-list" id="lq-list"></div>
+        <div class="lq-foot">
+          <div class="prog-seg" id="lq-prog-seg" role="progressbar" aria-label="回答の進捗" aria-valuemin="0" aria-valuemax="20" aria-valuenow="0" aria-valuetext="20問中0問に回答済み"></div>
+        </div>
+        <!-- 5問そろったときだけ出る。質問カードとは差し替えない（§C-3）。
+             差し替えると答えた5問が見えなくなり、選び直せなくなる。 -->
+        <div class="lq-done" id="lq-done">
+          <div class="lq-done-txt">ここまで5問。残りは15問、形式はまったく同じです。</div>
+          <div class="lq-next">
+            <span class="lq-next-lbl">20問すべてに答えると</span>
+            <ul class="lq-next-list">
+              <li>16タイプのうち、あなたに近い1つ</li>
+              <li>4つの軸それぞれの傾き</li>
+              <li>向いている職種の例</li>
+            </ul>
+          </div>
+          <div class="lq-done-meta">残り15問 / 約2分</div>
+        </div>
+        <div class="q-nav">
+          <div class="q-remain" id="lq-remain" role="status" aria-live="polite">あと5問</div>
+          <button class="btn rpl" id="lq-continue" onclick="addRipple(event,this);lqContinue()">残り15問を続ける →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="type-section" style="background:var(--off);padding:40px 0;">
     <div class="wrap">
       <div class="sec-lbl">All Types</div><div class="sec-title">全16タイプ一覧</div><p class="sec-sub">あなたはどれ？</p>
@@ -1159,29 +1207,18 @@ body[data-screen="screen-loading"] .ftr{display:none;}
     <div class="prog-area">
       <div class="prog-seg" id="prog-seg" role="progressbar" aria-label="回答の進捗" aria-valuemin="0" aria-valuemax="20" aria-valuenow="0" aria-valuetext="20問中0問に回答済み"></div>
       <div class="prog-meta">
-        <div class="prog-num" id="prog-text" aria-hidden="true">Q1 / 20</div>
+        <div class="prog-num" id="prog-text" aria-hidden="true">1 / 4 ページ（Q1-5）</div>
         <div class="prog-msg" id="prog-msg">さあはじめよう！</div>
       </div>
     </div>
-    <div style="padding:20px 16px;max-width:480px;margin:0 auto;">
-      <button class="back-btn" id="back-btn" onclick="goBack()" style="display:none;">← 前の質問に戻る</button>
-      <div class="q-card qin" id="q-card" data-ax="1" role="group" aria-labelledby="q-num q-text">
-        <div class="q-top" id="q-top">
-          <div class="q-num-row"><div class="q-badge" id="q-num">Q1</div></div>
-          <div class="q-text" id="q-text" tabindex="-1"></div>
-        </div>
-        <div class="q-body">
-          <div class="choice-row"><div class="choice-box cb-l" id="q-a"><span class="opt-key">A.</span><span class="opt-txt" id="q-at"></span></div><div class="choice-box cb-r" id="q-b"><span class="opt-key">B.</span><span class="opt-txt" id="q-bt"></span></div></div>
-          <div class="spec-track" id="spec-track" role="radiogroup" aria-label="6段階で選んでください" aria-describedby="q-a q-b">
-            <button type="button" class="sdw" data-v="3"  role="radio" aria-checked="false" aria-label="Aに強く近い" onclick="pick(this)"><span class="sd"></span></button>
-            <button type="button" class="sdw" data-v="2"  role="radio" aria-checked="false" aria-label="Aに近い" onclick="pick(this)"><span class="sd"></span></button>
-            <button type="button" class="sdw" data-v="1"  role="radio" aria-checked="false" aria-label="どちらかといえばA" onclick="pick(this)"><span class="sd"></span></button>
-            <button type="button" class="sdw" data-v="-1" role="radio" aria-checked="false" aria-label="どちらかといえばB" onclick="pick(this)"><span class="sd"></span></button>
-            <button type="button" class="sdw" data-v="-2" role="radio" aria-checked="false" aria-label="Bに近い" onclick="pick(this)"><span class="sd"></span></button>
-            <button type="button" class="sdw" data-v="-3" role="radio" aria-checked="false" aria-label="Bに強く近い" onclick="pick(this)"><span class="sd"></span></button>
-          </div>
-          <div class="spec-hint"><span class="sh-a">A</span><span class="sh-b">B</span></div>
-        </div>
+    <div class="quiz-inner">
+      <button class="back-btn" id="back-btn" onclick="goBack()" style="display:none;">← 前のページに戻る</button>
+      <!-- 5問ぶんの .q-card は renderPage('quiz') が組み立てる（仕様 §A-1）。
+           LP側（#lq-list）とまったく同じ組み立て関数・同じ class を使う。 -->
+      <div class="q-list" id="q-list"></div>
+      <div class="q-nav">
+        <div class="q-remain" id="q-remain" role="status" aria-live="polite">あと5問</div>
+        <button class="btn rpl" id="q-next" onclick="addRipple(event,this);nextPage()">次へ →</button>
       </div>
     </div>
   </div>
@@ -1353,7 +1390,9 @@ const LP_Q_COUNT=5;
 /* 出題位置 i の設問。curQ は「出題位置」を指し、Qs の添字ではない。 */
 function qAt(i){return Qs[Q_ORDER[i]];}
 
-const PROG_MSGS=["さあはじめよう！","いい感じです！","順調です！","折り返し！","半分超えた！","もうすぐ！","ラストスパート！","あと少し！","もう少し！","完了まであと1問！"];
+/* ページ単位の励まし。1問ずつ時代の20段階（PROG_MSGS）は、4ページになって
+   段数が合わなくなったのでページ数ぶんに置き換えた（仕様 §B-5）。 */
+const PAGE_MSGS=["さあはじめよう！","いい調子です！","折り返しです！","最後のページです！"];
 
 /* ===== TYPE DATA (from ORIGINAL, field names adapted for new UI) ===== */
 const TD={
@@ -1534,13 +1573,54 @@ const CD={
 };
 
 /* ===== STATE ===== */
-let curQ=0,scores={1:0,2:0,3:0,4:0},ans=[],selectedIndustries=[],trans=false;
+/* ans[] だけが一次情報である。
+   -------------------------------------------------------------------------
+   scores と curQ は ans[] から作り直す派生値にした（仕様 §B-3）。
+   5問を同時に出す以上、同じ設問を選び直せる。従来の `scores[ax]+=v` は
+   同じ設問を2回選ぶと2回足されるため成立しない。差分を引く方式は
+   引き忘れ・二重引きの経路が残るので採らず、毎回ぜんぶ作り直す。
+   既存の axisVotes() も ans[] から集計しており、これで
+   「スコアと票がまったく同じ入力から作られる」ことが保証される。 */
+let ans=[];                            /* 出題位置 -> 値。未回答は undefined */
+let scores={1:0,2:0,3:0,4:0};          /* ans[] からの派生。pick 以外から直接書かない */
+let curQ=0;                            /* 回答済みの問数。ans[] からの派生 */
+let curPage=0;                         /* 診断画面で表示中のページ（0〜PAGE_COUNT-1） */
+let selectedIndustries=[];
 let quizStartedAt=0;   /* quiz_complete の duration_sec 用 */
-/* いま質問カードを描画している先。'lp'（LP埋め込み）か 'quiz'（質問画面）。
-   両者は同じ class・同じ renderQ() を使い、id の接頭辞だけが違う。 */
-let qTarget='lp';
-/* quiz_start はセッション内で1回だけ発火させる（LP1問目の回答か、CTA経由か） */
+/* quiz_start はセッション内で1回だけ発火させる（LPでの回答か、CTA経由か） */
 let quizStarted=false;
+
+/* 1ページあたりの問数。LP埋め込みはページ0（出題位置0-4）を診断画面と共有する（§A-2）。
+   PAGE_SIZE は「1軸あたりの設問数が奇数」というタイブレーカーの前提とは無関係で、
+   出題位置を何個ずつ束ねて見せるかだけを決める。 */
+const PAGE_SIZE=5;
+const PAGE_COUNT=Math.ceil(Qs.length/PAGE_SIZE);
+/* ページ p が持つ出題位置の配列 */
+function pagePositions(p){
+  const o=[];
+  for(let i=p*PAGE_SIZE;i<Math.min((p+1)*PAGE_SIZE,Qs.length);i++)o.push(i);
+  return o;
+}
+function pageOf(pos){return Math.floor(pos/PAGE_SIZE);}
+/* そのページに未回答が何問あるか */
+function unansweredIn(p){return pagePositions(p).filter(i=>typeof ans[i]!=='number').length;}
+/* 最初の「5問すべてが埋まっていない」ページ。全部埋まっていれば最終ページ（§A-2） */
+function firstIncompletePage(){
+  for(let p=0;p<PAGE_COUNT;p++)if(unansweredIn(p)>0)return p;
+  return PAGE_COUNT-1;
+}
+
+/* ans[] から scores と curQ を作り直す。回答のたびに必ず通す（§B-3） */
+function recalcScores(){
+  const s={1:0,2:0,3:0,4:0};
+  let n=0;
+  for(let i=0;i<Qs.length;i++){
+    const a=ans[i];
+    if(typeof a!=='number')continue;
+    s[qAt(i).ax]+=a;n++;
+  }
+  scores=s;curQ=n;
+}
 
 /* ===== INIT ===== */
 window.addEventListener('DOMContentLoaded',()=>{
@@ -1548,7 +1628,8 @@ window.addEventListener('DOMContentLoaded',()=>{
   buildTypeOverview();
   dropLegacyProgress();
   checkSavedProgress();
-  renderQ('lp');   /* LP埋め込みの1問目を描画する */
+  renderPage('lp');    /* LP埋め込み（Q1-5）を描画する */
+  renderPage('quiz');  /* 診断画面の1ページ目も先に描いておく（LPと同じ出題位置を共有する） */
   window.addEventListener('scroll',()=>document.getElementById('hdr').classList.toggle('sc',scrollY>10));
   document.addEventListener('click',e=>{
     const d=document.getElementById('drawer'),b=document.getElementById('ham');
@@ -1556,10 +1637,9 @@ window.addEventListener('DOMContentLoaded',()=>{
   });
 });
 
-/* animateCount() は削除した（仕様 §C-5）。
-   架空の診断者数を「質問数20」に差し替えた結果、変動しない定数を0から
-   数え上げる演出だけが残っていた。数字が増える動きは「実績が積み上がっている」
-   という誤った含意を持つ。#stat-count は HTML に静的な 20 を書いてある。 */
+/* animateCount() は削除済み（仕様 §C-5）。その後、数字を載せていた
+   .hero-stats（20 質問数 / 16 タイプ数 / 3分 所要時間）自体も削除した。
+   「20問・約3分」は .hero-sub が文章で言っており、情報が重複していたため。 */
 
 const CODE_IMG={HALS:'a1',HALG:'a2',HAWS:'a3',HAWG:'a4',HBLS:'b1',HBLG:'b2',HBWS:'b3',HBWG:'b4',DALS:'c1',DALG:'c2',DAWS:'c3',DAWG:'c4',DBLS:'d1',DBLG:'d2',DBWS:'d3',DBWG:'d4'};
 function codeImg(code){return CODE_IMG[code]||code.toLowerCase();}
@@ -1604,12 +1684,18 @@ function checkSavedProgress(){
 function continueDiag(){
   try{
     const d=JSON.parse(localStorage.getItem(SAVE_KEY));
-    curQ=d.curQ;scores=d.scores;ans=d.ans;selectedIndustries=d.selectedIndustries||[];
+    /* 保存された scores は読まない。ans[] を正として組み立て直す（仕様 §E-1）。
+       二重加算の防止と同じ原理を復帰経路にも通す。旧データ（1問ずつ時代の
+       連続した ans）はこれでそのまま正しく復元される。 */
+    ans=Array.isArray(d.ans)?d.ans.slice(0,Qs.length):[];
+    selectedIndustries=d.selectedIndustries||[];
+    recalcScores();
     quizStartedAt=Date.now();
     if(!quizStarted){quizStarted=true;track('quiz_start',{entry:'continue'});}
-    /* 復帰先を分岐させる。LPで2問だけ答えた人を質問画面のQ3に放り込まない（§A-6） */
+    /* 復帰先を分岐させる。LPで2問だけ答えた人を診断画面に放り込まない（§E-2） */
+    renderPage('lp');
     if(curQ<LP_Q_COUNT)goToLpQuiz();
-    else{renderQ('quiz');toScreen('screen-quiz');}
+    else goToQuizPage(firstIncompletePage());
   }
   catch(e){startFresh();}
 }
@@ -1649,33 +1735,40 @@ function scrollToTypes(cat){
 }
 
 function startFresh(entry){
-  curQ=0;scores={1:0,2:0,3:0,4:0};ans=[];selectedIndustries=[];
+  ans=[];selectedIndustries=[];curPage=0;
+  recalcScores();
   quizStartedAt=Date.now();
   if(!quizStarted){quizStarted=true;track('quiz_start',{entry:entry||'hero'});}
   clearSavedProgress();
-  renderQ('lp');                 /* LP側のカードも1問目に戻しておく */
-  renderQ('quiz');toScreen('screen-quiz');
+  renderPage('lp');              /* LP側も空に戻しておく（同じ出題位置を共有している） */
+  renderPage('quiz');toScreen('screen-quiz');
 }
 
 /* 既存CTA（ヒーロー・16タイプ節・ドロワー・共有バナー・タイプ紹介）の呼び先。
-   startFresh() は状態を全消去するため、LPで数問答えた人が押すと回答が消える。
-   ここで「消さずに続きへ送る」ことが、設計Aの回答を捨てさせない約束の実装である。 */
+   Q1-5 は「LP埋め込み」と「診断画面の1ページ目」の2つの入口を持つ（仕様 §A-2）。
+   どちらで答えても同じ ans[] を更新するので、CTAは
+   「最初の、5問すべてが埋まっていないページ」へ送れば全ケースが成立する。 */
 function continueOrStart(entry){
-  if(curQ<=0){
-    /* 共有リンクで来た人だけは段差を作らず #lp-quiz へ送る（仕様 §A-6）。
-       他の入口（hero / grid / drawer / peek）は従来どおり質問画面へ（仕様 §A-5）。
-       ※この2つは仕様内で扱いが分かれている。UI仕様 §11 A-2 の指摘どおり未決。 */
-    if(entry==='shared'){goToLpQuiz();return;}
-    startFresh(entry);return;
-  }
-  if(curQ<LP_Q_COUNT){goToLpQuiz();return;}
-  renderQ('quiz');toScreen('screen-quiz');
+  /* 共有リンクで来た人だけは段差を作らず #lp-quiz へ送る（§A-2 の表）。
+     友達のリンクで来た人こそ、画面遷移なしで答え始めさせるべき相手である。 */
+  if(entry==='shared'&&curQ<LP_Q_COUNT){goToLpQuiz();return;}
+  if(curQ<=0){startFresh(entry);return;}
+  if(!quizStarted){quizStarted=true;quizStartedAt=Date.now();track('quiz_start',{entry:entry||'hero'});}
+  goToQuizPage(firstIncompletePage());
 }
 
-/* LPの質問カードまで送る（画面遷移ではなくスクロール） */
+/* 診断画面の指定ページを表示する */
+function goToQuizPage(p){
+  curPage=Math.max(0,Math.min(PAGE_COUNT-1,p));
+  renderPage('quiz');
+  toScreen('screen-quiz');
+}
+
+/* LPの質問カードまで送る（画面遷移ではなくスクロール）。
+   #lp-quiz は id で引いているので、設置場所を移しても追随する（§C-2）。 */
 function goToLpQuiz(){
   const go=()=>{
-    if(curQ>=LP_Q_COUNT)showLqDone();else renderQ('lp');
+    renderPage('lp');
     const el=document.getElementById('lp-quiz');
     if(!el)return;
     const y=el.getBoundingClientRect().top+window.pageYOffset-70;   /* .hdr の60pxぶん逃がす */
@@ -1686,37 +1779,49 @@ function goToLpQuiz(){
   else go();
 }
 
+/* LPの「残り15問を続ける →」。5問そろっていなければ進まない（§B-2） */
 function lqContinue(){
+  if(!requireComplete('lp'))return;
   track('lq_continue_click',{});
-  renderQ('quiz');toScreen('screen-quiz');
+  goToQuizPage(firstIncompletePage());
 }
 
 function toggleDrawer(){document.getElementById('ham').classList.toggle('open');document.getElementById('drawer').classList.toggle('open');}
 function closeDrawer(){document.getElementById('ham').classList.remove('open');document.getElementById('drawer').classList.remove('open');}
 
-/* LP と質問画面で id の接頭辞だけが違う。描画関数は1つしか作らない（仕様 §A-4） */
-/* at / bt は選択肢の本文だけを入れる span。box（a / b）には「A.」「B.」の
-   接頭辞が入っているので、box に直接 textContent を書くと接頭辞ごと消える。
-   aria-describedby は box 側（q-a / q-b）を指したままにする＝読み上げは
-   「A. 〈本文〉」になり、目盛の aria-label（「Aに強く近い」）と対応する。 */
-const Q_IDS={
-  quiz:{card:'q-card',num:'q-num',text:'q-text',a:'q-a',b:'q-b',at:'q-at',bt:'q-bt',track:'spec-track',seg:'prog-seg'},
-  lp:  {card:'lq-card',num:'lq-num',text:'lq-text',a:'lq-a',b:'lq-b',at:'lq-at',bt:'lq-bt',track:'lq-spec-track',seg:'lq-prog-seg'}
+/* =========================================================================
+   質問カードの組み立て — 1画面5問（仕様 quiz-five-per-page.md §A / §B）
+   -------------------------------------------------------------------------
+   LP埋め込み（#lq-list）と診断画面（#q-list）は、同じ関数・同じ class で
+   組み立てる。違うのは「どのページを持つか」と id の接頭辞だけ。
+     lp   … 常にページ0（出題位置 0-4 ＝ Q1-5）
+     quiz … curPage（0-3）
+   Q1-5 はこの2つの面に同時に存在する。2つの入口を持つのは意図した仕様で、
+   どちらで答えても同じ ans[] を更新し、もう一方の面にも反映される（§A-2 / §A-3）。
+   ========================================================================= */
+const FACES={
+  quiz:{list:'q-list',seg:'prog-seg',pre:'q', remain:'q-remain'},
+  lp:  {list:'lq-list',seg:'lq-prog-seg',pre:'lq',remain:'lq-remain'}
 };
+/* 6段階（+3/+2/+1/-1/-2/-3・中央値なし）。読み上げ用のラベルを値と一緒に持つ。 */
+const SCALE=[[3,'Aに強く近い'],[2,'Aに近い'],[1,'どちらかといえばA'],
+             [-1,'どちらかといえばB'],[-2,'Bに近い'],[-3,'Bに強く近い']];
 
-/* 進捗の共通部品。4群 × 5目盛で、塗り数＝回答済み数、.cur＝現在地。
-   #dot-prog（20個の空ドット）と .ax-bars（軸の二値）を統合したもの（§A-3）。
-   群は「出題位置の4分割」であって軸ではない。Q_ORDER で軸は1問ごとに回るため、
-   軸で群を作ると塗りが飛び飛びになり、進捗量が読めなくなる。 */
-function renderProgSeg(id){
+/* その面が受け持つページ */
+function facePage(tg){return tg==='lp'?0:curPage;}
+
+/* 進捗の共通部品。4群 × 5目盛。群＝ページ、セル i ＝出題位置 i。
+   塗りは「その位置に回答済みか」で決めるので、歯抜けの回答にも正しく追従する。
+   現在地はセル1つではなく群全体で示す（5問同時表示なので「現在の1問」は無い。§B-5）。 */
+function renderProgSeg(id,curGroup){
   const el=document.getElementById(id);
   if(!el)return;
   let h='';
-  for(let g=0;g<4;g++){
-    h+='<div class="ps-group">';
-    for(let c=0;c<5;c++){
-      const i=g*5+c;
-      h+=`<span class="ps-cell${i<curQ?' done':i===curQ?' cur':''}"></span>`;
+  for(let g=0;g<PAGE_COUNT;g++){
+    h+=`<div class="ps-group${g===curGroup?' cur':''}">`;
+    for(let c=0;c<PAGE_SIZE;c++){
+      const i=g*PAGE_SIZE+c;
+      h+=`<span class="ps-cell${typeof ans[i]==='number'?' done':''}"></span>`;
     }
     h+='</div>';
   }
@@ -1725,7 +1830,7 @@ function renderProgSeg(id){
   el.setAttribute('aria-valuetext',`${Qs.length}問中${curQ}問に回答済み`);
 }
 
-/* 1問以上答えていたら、CTAの文言を実際の遷移先に合わせる（§A-5）。
+/* 1問以上答えていたら、CTAの文言を実際の遷移先に合わせる。
    「診断をはじめる」のまま「続きから」に飛ばすと、既存の .btn-ghost と
    同じ種類の不整合を新しく作ることになる。 */
 function updateCtas(){
@@ -1738,96 +1843,151 @@ function updateCtas(){
   if(sb&&!fresh)sb.textContent=`残り${rem}問を続ける →`;
 }
 
-function renderQ(target){
-  const tg=(target==='lp'||target==='quiz')?target:qTarget;
-  qTarget=tg;
-  const ids=Q_IDS[tg],$=id=>document.getElementById(id);
-  const card=$(ids.card);
-  if(!card)return;
-  const q=qAt(curQ),ax=q.ax;
-  /* 軸の手がかりは .q-badge の影の色だけに置く。面の全面グラデーションは
-     出題順のローテーションにより1問ごとに激変するため廃止した（§A-2） */
-  card.dataset.ax=String(ax);
-  $(ids.num).textContent=`Q${curQ+1}`;
-  /* C-4: 測定軸の名前は回答前に出さない。#q-axis と .spec-labels は DOM ごと削除し、
-     ここでの代入も無くした。軸の名称・向き・強度は結果画面で全部開示する。 */
-  $(ids.text).textContent=q.t;
-  $(ids.at).textContent=q.a;
-  $(ids.bt).textContent=q.b;
-  const tk=$(ids.track);
-  if(tk)tk.querySelectorAll('.sdw').forEach(d=>{d.classList.remove('sel');if(d.setAttribute)d.setAttribute('aria-checked','false');});
-  renderProgSeg(ids.seg);
-  card.classList.remove('qin');void card.offsetWidth;card.classList.add('qin');
+/* 残りの問数は常時出す。押す前に分かる位置に置くのが要件（§B-2） */
+function updateRemain(tg){
+  const f=FACES[tg],el=document.getElementById(f.remain);
+  if(!el)return;
+  const n=unansweredIn(facePage(tg));
+  el.classList.remove('warn');
+  el.classList.toggle('done',n===0);
+  el.textContent=n===0?`${PAGE_SIZE}問すべて回答済み`:`あと${n}問`;
+}
+
+/* 1問ぶんのカード。LP と診断画面で同一の HTML を吐く。 */
+function buildCard(f,pos){
+  const q=qAt(pos),a=ans[pos],has=typeof a==='number';
+  const idT=`${f.pre}t-${pos}`,idA=`${f.pre}a-${pos}`,idB=`${f.pre}b-${pos}`;
+  let dots='';
+  SCALE.forEach(([v,lb])=>{
+    const sel=a===v;
+    dots+=`<button type="button" class="sdw${sel?' sel':''}" data-v="${v}" data-pos="${pos}" data-face="${f.pre}"`
+        + ` role="radio" aria-checked="${sel?'true':'false'}" aria-label="${lb}" onclick="pick(this)"><span class="sd"></span></button>`;
+  });
+  /* 軸の手がかりは .q-badge の影の色だけに置く（面積の大きい背景では表現しない）。
+     選択肢は枠付きボックスではなくテキスト行。選んだ側の行に .on が付く（§D-1 / §D-2）。 */
+  return `<div class="q-card qin" data-ax="${q.ax}" data-pos="${pos}" role="group" aria-labelledby="${idT}">`
+    + `<div class="q-top"><div class="q-badge">Q${pos+1}</div>`
+    + `<div class="q-text" id="${idT}" tabindex="-1">${esc(q.t)}</div></div>`
+    + `<div class="q-body">`
+    + `<div class="choice-list">`
+    + `<div class="opt-line opt-a${has&&a>0?' on':''}" id="${idA}"><span class="opt-key">A.</span><span class="opt-txt">${esc(q.a)}</span></div>`
+    + `<div class="opt-line opt-b${has&&a<0?' on':''}" id="${idB}"><span class="opt-key">B.</span><span class="opt-txt">${esc(q.b)}</span></div>`
+    + `</div>`
+    + `<div class="spec-track" role="radiogroup" aria-label="Q${pos+1} 6段階で選んでください" aria-describedby="${idA} ${idB}">${dots}</div>`
+    + `<div class="spec-hint"><span class="sh-a">A</span><span class="sh-b">B</span></div>`
+    + `</div></div>`;
+}
+
+/* 面ごとに5問ぶんを描き直す。既存の回答は選択済みの状態で復元される（§A-3） */
+function renderPage(target){
+  const tg=(target==='lp')?'lp':'quiz';
+  const f=FACES[tg];
+  const list=document.getElementById(f.list);
+  if(!list)return;
+  const p=facePage(tg);
+  list.innerHTML=pagePositions(p).map(pos=>buildCard(f,pos)).join('');
+  renderProgSeg(f.seg,p);
   if(tg==='quiz'){
-    const rem=Qs.length-curQ;
-    $('prog-text').textContent=`Q${curQ+1} / ${Qs.length}`;
-    const msgIdx=Math.min(Math.floor((curQ/Qs.length)*PROG_MSGS.length),PROG_MSGS.length-1);
-    $('prog-msg').textContent=rem===1?'最後の1問！':rem<=3?`残り${rem}問！`:PROG_MSGS[msgIdx];
-    $('back-btn').style.display=curQ>0?'flex':'none';
+    const from=p*PAGE_SIZE+1,to=Math.min((p+1)*PAGE_SIZE,Qs.length);
+    const pt=document.getElementById('prog-text');
+    if(pt)pt.textContent=`${p+1} / ${PAGE_COUNT} ページ（Q${from}-${to}）`;
+    const pm=document.getElementById('prog-msg');
+    if(pm)pm.textContent=PAGE_MSGS[Math.min(p,PAGE_MSGS.length-1)];
+    const bk=document.getElementById('back-btn');
+    if(bk)bk.style.display=p>0?'flex':'none';     /* 1ページ目では出さない（§B-4） */
+    const nx=document.getElementById('q-next');
+    if(nx)nx.textContent=p>=PAGE_COUNT-1?'結果を見る →':'次へ →';
   }else{
-    const lbl=$('lq-lbl');
-    if(lbl)lbl.textContent=`${curQ+1}問目です。答えた分はそのまま引き継がれます。`;
-    const bk=$('lq-back');if(bk)bk.hidden=curQ<=0;
-    card.style.display='';
-    const dn=$('lq-done');if(dn)dn.classList.remove('on');
+    updateLpDone();
   }
+  updateRemain(tg);
   updateCtas();
 }
 
-/* 5問目に回答したあと。自動では画面遷移しない（仕様 §A-5）。
-   .lq-done の自然高は .q-card より約100px低く、そのまま差し替えると
-   指の下にあった位置に別のボタンがせり上がる。高さを実測して固定する。 */
-function showLqDone(){
-  const card=document.getElementById('lq-card'),done=document.getElementById('lq-done');
-  if(!card||!done)return;
-  if(card.offsetHeight)done.style.minHeight=card.offsetHeight+'px';
-  card.style.display='none';
-  done.classList.add('on');
+/* LPの5問がそろったときだけ、リストの下に .lq-done を出す。
+   質問カードとは差し替えない（差し替えると答えた5問が見えず、選び直せない。§C-3） */
+function updateLpDone(){
+  const full=unansweredIn(0)===0;
+  const dn=document.getElementById('lq-done');
+  if(dn)dn.classList.toggle('on',full);
   const lbl=document.getElementById('lq-lbl');
-  if(lbl)lbl.textContent='ここまでの回答は保存されています。';
-  const bk=document.getElementById('lq-back');if(bk)bk.hidden=false;
-  renderProgSeg('lq-prog-seg');
-  updateCtas();
+  if(lbl)lbl.textContent=full
+    ?'ここまでの回答は保存されています。'
+    :'最初の5問です。ここで答えた分はそのまま引き継がれます。';
+}
+
+/* 同じ出題位置を持つ「すべての面」の見た目を合わせる。
+   Q1-5 は LP と診断画面1ページ目の両方に存在するため、これが相互反映の実体（§A-3）。 */
+function syncPos(pos){
+  const v=ans[pos],has=typeof v==='number';
+  document.querySelectorAll(`.sdw[data-pos="${pos}"]`).forEach(b=>{
+    const sel=has&&Number(b.dataset.v)===v;
+    b.classList.toggle('sel',sel);
+    if(b.setAttribute)b.setAttribute('aria-checked',sel?'true':'false');
+  });
+  document.querySelectorAll(`.q-card[data-pos="${pos}"]`).forEach(c=>{
+    const a=c.querySelector('.opt-a'),b=c.querySelector('.opt-b');
+    if(a)a.classList.toggle('on',has&&v>0);
+    if(b)b.classList.toggle('on',has&&v<0);
+  });
 }
 
 function pick(el){
-  if(trans)return;trans=true;
-  const v=parseInt(el.dataset.v);
-  const tg=qTarget,ids=Q_IDS[tg];
-  const tk=document.getElementById(ids.track);
-  if(tk)tk.querySelectorAll('.sdw').forEach(d=>{d.classList.remove('sel');if(d.setAttribute)d.setAttribute('aria-checked','false');});
-  el.classList.add('sel');
-  if(el.setAttribute)el.setAttribute('aria-checked','true');
-  /* 採点は従来どおり。出題位置 curQ から実際の設問を引くところだけが変わった */
-  scores[qAt(curQ).ax]+=v;ans[curQ]=v;
+  const v=parseInt(el.dataset.v,10),pos=parseInt(el.dataset.pos,10);
+  if(!isFinite(v)||!isFinite(pos))return;
+  const tg=el.dataset.face==='lq'?'lp':'quiz';
+  const firstForPos=typeof ans[pos]!=='number';
+  ans[pos]=v;
+  recalcScores();     /* ★ 二重加算の根絶。選び直しても最後の1回ぶんしか入らない（§B-3） */
+  syncPos(pos);       /* 両方の面の同じ設問に反映する（§A-3） */
   if(!quizStarted){quizStarted=true;quizStartedAt=Date.now();track('quiz_start',{entry:tg==='lp'?'lp_inline':'quiz'});}
-  if(tg==='lp')track('lp_q_answer',{n:curQ+1});
+  if(tg==='lp'&&firstForPos)track('lp_q_answer',{n:pos+1});
   saveProgress();
-  /* 同じDOMを使い回すため、フォーカスを回答ボタンに置いたままだと
-     読み上げ上は「何も起きていない」ことになる。次の内容を描いてから移す。
-     スクロール位置は動かさない（LPで画面が飛ぶのを防ぐ）。 */
-  const wasFocused=!!(document.activeElement&&document.activeElement===el);
-  const moveFocus=id=>{
-    if(!wasFocused)return;
-    const t=document.getElementById(id);
-    if(t&&t.focus){try{t.focus({preventScroll:true});}catch(e){}}
-  };
-  setTimeout(()=>{
-    curQ++;trans=false;
-    if(curQ>=Qs.length){
-      saveProgress();
-      track('quiz_complete',{type_code:getCode(),duration_sec:quizStartedAt?Math.round((Date.now()-quizStartedAt)/1000):0});
-      setTimeout(showLoading,300);
-      return;
-    }
-    if(tg==='lp'&&curQ>=LP_Q_COUNT){showLqDone();moveFocus('lq-continue');return;}
-    renderQ(tg);
-    moveFocus(ids.text);
-  },500);
+  /* 自動ではページを送らない（§B-1）。進捗と残数だけを更新する。 */
+  renderProgSeg('lq-prog-seg',0);
+  renderProgSeg('prog-seg',curPage);
+  updateRemain('lp');updateRemain('quiz');
+  updateLpDone();
+  updateCtas();
 }
+
+/* そのページの5問がそろっているか。そろっていなければ進まず、
+   残数を警告して最初の未回答へ送る（§B-2）。「次へ」は disabled にしない。 */
+function requireComplete(tg){
+  const f=FACES[tg],p=facePage(tg),n=unansweredIn(p);
+  if(n===0)return true;
+  const el=document.getElementById(f.remain);
+  if(el){el.classList.remove('done');el.classList.add('warn');
+         el.textContent=`未回答が${n}問あります。すべて答えると次へ進めます。`;}
+  const pos=pagePositions(p).filter(i=>typeof ans[i]!=='number')[0];
+  const card=document.querySelector(`#${f.list} .q-card[data-pos="${pos}"]`);
+  if(card){
+    card.classList.remove('seek');void card.offsetWidth;card.classList.add('seek');
+    if(card.scrollIntoView)card.scrollIntoView({block:'center',behavior:'smooth'});
+  }
+  return false;
+}
+
+/* 診断画面の「次へ」。最終ページでは結果へ進む（§B-2） */
+function nextPage(){
+  if(!requireComplete('quiz'))return;
+  if(curPage>=PAGE_COUNT-1){
+    saveProgress();
+    track('quiz_complete',{type_code:getCode(),duration_sec:quizStartedAt?Math.round((Date.now()-quizStartedAt)/1000):0});
+    showLoading();
+    return;
+  }
+  curPage++;
+  renderPage('quiz');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* 1ページ戻る。回答は消さない（§B-4。1問ずつ時代は戻ると同時に取り消していた） */
 function goBack(){
-  if(curQ<=0)return;
-  curQ--;scores[qAt(curQ).ax]-=ans[curQ];ans[curQ]=undefined;saveProgress();renderQ(qTarget);
+  if(curPage<=0)return;
+  curPage--;
+  renderPage('quiz');
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 /* =========================================================================

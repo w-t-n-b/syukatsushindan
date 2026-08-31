@@ -125,19 +125,35 @@ console.log('[lint] 診断体験の改訂：消したものが戻っていない
   check(/class="prog-seg"/.test(html), '.prog-seg が存在する');
   check((html.match(/class="prog-seg"/g) || []).length === 2, '.prog-seg はLPと質問画面の2箇所（同一部品の使い回し）');
 
-  // C-7：回答ドットは <button> + role="radio"
-  const sdwTags = [...html.matchAll(/<(\w+)[^>]*class="sdw"[^>]*>/g)].map(m => m[1]);
-  check(sdwTags.length === 12, `.sdw は12個（LP6 + 質問画面6）: ${sdwTags.length}`);
-  check(sdwTags.every(t => t === 'button'), `.sdw はすべて <button>（${[...new Set(sdwTags)].join(',')}）`);
-  check((html.match(/class="sdw"[^>]*role="radio"/g) || []).length === 12, '.sdw すべてに role="radio"');
-  check((html.match(/class="spec-track"[^>]*role="radiogroup"/g) || []).length === 2,
-    '.spec-track は role="radiogroup"');
+  // 5問ずつ：質問カードは buildCard() が組み立てる。静的な .q-card は持たない。
+  // （LP と診断画面それぞれに空のリストが1つずつあるだけ）
+  // 判定は「配信されるマークアップ」に対して行う。JS の中の組み立てテンプレートは対象外。
+  const markup = html.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<!--[\s\S]*?-->/g, '');
+  const staticCards = (markup.match(/class="q-card/g) || []).length;
+  check(staticCards === 0, `静的な .q-card が0件（5問ぶんは buildCard() が組む）${staticCards ? ` → ${staticCards}件` : ''}`);
+  check(/id="lq-list"/.test(html) && /id="q-list"/.test(html),
+    'LP（#lq-list）と診断画面（#q-list）に質問リストの器がある');
+  check(/const PAGE_SIZE=5/.test(html) && /const PAGE_COUNT=Math\.ceil\(Qs\.length\/PAGE_SIZE\)/.test(html),
+    '1ページ5問・ページ数は問数から算出（20問 → 4ページ）');
+  check(/function pagePositions\(/.test(html) && /function firstIncompletePage\(/.test(html),
+    'ページと出題位置の対応（pagePositions / firstIncompletePage）がある');
+
+  // C-7：回答ドットは <button> + role="radio"。組み立てているのは buildCard()。
+  const sdwBuild = html.match(/class="sdw\$\{sel\?' sel':''\}"[\s\S]{0,240}?><span class="sd">/);
+  check(!!sdwBuild, '.sdw は buildCard() が組み立てている');
+  const sdwSrc = sdwBuild ? sdwBuild[0] : '';
+  check(/<button type="button" class="sdw/.test(html), '.sdw は <button>');
+  check(/role="radio"/.test(sdwSrc), '.sdw に role="radio"');
+  check(/aria-checked="\$\{sel\?'true':'false'\}"/.test(sdwSrc), '.sdw に aria-checked が付く');
+  check(/data-pos="\$\{pos\}"/.test(sdwSrc), '.sdw は出題位置（data-pos）を持つ＝どの設問の目盛か特定できる');
+  check(/<div class="spec-track" role="radiogroup"/.test(html),
+    '.spec-track は role="radiogroup"（5問ぶんが独立したグループになる）');
 
   // 6段階スケール：中央値（どちらでもない）を廃止し、必ずどちらかに倒す
-  const vals = [...html.matchAll(/class="sdw" data-v="(-?\d+)"/g)].map(m => Number(m[1]));
-  check(vals.length === 12 && [0, 6].every(o => vals.slice(o, o + 6).join(',') === '3,2,1,-1,-2,-3'),
-    `回答値は LP・質問画面とも +3/+2/+1/-1/-2/-3（実際: ${vals.join(',')}）`);
-  check(!vals.includes(0), '中央値 data-v="0" が存在しない');
+  const scale = html.match(/const SCALE=\[([\s\S]*?)\];/);
+  const vals = scale ? [...scale[1].matchAll(/\[(-?\d+),'/g)].map(m => Number(m[1])) : [];
+  check(vals.join(',') === '3,2,1,-1,-2,-3', `回答値は +3/+2/+1/-1/-2/-3（実際: ${vals.join(',') || 'なし'}）`);
+  check(!vals.includes(0), '中央値 0 が存在しない');
   const chudemo = (live0 => (live0.match(/どちらでもない/g) || []).length)(
     html.replace(/<!--[\s\S]*?-->/g, '').replace(/\/\*[\s\S]*?\*\//g, ''));
   check(chudemo === 0, `画面に出る「どちらでもない」が0件（6段階化で廃止）${chudemo ? ` → ${chudemo}件` : ''}`);
@@ -163,7 +179,11 @@ console.log('[lint] 診断体験の改訂：消したものが戻っていない
     const n = (liveFx.match(new RegExp(w, 'g')) || []).length;
     check(n === 0, `${w}（${why}）が0件${n ? ` → ${n}件` : ''}`);
   }
-  check(/id="stat-count">20</.test(html), '#stat-count は静的な 20（0からの数え上げをしない）');
+  // .hero-stats（20 質問数 / 16 タイプ数 / 3分 所要時間）はカードごと削除した。
+  // 「20問・約3分」は .hero-sub が文章で言っており、情報が重複していた。
+  const hs = (liveFx.match(/hstat|hero-stats|stat-count/g) || []).length;
+  check(hs === 0, `.hero-stats / .hstat / #stat-count が0件（3連カードを撤去）${hs ? ` → ${hs}件` : ''}`);
+  check(/20問・約3分/.test(html), '「20問・約3分」は .hero-sub に残っている（情報自体は消えていない）');
 
   // キャラ画像の頭が切れないようにする object-position（tools/measure-heads.mjs の実測駆動）
   const IMG_CODES = ['a1','a2','a3','a4','b1','b2','b3','b4','c1','c2','c3','c4','d1','d2','d3','d4'];
@@ -209,20 +229,32 @@ console.log('[lint] 診断体験の改訂：消したものが戻っていない
 // 何を指すのかが画面に出ている必要がある。ここが消えると目盛の文言が意味を失う。
 console.log('[lint] 回答UI：A / B の明示');
 {
+  // 選択肢は枠付きボックス2つ横並びから、テキスト2行に変わった（仕様 §D-1）。
+  // A / B の手がかりは「行頭の縦帯」「A. / B. の接頭辞」「選んだ側の .on」の3つ。
   const keys = [...html.matchAll(/<span class="opt-key">([AB])\.<\/span>/g)].map(m => m[1]);
-  check(keys.join('') === 'ABAB',
-    `選択肢に A. / B. の接頭辞がある（LP2 + 質問画面2）: ${keys.join(',') || 'なし'}`);
-  check((html.match(/class="opt-txt"/g) || []).length === 4,
-    '選択肢の本文は .opt-txt に入る（箱に直接書くと接頭辞が消える）');
-  check(/\$\(ids\.at\)\.textContent=q\.a/.test(html) && /\$\(ids\.bt\)\.textContent=q\.b/.test(html),
-    'renderQ() は .opt-txt（at / bt）に書き込む');
+  check(keys.join('') === 'AB', `選択肢に A. / B. の接頭辞がある: ${keys.join(',') || 'なし'}`);
+  check((html.match(/class="opt-txt"/g) || []).length === 2,
+    '選択肢の本文は .opt-txt に入る（行に直接書くと接頭辞が消える）');
+  check(/class="opt-line opt-a\$\{has&&a>0\?' on':''\}"/.test(html) &&
+        /class="opt-line opt-b\$\{has&&a<0\?' on':''\}"/.test(html),
+    '選んだ側の選択肢に .on が付く（どちらを選んだかが目盛以外でも読める）');
+  check(/\.opt-a\.on\{/.test(html) && /\.opt-b\.on\{/.test(html), '.on の見た目が定義されている');
+  check(/\.opt-a\{border-left-color/.test(html) && /\.opt-b\{border-left-color/.test(html),
+    'A側 / B側の縦帯（色分け）が残っている');
+  // コメント（何をやめたかの記録）は残す価値があるので、除いてから数える
+  const liveUi = html.replace(/<!--[\s\S]*?-->/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
+  const boxes = (liveUi.match(/class="choice-box|class="choice-row|\bcb-l\b|\bcb-r\b/g) || []).length;
+  check(boxes === 0, `枠付きボックス（.choice-box / .cb-l / .cb-r）が0件${boxes ? ` → ${boxes}件` : ''}`);
+  check(/\$\{esc\(q\.a\)\}/.test(html) && /\$\{esc\(q\.b\)\}/.test(html),
+    'buildCard() は選択肢本文を esc() を通して .opt-txt に入れる');
   const ends = [...html.matchAll(/<span class="sh-([ab])">([AB])<\/span>/g)].map(m => m[2]);
-  check(ends.join('') === 'ABAB', `目盛の両端に A / B のラベルがある: ${ends.join(',') || 'なし'}`);
+  check(ends.join('') === 'AB', `目盛の両端に A / B のラベルがある: ${ends.join(',') || 'なし'}`);
   // 「左/右」に戻すと、画面に出ている A / B と読み上げが食い違う
   const lr = (html.match(/aria-label="[^"]*[左右]の選択肢[^"]*"/g) || []).length;
   check(lr === 0, `目盛の aria-label が「左/右」ではなく A / B${lr ? ` → ${lr}件` : ''}`);
-  const labs = [...html.matchAll(/class="sdw" data-v="(-?\d+)"[^>]*aria-label="([^"]+)"/g)];
-  check(labs.length === 12 && labs.every(([, v, l]) =>
+  const scale2 = html.match(/const SCALE=\[([\s\S]*?)\];/);
+  const labs = scale2 ? [...scale2[1].matchAll(/\[(-?\d+),'([^']+)'\]/g)] : [];
+  check(labs.length === 6 && labs.every(([, v, l]) =>
     Number(v) > 0 ? (l.includes('A') && !l.includes('B')) : (l.includes('B') && !l.includes('A'))),
     'aria-label が符号どおり A側 / B側に対応している');
 }
