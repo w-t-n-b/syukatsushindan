@@ -527,10 +527,24 @@ try{
     const badCc=cc.filter(o=>o.now<0||o.min<0);
     chk(badTc.length===0,'16タイプ一覧で頭が切れている体が0件'+(badTc.length?' → '+badTc.map(o=>o.code+'(余白'+Math.min(o.now,o.min)+'%)').join(','):''));
     chk(badCc.length===0,'キャラマーキーで頭が切れている体が0件'+(badCc.length?' → '+badCc.map(o=>o.code+'(余白'+Math.min(o.now,o.min)+'%)').join(','):''));
-    // 頭頂がいちばん低い c4（実測9.2%）は固定値では必ず切れていた。個別に押さえる。
-    const c4=tc.find(o=>o.code==='c4'),c4c=cc.find(o=>o.code==='c4');
-    chk(!!c4&&c4.head===9.2&&c4.y>10,'DAWG(c4) は Y が引き下げられている: --head='+(c4&&c4.head)+' Y='+(c4&&c4.y)+'% 余白='+(c4&&c4.now)+'%');
-    chk(!!c4c&&c4c.y>20,'DAWG(c4) はマーキーでも引き下げられている: Y='+(c4c&&c4c.y)+'% 余白='+(c4c&&c4c.now)+'%');
+    /* 「余白 > 0」だけでは足りない。余白 4%（128px の枠で 5px）のとき、数値上は
+       入っていても髪の先端が枠線に接して「切れている」と報告された（DAWG）。
+       見た目の余白として 8% 以上を要求する。--head の値そのものは実測に依存する
+       ので固定しない（画像を差し替えれば変わる。make heads で再計測する）。 */
+    /* 目標は 8% だが、素材自身の頭上の余白がそれ未満のキャラでは達成できない
+       （a2 は頭頂 1.4% なので、Y=0 にしても 1.4% ぶんしか出せない）。
+       したがって条件は「8% 以上」ではなく「切り取りで余白を減らしていないこと」——
+       すなわち 8% を満たすか、Y=0（画像の最上部から出しており、これ以上できない）。 */
+    const MIN_MARGIN=8;
+    const tight=o=>Math.min(o.now,o.min)<MIN_MARGIN && o.y>0.01;
+    const tightTc=tc.filter(tight), tightCc=cc.filter(tight);
+    chk(tightTc.length===0,'16タイプ一覧: 頭上の余白が'+MIN_MARGIN+'%以上、または Y=0（素材の上限）'
+        +(tightTc.length?' → '+tightTc.map(o=>o.code+':余白'+Math.min(o.now,o.min)+'% Y='+o.y+'%').join(','):''));
+    chk(tightCc.length===0,'キャラマーキー: 頭上の余白が'+MIN_MARGIN+'%以上、または Y=0（素材の上限）'
+        +(tightCc.length?' → '+tightCc.map(o=>o.code+':余白'+Math.min(o.now,o.min)+'% Y='+o.y+'%').join(','):''));
+    // 頭頂がいちばん低い c4 は、固定値だと必ず破綻する。名指しでも押さえておく。
+    const c4=tc.find(o=>o.code==='c4');
+    chk(!!c4&&c4.head>=8,'DAWG(c4) の --head は実測どおり低い位置にある: '+(c4&&c4.head));
     p('     .tc 余白(%): '+tc.map(o=>o.code+':'+o.now).join(' '));
     p('     .cc 余白(%): '+cc.map(o=>o.code+':'+o.now).join(' '));
     // 結果画面のキャラ枠は縦の切り取りが起きない（f>=1）。ここを変えていないこと。

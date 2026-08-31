@@ -30,8 +30,10 @@ const CODE_OF = { a1:'HALS',a2:'HALG',a3:'HAWS',a4:'HAWG',b1:'HBLS',b2:'HBLG',b3
                   c1:'DALS',c2:'DALG',c3:'DAWS',c4:'DAWG',d1:'DBLS',d2:'DBLG',d3:'DBWS',d4:'DBWG' };
 
 // 頭の上に残す余白。枠の高さに対する割合。
-// 0 にすると髪の先端が枠線に接して窮屈に見えるので 4% を既定にしている。
-const MARGIN = 0.04;
+// 4% だと 128px の枠で 5px にしかならず、髪の先端が枠線に接して「切れている」と
+// 受け取られた（オーナー報告・DAWG）。数値上は入っていても、見た目には余白が要る。
+// 10% なら同じ枠で約 13px 空き、どのキャラでも先端が枠に触れない。
+const MARGIN = 0.10;
 // 枠幅が変わると切り取り量（f）も変わる。ここに挙げた幅すべてで頭が入る値を採る。
 const WIDTHS = [480, 390, 375, 360, 320];
 
@@ -64,19 +66,35 @@ const MEASURE = `(async()=>{
     const at=(x,y)=>{const i=(y*W+x)*4;return [px[i],px[i+1],px[i+2]];};
     const corners=[at(0,0),at(W-1,0),at(0,H-1),at(W-1,H-1)];
     const bg=[0,1,2].map(k=>Math.round(corners.reduce((a,c)=>a+c[k],0)/4));
+    /* 頭頂の検出は「その行に絵があるか」の判定であって、「絵が太いか」ではない。
+       前景ピクセル数の割合を閾値にすると、c4（DAWG）のような細く尖った髪の毛先を
+       落として、髪が太くなる位置を頭頂と誤検出する（実測で 3.1% → 9.2% と 6ポイント
+       ずれ、毛先が丸ごと切り取られていた）。
+       そのため 1px 刻みで走査し、色差 30 以上の画素が 2 個以上ある最初の行を頭頂とする。
+       圧縮ノイズの単発ヒットを拾わないよう、2 行以内に連続することを条件に加える。 */
+    /* FG（色差）は背景のムラより大きく、絵より小さい値にする。素材には上端に
+       わずかなグラデーションがあり（c4 で色差 34〜36）、30 だとそれを絵と誤認する。
+       絵の画素は数百の色差を持つので 60 で十分に拾える。
+       細い毛先を落とさないための工夫は「閾値を下げること」ではなく
+       「行あたりの必要画素数を減らし、1px 刻みで走査すること」である。 */
+    const FG=60, MINPX=2;
     const rows=[];
-    for(let y=0;y<H;y+=2){
+    for(let y=0;y<H;y++){
       let n=0;
-      for(let x=0;x<W;x+=2){
+      for(let x=0;x<W;x++){
         const p=at(x,y);
-        if(Math.abs(p[0]-bg[0])+Math.abs(p[1]-bg[1])+Math.abs(p[2]-bg[2])>60)n++;
+        if(Math.abs(p[0]-bg[0])+Math.abs(p[1]-bg[1])+Math.abs(p[2]-bg[2])>FG){ n++; if(n>=MINPX) break; }
       }
       rows.push([y,n]);
     }
-    const max=rows.reduce((a,r)=>Math.max(a,r[1]),0);
-    const th=max*0.04;
-    const first=rows.find(r=>r[1]>th);
-    const last=[...rows].reverse().find(r=>r[1]>th);
+    const hit=r=>r[1]>=MINPX;
+    let first=null;
+    for(let i=0;i<rows.length;i++){
+      if(!hit(rows[i]))continue;
+      let run=0; while(i+run<rows.length&&hit(rows[i+run]))run++;
+      if(run>=2){ first=rows[i]; break; }
+    }
+    const last=[...rows].reverse().find(hit);
     return {w:W,h:H,
       head:first?+(first[0]/H*100).toFixed(1):null,
       foot:last?+(last[0]/H*100).toFixed(1):null,
