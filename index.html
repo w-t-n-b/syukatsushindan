@@ -546,7 +546,8 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .cc:has(img[src*="sm/b"]){--cat:#1d6b4c;--cat-ink:#14523a;}
 .cc:has(img[src*="sm/c"]){--cat:#c8412e;--cat-ink:#a4301f;}
 .cc:has(img[src*="sm/d"]){--cat:#4b4483;--cat-ink:#3d376c;}
-.cc img{width:100%;height:132px;object-fit:cover;
+/* .tc と同じ理由で 2:3。マーキーでも下端で切れないようにする。 */
+.cc img{width:100%;aspect-ratio:2/3;height:auto;object-fit:cover;
   display:block;margin:0 0 7px;border-bottom:var(--bd) solid var(--navy);}
 /* object-position は下の「キャラ画像の頭が切れないようにする」ブロックで
    キャラごとに算出している（固定値にすると頭頂の低いキャラが切れる）。 */
@@ -565,7 +566,10 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .tc:has(img[src*="chars/b"]){--cat:#1d6b4c;--cat-ink:#14523a;}
 .tc:has(img[src*="chars/c"]){--cat:#c8412e;--cat-ink:#a4301f;}
 .tc:has(img[src*="chars/d"]){--cat:#4b4483;--cat-ink:#3d376c;}
-.tc img{width:100%;height:128px;object-fit:cover;
+/* 枠を素材と同じ 2:3 にする。cover でも切り取りが発生しないので、全身が入り
+   下端で腕や脚が切れない（オーナー判断: 下が切れるのは不可）。高さ固定を捨てた
+   ぶんセクションは縦に伸びるが、キャラを見せることが目的なので許容する。 */
+.tc img{width:100%;aspect-ratio:2/3;height:auto;object-fit:cover;
   display:block;margin:0 0 8px;border-bottom:var(--bd) solid var(--navy);transition:none;}
 .tc:hover img{transform:none;}
 .tc::after{top:auto;bottom:0;left:0;width:100%;height:4px;background:var(--cat);}
@@ -577,11 +581,19 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .pa{background:#1a56db;}.pb{background:#1d6b4c;}.pc{background:#c8412e;}.pd{background:#4b4483;}
 .tc-line{background:var(--border);height:2px;}
 
-/* --- キャラ画像の頭が切れないようにする（object-position を実測から出す）---
-   .tc img / .cc img は縦長画像（800x1200）を横長寄りの枠に object-fit:cover で
-   嵌めるため、縦が切り取られる。切り取り位置を全16体で固定していた（50% 6%）が、
-   頭頂の位置は 1.2%〜9.2% とばらついており、固定値では両端のどちらかが必ず切れる。
-   実際 DAWG(c4) / DALG(c2) / DBLG(d2) などで頭が枠外に出ていた。
+/* --- キャラ画像の切り取り位置（現在は無効。下記の経緯のため残している）---
+
+   ★現状: .tc img / .cc img は枠を素材と同じ 2:3 にしたので縦の切り取りが起きない。
+     したがって以下の object-position は効いていない（f=1 で clamp が 0% を返す）。
+     枠を再び横長にした場合にだけ必要になるので、算出方法ごと残してある。
+     --head 自体は実測データとして有効（`make heads` で取り直せる）。
+
+   経緯: もともと横長の枠に縦長画像を cover で嵌めていたため縦が切り取られ、
+   切り取り位置を全16体で固定していた（50% 6%）。頭頂は 1.2%〜9.1% とばらつくので
+   固定値ではどちらかの端が必ず破綻し、DAWG(c4) 等で頭が枠外に出ていた。
+   位置を実測から出すようにして頭切れは解消したが、しゃがみ姿勢の DAWG だけ
+   写る範囲が頭と肩までになり、下端で腕が切れることが問題として残った。
+   枠を 2:3 にすることで、切り取りそのものを無くしている。
 
    --head = その画像でキャラの頭頂が始まる縦位置（画像高さに対する%・単位なし）。
    ★実測値。画像を差し替えたら `make heads` で取り直してここを更新すること。
