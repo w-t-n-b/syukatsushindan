@@ -233,8 +233,8 @@ console.log('[lint] 回答UI：A / B の明示');
   // A / B の手がかりは「行頭の縦帯」「A. / B. の接頭辞」「選んだ側の .on」の3つ。
   const keys = [...html.matchAll(/<span class="opt-key">([AB])\.<\/span>/g)].map(m => m[1]);
   check(keys.join('') === 'AB', `選択肢に A. / B. の接頭辞がある: ${keys.join(',') || 'なし'}`);
-  check((html.match(/class="opt-txt"/g) || []).length === 2,
-    '選択肢の本文は .opt-txt に入る（行に直接書くと接頭辞が消える）');
+  check((html.match(/class="opt-txt"/g) || []).length === 4,
+    'LP用と本診断用の両テンプレートで、選択肢本文は .opt-txt に入る');
   check(/class="opt-line opt-a\$\{has&&a>0\?' on':''\}"/.test(html) &&
         /class="opt-line opt-b\$\{has&&a<0\?' on':''\}"/.test(html),
     '選んだ側の選択肢に .on が付く（どちらを選んだかが目盛以外でも読める）');
