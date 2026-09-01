@@ -441,7 +441,9 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .o3{background:rgba(139,132,182,.30);}
 .ro1{width:230px;height:230px;background:transparent;border:18px solid rgba(255,255,255,.07);top:-78px;right:-64px;}
 .ro2{width:130px;height:130px;background:var(--cat);opacity:.26;bottom:-40px;left:-34px;}
-/* 不透過素材はシルエットにならない（低透明度の白い矩形が出るだけ） */
+/* 装飾のシルエットは出さない。素材が不透過だった頃は「低透明度の白い矩形」に
+   しかならず消していた。透過素材ではシルエットとして成立するようになったが、
+   復活させるかは意匠の判断なので現状は出さないまま（戻すならこの1行を消す）。 */
 .hero-sil,.result-sil,.tc-sil{display:none;}
 
 /* 暗い面に載る文字 */
@@ -471,22 +473,22 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .btn-ghost:hover{border-color:var(--must);color:var(--must);background:rgba(255,255,255,.06);}
 
 /* --- #2 キャラを見えるサイズに：顔 7〜12px → 約48px --------------------- */
-/* 素材は 2:3 の不透過全身像。枠の比率を素材と一致させ、画像自身の背景を地にする */
+/* 素材は 2:3 の背景透過の全身像。枠の比率を素材と一致させ、枠の地色を背景にする。
+   素材が不透過だった頃は画像ごとに違う地色（白〜クリーム）がそのまま出たので、
+   キャラごとのマット色（--mat）と弱いウォッシュ（::after の multiply）で
+   色温度差を縮めていた。透過素材ではその差が存在しないため両方とも撤去し、
+   16体すべて --paper 1色に統一する。 */
 .char-frame{
   width:min(74vw,268px);aspect-ratio:2/3;height:auto;margin:0 auto 22px;
   border-radius:var(--r-2) var(--r-2) 0 0;
-  overflow:hidden;                 /* これが無いと円から白い矩形がはみ出す */
-  isolation:isolate;position:relative;z-index:1;
-  background:var(--mat,#f7f6f3);
+  overflow:hidden;                 /* 角丸から画像がはみ出さないようにする */
+  position:relative;z-index:1;
+  background:var(--paper);
   border:var(--bd-heavy) solid var(--navy);
   box-shadow:10px 10px 0 var(--cat),10px 10px 0 3px var(--navy);
   display:block;
 }
 .char-frame::before{content:none;}
-.char-frame:has(.res-char[src*="chars/d"]){--mat:#f4f0e4;}   /* d系だけ元画像がクリーム地 */
-/* 背景の色温度差を「消す」のではなく「縮める」弱いウォッシュ */
-.char-frame::after{content:'';position:absolute;inset:0;pointer-events:none;
-  background:#e0ac5e;mix-blend-mode:multiply;opacity:.10;}
 .res-char{width:100%;height:100%;display:block;object-fit:cover;object-position:50% 50%;
   filter:none;animation:none;}
 
@@ -567,11 +569,13 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
    描画幅だけを縮める（要素の幅は 100% のままなので下の区切り線は全幅に残る）。
    padding 18.6% → 描画幅は枠の 62.8%、縦の可視率 0.632。
    頭頂 9.1% から約 69% まで入り、左手（実測 66〜68.5%）が収まる。
-   地色は「実際に表示される範囲（縦 5.9〜69%）の左右端」の実測平均。四隅の色
-   （#f1e6d6）だと素材のグラデーションのぶん濃すぎて、継ぎ目が見える。 */
+
+   素材が不透過だった頃は、この padding で空いた左右の余白に画像の地色
+   （実測平均 #f7efe2）を敷いて継ぎ目を隠していた。透過素材では余白に
+   カードの地色（--paper）がそのまま出るので、地色の指定は撤去する。 */
 .tc:has(img[src*="chars/c4"]) img,
 .cc:has(img[src*="sm/c4"]) img{
-  box-sizing:border-box;padding:0 18.6%;background:#f7efe2;
+  box-sizing:border-box;padding:0 18.6%;
   object-position:50% 16%;
 }
 .tc:hover img{transform:none;}
@@ -600,6 +604,14 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 
    --head = その画像でキャラの頭頂が始まる縦位置（画像高さに対する%・単位なし）。
    ★実測値。画像を差し替えたら `make heads` で取り直してここを更新すること。
+
+   ★背景透過版への差し替え時（2026-09）の確認結果：構図は旧素材と同一で、
+     アルファから測り直しても 16体中14体が下記の値と完全に一致した。よって
+     下の値はそのまま有効で、更新していない。
+     ただし `make heads` は「四隅の色＝背景」を前提にしているため、透過素材では
+     c4 を 9.1 → 2.5、a1 を 2.8 → 1.2 と誤って小さく報告する。
+     c4 の 2.5% は切り抜きの取りこぼし（幅2px・α24〜55 のごみ）であって頭頂ではない。
+     make heads の出力をそのまま貼ると c4 の頭が切れるので、貼る前に確認すること。
 
    Y = (--head − 100·m·f) / (1 − f)      m = 頭の上に残す余白率
      f = 枠高 / (枠幅 × 1.5)   縦の可視率。f が小さいほど強く切り取る。
@@ -665,8 +677,9 @@ body[data-screen="screen-loading"] .ftr{display:none;}
 .sb-lbl{font-size:11px;font-weight:900;letter-spacing:var(--ls-lbl);
   color:var(--verm);margin-bottom:10px;}
 .sb-body{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+/* 地色は敷かない（透過素材なので .shared-banner の --paper がそのまま出る）。 */
 .sb-img{width:64px;height:96px;object-fit:cover;object-position:50% 6%;flex-shrink:0;
-  border:var(--bd) solid var(--navy);border-radius:var(--r-1);background:#f7f6f3;display:block;}
+  border:var(--bd) solid var(--navy);border-radius:var(--r-1);display:block;}
 .sb-txt{display:flex;flex-direction:column;gap:3px;min-width:0;}
 .sb-code{font-family:var(--lat);font-weight:700;font-size:1.15rem;
   letter-spacing:var(--ls-lat);color:var(--navy);line-height:1;}
@@ -1041,7 +1054,8 @@ body[data-screen="screen-loading"] .ftr{display:none;}
 .tp-img{
   flex:0 0 auto;width:96px;height:144px;                   /* 2:3。顔 約48px */
   object-fit:cover;object-position:50% 6%;display:block;
-  background:#f7f6f3;border:var(--bd) solid var(--navy);border-radius:var(--r-1);
+  /* 地色は敷かない（透過素材なので .type-peek の --paper がそのまま出る）。 */
+  border:var(--bd) solid var(--navy);border-radius:var(--r-1);
 }
 .tp-txt{min-width:0;padding-top:2px;padding-right:40px;}   /* .tp-close の逃げ */
 .tp-code{font-family:var(--lat);font-weight:700;font-size:1.35rem;
