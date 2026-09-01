@@ -1,7 +1,8 @@
 // 最小のCDPクライアント: ヘッドレスChromeを起動し、実ページ上でJSを評価する
 import { spawn } from 'node:child_process';
 import fsx from 'node:fs';
-const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+import { requireChrome, EXTRA_FLAGS } from './chrome-path.mjs';
+const CHROME = requireChrome('cdp');
 
 async function withPage(url, width, height, fn){
   const port = 9222 + Math.floor(Math.random()*900);
@@ -9,7 +10,7 @@ async function withPage(url, width, height, fn){
   const p = spawn(CHROME, [
     '--headless=new','--disable-gpu','--hide-scrollbars','--no-first-run','--no-default-browser-check',
     '--user-data-dir='+tmp, '--remote-debugging-port='+port,
-    '--window-size='+width+','+height, 'about:blank'
+    '--window-size='+width+','+height, ...EXTRA_FLAGS, 'about:blank'
   ], { stdio:'ignore' });
   const base = 'http://127.0.0.1:'+port;
   let list=null;

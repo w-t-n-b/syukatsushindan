@@ -1,0 +1,56 @@
+name: check
+
+# main を壊さないための関門。
+# PR と main への push で `make check`（lint / typecheck / 診断ロジックの回帰 / 実ブラウザe2e）を回す。
+# 落ちたらマージできない設定（ブランチ保護）と組で使う。
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# 同じブランチに続けて push されたら、古い実行は打ち切る（待ち時間を短くするため）
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # ubuntu-latest には Google Chrome が入っている。
+      # 入っていない/入れ替わった場合にここで落として、
+      # 「e2e を飛ばしたまま緑」になるのを防ぐ。
+      - name: Chrome の場所を確定する
+        run: |
+          set -euo pipefail
+          found=""
+          for p in /usr/bin/google-chrome /usr/bin/google-chrome-stable /opt/google/chrome/chrome /usr/bin/chromium; do
+            [ -x "$p" ] && { found="$p"; break; }
+          done
+          if [ -z "$found" ]; then
+            echo "Chrome が見つかりません。e2e を飛ばして緑にはしません。" >&2
+            exit 1
+          fi
+          echo "CHROME_PATH=$found" >> "$GITHUB_ENV"
+          "$found" --version
+
+      - name: make check
+        env:
+          # GitHub のランナーはコンテナではないのでサンドボックスは動くが、
+          # 環境差で落ちることがあるため明示的に無効化しておく。
+          CHROME_FLAGS: --no-sandbox --disable-dev-shm-usage
+        run: make check

@@ -15,10 +15,15 @@
 #   make ogp     … og:image（1200x630）の再生成
 #
 # 必要なもの: node（18以上）/ Google Chrome / python3（serve のみ）
+#
+# Chrome の場所は tools/chrome-path.mjs が解決する（環境変数 CHROME_PATH で上書き可）。
+# CI のように OS が違う環境でも同じ `make check` が通るようにするため、
+# ここに直書きしない。ogp だけは Makefile から直接叩くので既定値を用意する。
 
 SHELL := /bin/bash
 NODE  := node
-CHROME := /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+# 開発機（macOS）の既定値。CI 等では CHROME_PATH で上書きする。
+CHROME ?= $(shell CHROME_PATH="$$CHROME_PATH" $(NODE) -e 'import("./tools/chrome-path.mjs").then(m=>console.log(m.findChrome()||""))')
 
 .PHONY: check lint type typecheck test e2e serve shot heads ogp golden help
 

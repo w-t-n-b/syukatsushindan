@@ -12,21 +12,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import http from 'node:http';
 import { spawn } from 'node:child_process';
+import { requireChrome, EXTRA_FLAGS } from './chrome-path.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const DRIVER_SRC = path.join(ROOT, 'tools/e2e-driver.html');
 const DRIVER_TMP = path.join(ROOT, '__e2e_tmp.html');
-const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const CHROME = requireChrome('e2e');
 const PORT = 8791;
 
 const MIME = { '.html': 'text/html; charset=utf-8', '.png': 'image/png', '.webp': 'image/webp',
                '.jpg': 'image/jpeg', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml' };
-
-if (!fs.existsSync(CHROME)) {
-  console.error(`[e2e] Google Chrome が見つかりません: ${CHROME}
-実ブラウザでの検証を飛ばして「問題なし」とはしません。Chrome を導入してから実行してください。`);
-  process.exit(1);
-}
 
 // --- 静的サーバ（依存なし） ---
 const server = http.createServer((req, res) => {
@@ -52,6 +47,7 @@ const args = [
   '--headless=new', '--disable-gpu', '--hide-scrollbars', '--no-first-run',
   '--no-default-browser-check', `--user-data-dir=${profile}`,
   '--window-size=1400,900', '--virtual-time-budget=900000', '--dump-dom',
+  ...EXTRA_FLAGS,          // CI で --no-sandbox 等が要る環境向け（CHROME_FLAGS）
   `http://127.0.0.1:${PORT}/${path.basename(DRIVER_TMP)}`,
 ];
 
