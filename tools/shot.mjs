@@ -29,18 +29,51 @@ const MEASURE = `(()=>{
     hscroll:document.documentElement.scrollWidth>innerWidth,
     scrollW:document.documentElement.scrollWidth};
   ['.hero','.hero-title','.hero-title em','.hero-sub','#lp-quiz-sec','#lp-quiz','#lq-list',
-   '.lq-foot','.char-strip-outer','.btn-wrap','.steps','#type-section'].forEach(s=>{
+   '.lq-foot','.hero-cast','.btn-wrap','#type-section'].forEach(s=>{
     const el=q(s); if(el)o[s]=r(el);
   });
+  /* 浮遊キャラ（.hc）の検証。docs/design/hero-floating-characters.md §7-4
+     (a) 横スクロールが出ていないこと（上の hscroll）
+     (b) .btn-wrap の上端と各 .hc の下端の差＝CTA の外形に重なっていないこと（1.4.11）
+     (c) .hc 同士の矩形が交差しないこと（重なると実効αが上がり AA を割る） */
+  const hcs=[...document.querySelectorAll('.hc')].map(e=>{
+    const b=e.getBoundingClientRect();
+    return {cls:e.className,src:(e.src.match(/([a-d]\\d)\\.webp/)||[])[1]||'?',
+            x:Math.round(b.left),y:Math.round(b.top+scrollY),
+            w:Math.round(b.width),h:Math.round(b.height),
+            bottom:Math.round(b.bottom+scrollY),
+            a:getComputedStyle(e).opacity};
+  });
+  o.hc=hcs;
+  const bw=q('.btn-wrap');
+  if(bw){
+    const t=bw.getBoundingClientRect().top+scrollY;
+    o.hcToCta=hcs.map(h=>({cls:h.cls,gap:Math.round(t-h.bottom)}));
+  }
+  o.hcOverlap=[];
+  for(let i=0;i<hcs.length;i++)for(let j=i+1;j<hcs.length;j++){
+    const a=hcs[i],b=hcs[j];
+    if(a.x<b.x+b.w&&b.x<a.x+a.w&&a.y<b.bottom&&b.y<a.bottom)o.hcOverlap.push(a.cls+' x '+b.cls);
+  }
   const em=q('.hero-title em');
   if(em){o.emLines=Math.round(em.getBoundingClientRect().height/parseFloat(getComputedStyle(em).lineHeight));
          o.emFont=getComputedStyle(em).fontSize;}
   const sub=q('.hero-sub');
   if(sub)o.subLines=Math.round(sub.getBoundingClientRect().height/parseFloat(getComputedStyle(sub).lineHeight));
-  // #lp-quiz はヒーローの外（3ステップの直後）に出したので、
-  // ファーストビューではなく「そこへ到達するまでのスクロール量」を見る
+  // #lp-quiz はヒーローの外（ヒーローの直後）に出す。3ステップの節を削り
+  // .hero の min-height:100svh も外したので、ファーストビューに Q1 が入る。
   const lq=q('#lp-quiz');
   if(lq)o.lpQuizScrollToReach=Math.round(lq.getBoundingClientRect().top+scrollY);
+  /* ファーストビューに Q1 のカードがどこまで入るか（判断⑩） */
+  const q1=q('#lq-list .q-card[data-pos="0"]');
+  if(q1){
+    const b=q1.getBoundingClientRect();
+    const part=s=>{const e=q1.querySelector(s);if(!e)return null;
+      const r2=e.getBoundingClientRect();return {bottom:Math.round(r2.bottom+scrollY),inFold:r2.bottom<=innerHeight};};
+    o.q1={top:Math.round(b.top+scrollY),bottom:Math.round(b.bottom+scrollY),
+          fold:innerHeight,wholeCardInFold:b.bottom<=innerHeight,
+          qText:part('.q-text'),choices:part('.choice-list'),track:part('.spec-track')};
+  }
   return JSON.stringify(o);
 })()`;
 

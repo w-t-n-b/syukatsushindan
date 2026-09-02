@@ -45,6 +45,47 @@ async function runQuiz(w,d,av,last){
 let fail=0;
 const chk=(ok,msg)=>{if(!ok)fail++;p((ok?'OK  ':'NG  ')+msg);};
 
+/* --- コントラスト比の実測（浮遊キャラ用）------------------------------------
+   docs/design/hero-floating-characters.md §7-1 は「線上＋α=.18 の純白画素」を
+   最悪値として計算している。ここでは計算値ではなく、実際に配信している webp を
+   canvas に描いて 1画素ずつ合成し、実測の最悪値を出す。 */
+const srgb=v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);};
+const lum=(r,g,b)=>0.2126*srgb(r)+0.7152*srgb(g)+0.0722*srgb(b);
+const ratio=(a,b)=>{const h=Math.max(a,b),l=Math.min(a,b);return (h+0.05)/(l+0.05);};
+const hex=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+const over=(fg,a,bg)=>fg.map((v,i)=>v*a+bg[i]*(1-a));
+/* .hero の地色 #132043 と、その上の集中線（rgba(255,255,255,.05)）。
+   集中線は .hc より下の層なので、最悪値は必ず線上で出る。 */
+const FIELD=hex('#132043');
+const LINE=over([255,255,255],0.05,FIELD);
+/* mask-image:linear-gradient(180deg,#000 0 52%,transparent 88%) の不透明度 */
+const maskA=t=>t<=0.52?1:(t>=0.88?0:(0.88-t)/0.36);
+/* 1体ぶんの最悪画素を返す。rect は測りたい範囲（文字の行ボックス等）。 */
+function worstPixel(img,hcRect,opacity,clip){
+  const W=Math.max(1,Math.round(hcRect.width)),H=Math.max(1,Math.round(hcRect.height));
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const cx=cv.getContext('2d',{willReadFrequently:true});
+  cx.drawImage(img,0,0,W,H);
+  /* ゆらぎ（translateY 最大 6px）ぶん、上下に広げて走査する */
+  const x0=Math.max(0,Math.floor(clip.left-hcRect.left));
+  const x1=Math.min(W,Math.ceil(clip.right-hcRect.left));
+  const y0=Math.max(0,Math.floor(clip.top-hcRect.top)-6);
+  const y1=Math.min(H,Math.ceil(clip.bottom-hcRect.top)+6);
+  if(x1<=x0||y1<=y0)return null;
+  const px=cx.getImageData(x0,y0,x1-x0,y1-y0).data;
+  let best=null;
+  for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){
+    const i=((y-y0)*(x1-x0)+(x-x0))*4;
+    const a=px[i+3]/255*opacity*maskA(y/H);
+    if(a<=0)continue;
+    const onLine=over([px[i],px[i+1],px[i+2]],a,LINE);
+    const l=lum(onLine[0],onLine[1],onLine[2]);
+    if(!best||l>best.l)best={l,x,y,rgb:[px[i],px[i+1],px[i+2]],a:+a.toFixed(4),
+      inter:lum(...over([px[i],px[i+1],px[i+2]],a,FIELD))};
+  }
+  return best;
+}
+
 (async()=>{
 try{
   // ---------- A. LP が正常に読み込まれ、スクリプトが最後まで走ったか ----------
@@ -285,13 +326,20 @@ try{
     const lq=d.getElementById('lp-quiz');
     chk(!!lq,'#lp-quiz が LP にある');
     chk(!d.querySelector('.hero').contains(lq),'#lp-quiz はヒーローの中に無い（外へ移した）');
-    // 「診断の流れ」3ステップの直後・16タイプ一覧の直前
-    const stepsBottom=d.querySelector('.steps').getBoundingClientRect().bottom+w.pageYOffset;
+    // 「3ステップで完了」の節を削除したので、#lp-quiz はヒーローの直後・16タイプ一覧の直前
+    const heroBottom=d.querySelector('.hero').getBoundingClientRect().bottom+w.pageYOffset;
     const typesTop=d.getElementById('type-section').getBoundingClientRect().top+w.pageYOffset;
     const lqTop=lq.getBoundingClientRect().top+w.pageYOffset;
     const lqBottom=lq.getBoundingClientRect().bottom+w.pageYOffset;
-    chk(lqTop>stepsBottom&&lqBottom<=typesTop+1,
-        '#lp-quiz は3ステップの後・16タイプ一覧の前にある: steps下端='+Math.round(stepsBottom)+' lp-quiz='+Math.round(lqTop)+'〜'+Math.round(lqBottom)+' types上端='+Math.round(typesTop));
+    chk(lqTop>=heroBottom&&lqBottom<=typesTop+1,
+        '#lp-quiz はヒーローの後・16タイプ一覧の前にある: hero下端='+Math.round(heroBottom)+' lp-quiz='+Math.round(lqTop)+'〜'+Math.round(lqBottom)+' types上端='+Math.round(typesTop));
+    chk(d.querySelectorAll('.steps,.step,.step-n,.step-lbl,.step-desc').length===0,
+        '「3ステップで完了」の要素が DOM に存在しない');
+    chk(!/3ステップで完了|How it works/.test(d.body.innerText),
+        '「3ステップで完了」「How it works」の文字列が画面に出ない');
+    // 削除した3項目は文章として残っている（情報を落としていない）
+    chk(/20問・約3分/.test(d.querySelector('.hero-sub').textContent)&&/職種の例/.test(d.querySelector('.hero-sub').textContent),
+        '3ステップが伝えていた内容は .hero-sub に残っている: '+d.querySelector('.hero-sub').textContent);
 
     chk(d.querySelectorAll('#lq-list .q-card').length===5,'LPにも5問並ぶ: '+d.querySelectorAll('#lq-list .q-card').length);
     chk(posOf(d,'lq').join(',')==='0,1,2,3,4','LPは出題位置 0-4（Q1-5）: '+posOf(d,'lq').join(','));
@@ -655,9 +703,10 @@ try{
   chk(w.eval('curQ')===0&&w.eval('JSON.stringify(scores)')==='{"1":0,"2":0,"3":0,"4":0}','旧データがあっても1問目・スコア0から始まる');
 
   // ---------- O. キャラ画像の頭が切れていないこと ----------
-  // .tc img / .cc img は縦長画像を横長寄りの枠に object-fit:cover で嵌めるので縦が切れる。
+  // .tc img は縦長画像を横長寄りの枠に object-fit:cover で嵌めるので縦が切れる。
   // 全16体を実測し、頭頂（--head）が可視領域の内側に入っていることを確かめる。
   // 枠幅が可変な .tc は、いちばん強く切り取る条件（f=0.397 / vw>=480）でも確かめる。
+  // キャラマーキー（.cc）は廃止したので、対象は .tc だけになった。
   await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(900);
   {
     const probe=(sel,imgSel,fMin)=>{
@@ -685,13 +734,14 @@ try{
       return out;
     };
     const tc=probe('#type-overview .tc','img',0.397);
-    const cc=probe('.char-strip-track .cc','img',0.772);
     chk(tc.length===16&&tc.every(o=>!isNaN(o.head)),'16タイプ一覧の全16体に --head（実測の頭頂位置）が定義されている: '+tc.length);
-    chk(cc.length===16&&cc.every(o=>!isNaN(o.head)),'キャラマーキーの全16体に --head が定義されている: '+cc.length);
+    // 帯を廃止したので、--head を消費するのは .tc だけ。「消えたままである」ことを検査する。
+    chk(d.querySelectorAll('.char-strip-outer,.char-strip-track,.cc').length===0,
+        'キャラマーキー（.char-strip-outer / .char-strip-track / .cc）が DOM に存在しない');
+    chk(getComputedStyle(d.querySelector('#type-overview .tc')).getPropertyValue('--head').trim()!=='',
+        '--head は .tc 側で生きている（帯と一緒に消していない）');
     const badTc=tc.filter(o=>o.now<0||o.min<0);
-    const badCc=cc.filter(o=>o.now<0||o.min<0);
     chk(badTc.length===0,'16タイプ一覧で頭が切れている体が0件'+(badTc.length?' → '+badTc.map(o=>o.code+'(余白'+Math.min(o.now,o.min)+'%)').join(','):''));
-    chk(badCc.length===0,'キャラマーキーで頭が切れている体が0件'+(badCc.length?' → '+badCc.map(o=>o.code+'(余白'+Math.min(o.now,o.min)+'%)').join(','):''));
     /* 「余白 > 0」だけでは足りない。余白 4%（128px の枠で 5px）のとき、数値上は
        入っていても髪の先端が枠線に接して「切れている」と報告された（DAWG）。
        見た目の余白として 8% 以上を要求する。--head の値そのものは実測に依存する
@@ -705,16 +755,13 @@ try{
        近い 5% を下限とする。これを下回ると枠線に接して見える。 */
     const MIN_MARGIN=5;
     const tight=o=>Math.min(o.now,o.min)<MIN_MARGIN && o.y>0.01;
-    const tightTc=tc.filter(tight), tightCc=cc.filter(tight);
+    const tightTc=tc.filter(tight);
     chk(tightTc.length===0,'16タイプ一覧: 頭上の余白が'+MIN_MARGIN+'%以上、または Y=0（素材の上限）'
         +(tightTc.length?' → '+tightTc.map(o=>o.code+':余白'+Math.min(o.now,o.min)+'% Y='+o.y+'%').join(','):''));
-    chk(tightCc.length===0,'キャラマーキー: 頭上の余白が'+MIN_MARGIN+'%以上、または Y=0（素材の上限）'
-        +(tightCc.length?' → '+tightCc.map(o=>o.code+':余白'+Math.min(o.now,o.min)+'% Y='+o.y+'%').join(','):''));
     // 頭頂がいちばん低い c4 は、固定値だと必ず破綻する。名指しでも押さえておく。
     const c4=tc.find(o=>o.code==='c4');
     chk(!!c4&&c4.head>=8,'DAWG(c4) の --head は実測どおり低い位置にある: '+(c4&&c4.head));
     p('     .tc 余白(%): '+tc.map(o=>o.code+':'+o.now).join(' '));
-    p('     .cc 余白(%): '+cc.map(o=>o.code+':'+o.now).join(' '));
     // 結果画面のキャラ枠は縦の切り取りが起きない（f>=1）。ここを変えていないこと。
     w.eval("scores={1:15,2:15,3:15,4:15};ans=Array.from({length:20},()=>3);showResult(true,'quiz')");
     await sleep(600);
@@ -759,13 +806,13 @@ try{
     await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(900);
     const band=JSON.parse(w.eval(BAND));
     chk(band.gap<=120,'LP('+vw+'px)に120pxを超える空白帯が無い: 最大 '+band.gap+'px（'+band.after+' → '+band.before+'）');
-    // 不具合そのものの再発も名指しで押さえる（.steps の直後に何も無い帯が続く）。
-    // .steps と 16タイプ一覧の間には #lp-quiz が入ったので、隣り合う2区間で測る。
-    const sb=d.querySelector('.steps').getBoundingClientRect().bottom;
+    // 不具合そのものの再発も名指しで押さえる（あるセクションの直後に何も無い帯が続く）。
+    // 3ステップの節を削除したので、いまヒーローの下に来るのは #lp-quiz。
+    const sb=d.querySelector('.hero .btn-wrap').getBoundingClientRect().bottom;
     const lqTop=d.querySelector('#lp-quiz .lq-head').getBoundingClientRect().top;
     const lqBot=d.querySelector('#lp-quiz .q-nav').getBoundingClientRect().bottom;
     const nx=d.querySelector('#type-section .sec-lbl').getBoundingClientRect().top;
-    chk(Math.round(lqTop-sb)<=120,'診断の流れ→LP埋め込み質問 の間隔('+vw+'px): '+Math.round(lqTop-sb)+'px');
+    chk(Math.round(lqTop-sb)<=120,'ヒーローCTA→LP埋め込み質問 の間隔('+vw+'px): '+Math.round(lqTop-sb)+'px');
     chk(Math.round(nx-lqBot)<=120,'LP埋め込み質問→全16タイプ の間隔('+vw+'px): '+Math.round(nx-lqBot)+'px');
   }
   f.style.width='390px';
@@ -900,6 +947,156 @@ try{
     chk(card.querySelector('.sub-head').compareDocumentPosition(note)&Node.DOCUMENT_POSITION_FOLLOWING,
         '説明は見出し（.sub-head）の直後にある');
   }
+
+  // ---------- S. ヒーローの作り替え（浮遊キャラ / 3ステップ削除 / ファーストビュー）----------
+  // docs/design/hero-floating-characters.md 判断①〜⑭。
+  // 「消したもの」と「残したもの」を両側から押さえ、コントラストは計算値ではなく
+  // 実配信の webp を canvas で合成した実測値で判定する。
+  for(const [vw,vh,want] of [[390,844,2],[320,568,2],[1024,844,4]]){
+    f.style.width=vw+'px'; f.style.height=vh+'px';
+    await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(1200);
+    const hero=d.querySelector('.hero');
+    const cast=d.querySelector('.hero-cast');
+    const hcs=[...d.querySelectorAll('.hc')];
+    const T='('+vw+'x'+vh+') ';
+
+    // --- 構造 ---
+    chk(!!cast,T+'.hero-cast がヒーローに挿入されている');
+    chk(!!cast&&cast.getAttribute('aria-hidden')==='true',T+'.hero-cast は aria-hidden="true"');
+    chk(!!cast&&cast.parentElement===hero&&cast.nextElementSibling===d.querySelector('.hero-inner'),
+        T+'.hero-cast は .hero 直下・.hero-inner の直前にある');
+    chk(hcs.length===want,T+'浮遊キャラは '+want+' 体: '+hcs.length+' 体 '
+        +hcs.map(e=>(e.src.match(/([a-d]\d)\.webp/)||[])[1]).join(','));
+    chk(hcs.every(e=>e.alt===''&&e.loading==='lazy'&&e.decoding==='async'),
+        T+'各 .hc は alt="" / loading=lazy / decoding=async');
+    chk(hcs.every(e=>getComputedStyle(e).pointerEvents==='none'||getComputedStyle(cast).pointerEvents==='none'),
+        T+'.hc は押せない（pointer-events:none）');
+    chk(hcs.every(e=>e.complete&&e.naturalWidth>0),T+'.hc の画像がすべて読み込めている');
+    // ヒーローの高さはビューポートに依らずほぼ一定（判断②）
+    const heroH=Math.round(hero.getBoundingClientRect().height);
+    chk(getComputedStyle(hero).minHeight==='auto'||parseFloat(getComputedStyle(hero).minHeight)===0,
+        T+'.hero に min-height が効いていない: '+getComputedStyle(hero).minHeight);
+    chk(heroH<vh&&heroH>=380&&heroH<=520,
+        T+'ヒーローの高さが中身の積算そのもの（380〜520px・ビューポート未満）: '+heroH+'px');
+    chk(d.documentElement.scrollWidth<=vw,T+'横スクロールが出ない: scrollWidth='+d.documentElement.scrollWidth);
+    // 装飾円とシルエット（判断⑧⑪）
+    chk([...d.querySelectorAll('.hero .hero-orb')].every(e=>getComputedStyle(e).display==='none'),
+        T+'ヒーローの装飾円 .o1/.o2/.o3 が出ていない');
+    chk(d.querySelectorAll('.hero .hero-orb').length===3,T+'装飾円の DOM は残っている（消していない）');
+    chk(getComputedStyle(d.querySelector('.hero-sil')).display==='none',T+'.hero-sil は display:none のまま');
+
+    // --- 幾何：重なりと CTA（§3-2 / §7-2）---
+    if(hcs.length){
+      hcs.forEach(e=>{e.style.animation='none';});
+      await sleep(60);
+      const rects=hcs.map(e=>e.getBoundingClientRect());
+      let cross=[];
+      for(let i=0;i<rects.length;i++)for(let j=i+1;j<rects.length;j++){
+        const a=rects[i],b=rects[j];
+        if(a.left<b.right&&b.left<a.right&&a.top<b.bottom&&b.top<a.bottom)cross.push(i+'x'+j);
+      }
+      chk(cross.length===0,T+'.hc 同士が重なっていない（重なると実効αが上がり AA を割る）'
+          +(cross.length?' → '+cross.join(','):''));
+      // .btn の外形（6px の影を含む）に、ゆらぎ 6px を足しても届かないこと
+      const btn=d.querySelector('#cta-hero').getBoundingClientRect();
+      const gaps=rects.map(r=>Math.round(btn.top-6-(r.bottom)));
+      chk(Math.min(...gaps)>6,
+          T+'どの .hc も CTA の外形（影 6px 込み）に重ならない（1.4.11）: 余裕 '+gaps.join(' / ')+'px');
+      // 顔は見出しより上（§3-4 の不等式1）
+      const ttl=d.querySelector('.hero-title').getBoundingClientRect();
+      chk(rects.every(r=>r.top+30<=ttl.top),
+          T+'顔（上端から約30px）が見出しの上端より上にある: hc上端 '+rects.map(r=>Math.round(r.top)).join('/')+' / 見出し上端 '+Math.round(ttl.top));
+
+      // --- コントラスト実測（§7-1）---
+      const em=d.querySelector('.hero-title em').getBoundingClientRect();
+      const h1=d.querySelector('.hero-title').getBoundingClientRect();
+      const sub=d.querySelector('.hero-sub').getBoundingClientRect();
+      const TXT={'見出し2行目 --must':hex('#cf9a24'),'見出し1行目 --paper':hex('#f2ece0'),'本文 #c3cbdd':hex('#c3cbdd')};
+      const AREA={'見出し2行目 --must':em,'見出し1行目 --paper':{left:h1.left,right:h1.right,top:h1.top,bottom:em.top},
+                  '本文 #c3cbdd':sub};
+      for(const [name,col] of Object.entries(TXT)){
+        const need=name==='本文 #c3cbdd'?4.5:3;      // 見出しは 25.6px 以上 / 900 → 大きな文字
+        const tl=lum(col[0],col[1],col[2]);
+        let worst=null,worstI=null;
+        hcs.forEach((im,i)=>{
+          const b=worstPixel(im,rects[i],parseFloat(getComputedStyle(im).opacity),AREA[name]);
+          if(b&&(!worst||b.l>worst.l)){worst=b;worstI=i;}
+        });
+        if(!worst){p('     '+T+name+'：背後に .hc の画素なし（比は地色のまま）');continue;}
+        const onLine=ratio(tl,worst.l), between=ratio(tl,worst.inter);
+        chk(onLine>=need,
+          T+name+' の背後に .hc がある最悪画素で '+onLine.toFixed(3)+':1（基準 '+need+':1）'
+          +' / 線の間 '+between.toFixed(3)+':1'
+          +' ← '+(hcs[worstI].src.match(/([a-d]\d)\.webp/)||[])[1]
+          +' rgb('+worst.rgb.join(',')+') 実効α='+worst.a);
+      }
+      // CTA の面（--verm）は .hc が重なっていない前提で既存の比を保つ
+      {
+        const verm=hex('#c8412e'),vl=lum(...verm);
+        let hit=null;
+        hcs.forEach((im,i)=>{
+          const b=worstPixel(im,rects[i],parseFloat(getComputedStyle(im).opacity),
+            {left:btn.left-6,right:btn.right+6,top:btn.top-6,bottom:btn.bottom+6});
+          if(b&&(!hit||b.l>hit.l))hit=b;
+        });
+        const bg=hit?hit.l:lum(...LINE);
+        chk(!hit,T+'CTA の外形に .hc の画素が1つも無い（--verm と背景の比 '+ratio(vl,bg).toFixed(3)
+            +':1 は .hc に影響されない）');
+      }
+      hcs.forEach(e=>{e.style.animation='';});
+    }
+
+    // --- ファーストビュー（判断⑩）---
+    {
+      const q1=d.querySelector('#lq-list .q-card[data-pos="0"]');
+      chk(!!q1,T+'ファーストビュー側に Q1 のカードがある');
+      const b=q1.getBoundingClientRect();
+      const part=s=>{const e=q1.querySelector(s);return e?Math.round(e.getBoundingClientRect().bottom):null;};
+      p('     '+T+'Q1 カード y '+Math.round(b.top)+'〜'+Math.round(b.bottom)+' / fold '+vh
+        +'（質問文 '+part('.q-text')+' / 選択肢 '+part('.choice-list')+' / 目盛 '+part('.spec-track')+'）');
+      if(vw===390&&vh===844){
+        chk(b.bottom<=vh,'390x844: Q1 のカード全体がファーストビューに入る: 下端 '+Math.round(b.bottom)+'px ≦ '+vh);
+      }else if(vw===320&&vh===568){
+        chk(b.top<vh,'320x568: Q1 のカードがファーストビューに顔を出す: 上端 '+Math.round(b.top)+'px < '+vh);
+        chk(part('.q-text')!==null,'320x568: 質問文の要素がある（どこまで入るかは上の実測ログ）');
+      }
+    }
+
+    // --- 動きの抑制（§7-3）。CSSOM から実際にパースされた規則を見る ---
+    if(vw===390){
+      let kf=null,rm=false;
+      for(const ss of d.styleSheets){
+        let rules;try{rules=ss.cssRules;}catch(e){continue;}
+        for(const r of rules){
+          if(r.type===CSSRule.KEYFRAMES_RULE&&r.name==='hcFloat')kf=r;
+          if(r.type===CSSRule.MEDIA_RULE&&/prefers-reduced-motion/.test(r.conditionText)){
+            for(const ir of r.cssRules)if(ir.selectorText==='.hc'&&ir.style.animationName==='none')rm=true;
+          }
+        }
+      }
+      chk(!!kf,'@keyframes hcFloat がスタイルシートに存在する');
+      if(kf){
+        const at=n=>[...kf.cssRules].find(r=>r.keyText.split(',').map(s=>s.trim()).includes(n));
+        const a0=at('0%'),a100=at('100%');
+        const zero=r=>!r||/^translateY\(0(px)?\)$/.test((r.style.transform||'').trim());
+        chk(!!a0&&zero(a0)&&zero(a100),
+            'hcFloat の 0% / 100% がともに translateY(0)（抑制時にずれた位置で止まらない）: '
+            +(a0?a0.style.transform:'なし'));
+      }
+      chk(rm,'@media (prefers-reduced-motion:reduce) の .hc{animation:none} が実際にパースされている');
+      // 抑制されていない通常時は、実際に animation が走っている
+      const st=hcs[0]&&getComputedStyle(hcs[0]);
+      chk(!!st&&st.animationName==='hcFloat'&&parseFloat(st.animationDuration)>=11,
+          '通常時はゆらぎが動いている: '+(st&&st.animationName)+' '+(st&&st.animationDuration));
+    }
+  }
+  f.style.width='390px'; f.style.height='844px';
+
+  // 共有リンク（?ref=share）で来た人には浮遊キャラを出さない（§4 の状態表）
+  await load('index.html?type=HALS&ref=share'); w=f.contentWindow; d=f.contentDocument; await sleep(900);
+  chk(!!d.querySelector('.shared-banner'),'?ref=share で .shared-banner が出る');
+  chk(d.querySelectorAll('.hc').length===0||getComputedStyle(d.querySelector('.hero-cast')).display==='none',
+      '.shared-banner があるときは浮遊キャラを出さない（見えない絵を読まない）');
 
   p('\n===== '+(fail===0?'ALL PASS':fail+' FAILURES')+' =====');
 }catch(e){p('EXCEPTION: '+(e&&e.stack||e));p('\n===== EXCEPTION =====');}

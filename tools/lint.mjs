@@ -186,16 +186,19 @@ console.log('[lint] 診断体験の改訂：消したものが戻っていない
   check(/20問・約3分/.test(html), '「20問・約3分」は .hero-sub に残っている（情報自体は消えていない）');
 
   // キャラ画像の頭が切れないようにする object-position（tools/measure-heads.mjs の実測駆動）
+  // .cc（キャラマーキー）は廃止したので、--head を持つのは .tc だけになった。
   const IMG_CODES = ['a1','a2','a3','a4','b1','b2','b3','b4','c1','c2','c3','c4','d1','d2','d3','d4'];
   const noHead = IMG_CODES.filter(c =>
-    !new RegExp(`\\.tc:has\\(img\\[src\\*="chars/${c}"\\]\\),\\.cc:has\\(img\\[src\\*="sm/${c}"\\]\\)\\{--head:`).test(html));
+    !new RegExp(`\\.tc:has\\(img\\[src\\*="chars/${c}"\\]\\)\\{--head:`).test(html));
   check(noHead.length === 0,
     `全16体に --head（頭頂位置の実測値）が定義されている${noHead.length ? ' → 欠落: ' + noHead.join(',') : ''}`);
   // 固定値に戻すと頭頂の低いキャラ（c4=9.2%）が切れる。--head 経由でしか指定させない。
-  for (const [sel, re] of [['.tc img', /\.tc img\{object-position:50% clamp\(0%,calc\(\(var\(--head/],
-                           ['.cc img', /\.cc img\{object-position:50% clamp\(0%,calc\(\(var\(--head/]]) {
-    check(re.test(html), `${sel} の object-position は --head から算出している（固定値に戻していない）`);
-  }
+  check(/\.tc img\{object-position:50% clamp\(0%,calc\(\(var\(--head/.test(html),
+    '.tc img の object-position は --head から算出している（固定値に戻していない）');
+  // .cc 側の算出式が残っていないこと。存在しないセレクタの計算式を残すと
+  // 「マーキーを復活させれば使える」と誤読される（design §2-2 / W-3）。
+  const ccHead = (html.match(/\.cc:has\(|\.cc img\{object-position/g) || []).length;
+  check(ccHead === 0, `.cc 向けの --head / object-position が0件（帯の廃止に追従）${ccHead ? ` → ${ccHead}件` : ''}`);
   check(/\.res-char\{[^}]*object-position:50% 50%/.test(html),
     '.res-char は 50% 50% のまま（f>=1 で縦の切り取りが起きないため対象外）');
   check(fs.existsSync(path.join(ROOT, 'tools/measure-heads.mjs')),
@@ -222,6 +225,115 @@ console.log('[lint] 診断体験の改訂：消したものが戻っていない
   for (const ev of ['lp_q_answer', 'lq_continue_click', 'type_peek']) {
     check(new RegExp(`track\\('${ev}'`).test(html), `${ev} は track() 経由で送る（GA_ID が空なら送信しない）`);
   }
+}
+
+// --- ヒーローの作り替え（docs/design/hero-floating-characters.md）---------
+// マーキーと3ステップは「消した」ことが受け入れ基準そのものなので、
+// 消えたままであることを名指しで押さえる。代わりに入った .hero-cast も同じ強さで見る。
+console.log('[lint] ヒーロー：マーキー廃止 / 3ステップ削除 / 浮遊キャラ');
+{
+  const live = html
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/^\s*\/\/.*$/gm, '');
+
+  // (1) キャラのスライドする帯（判断①）
+  const marquee = live.match(/char-strip-outer|char-strip-track|csScroll|\bcc-code\b|\bcc-name\b|class="cc"/g) || [];
+  check(marquee.length === 0,
+    `キャラマーキーの残骸が0件（.char-strip-outer / .char-strip-track / @keyframes csScroll / .cc 系）${marquee.length ? ' → ' + [...new Set(marquee)].join(', ') : ''}`);
+  // 16タイプ一覧（.tc）は残っている。帯だけを消したことを両側から確かめる。
+  check(/\.tc:has\(img\[src\*="chars\/c4"\]\) img\{/.test(html),
+    'DAWG(c4) の切り取り例外は .tc 側に残っている（帯と一緒に消していない）');
+  check(/id="type-overview"/.test(html), '16タイプ一覧（#type-overview）は残っている');
+
+  // (2) 「3ステップで完了」の節（判断⑨）
+  const steps = live.match(/class="steps"|class="step"|\bstep-n\b|\bstep-lbl\b|\bstep-desc\b|3ステップで完了|How it works/g) || [];
+  check(steps.length === 0,
+    `「3ステップで完了」の残骸が0件（.steps / .step-n / .step-lbl / .step-desc / 見出し文言）${steps.length ? ' → ' + [...new Set(steps)].join(', ') : ''}`);
+  // 消えたセレクタが --lat / --jp-disp のセレクタ列に取り残されていないこと
+  const latSel = (html.match(/\.res-code,[^{]*\{\s*\n?\s*font-family:var\(--lat\)/) || [])[0] || '';
+  check(!/\.step-n|\.cc-code/.test(latSel),
+    `--lat のセレクタ列に .step-n / .cc-code が残っていない`);
+  const dispSel = (html.match(/\.hero-title,\.res-type-name,[^{]*\{/) || [])[0] || '';
+  check(!/\.step-n|\.cc-code|\.cc\b/.test(dispSel),
+    '--jp-disp のセレクタ列に .step-n / .cc 系が残っていない');
+
+  // (3) ヒーローの高さ（判断②）
+  const heroRule = (html.match(/^\.hero\{[^}]*\}/m) || [])[0] || '';
+  check(!/min-height/.test(heroRule),
+    `.hero に min-height が無い（高さは中身の積算そのもの）: ${heroRule.slice(0, 60)}…`);
+  check(/\.hero-sub\{margin-bottom:28px;\}/.test(html),
+    '.hero-sub の下マージンが 28px（廃止した帯から移送した値）');
+
+  // (4) 浮遊キャラの層（判断③⑤⑦⑬）
+  check(/\.hero-cast\{/.test(html) && /\.hc\{/.test(html) && /@keyframes hcFloat\{/.test(html),
+    '.hero-cast / .hc / @keyframes hcFloat が定義されている');
+  check(/\.hero-cast\{[^}]*pointer-events:none/.test(html),
+    '.hero-cast は pointer-events:none（押せる見た目を持たせない）');
+  check(/\.hero-cast\{[^}]*z-index:0/.test(html) && /\.hero-inner\{[^}]*z-index:1/.test(html),
+    '.hero-cast は .hero-inner（z-index:1）より下の層');
+  check(/@keyframes hcFloat\{0%,100%\{transform:translateY\(0\);\}/.test(html),
+    'hcFloat の 0% と 100% がともに translateY(0)（動きを止めても設計位置で静止する）');
+  check(/@media \(prefers-reduced-motion:reduce\)\{\.hc\{animation:none;\}\}/.test(html),
+    'prefers-reduced-motion でゆらぎを止める指定が明示されている');
+  check(!/max-height:560px/.test(html),
+    '@media (max-height:560px) による浮遊レイヤーの除外は撤去されている（判断⑬）');
+  check(!/--hc-[aytd]:[^;]*svh/.test(html) && /\.hc\{[^}]*height:210px/.test(html),
+    '.hc の寸法は px（svh を使っていない。判断⑬）');
+  check(/\.hero:has\(\.shared-banner\) \.hero-cast\{display:none;\}/.test(html),
+    '共有リンク着地時（.shared-banner）は浮遊キャラを出さない');
+  // α の上限。.19 で余裕 0.2%、.20 で見出し2行目が 2.91:1 になり AA（3:1）を割る。
+  const alphas = [...html.matchAll(/--hc-a:\s*\.?(\d+)/g)].map(m => Number('.' + m[1]));
+  check(alphas.length >= 3 && Math.max(...alphas) <= 0.18,
+    `.hc の不透明度が上限 .18 以下（AA 3:1 を決めているのは見出し2行目 --must）: ${alphas.join(' / ')}`);
+  // ゆらぎの振幅。8px 以上にすると top:66px から頭が固定ヘッダー（60px）にもぐる。
+  const amps = [...html.matchAll(/--hc-y:\s*-(\d+)px/g)].map(m => Number(m[1]));
+  check(amps.length >= 2 && Math.max(...amps) <= 6,
+    `ゆらぎの振幅が 6px 以下（ヘッダー下端 60px に頭を突っ込ませない）: ${amps.join(' / ')}px`);
+  // キャストは4体固定・スマホは両端2体（判断③）
+  check(/const CAST=\[\['a1',1\],\['b3',2\],\['c1',3\],\['d1',4\]\]/.test(html),
+    'キャストは a1 / b3 / c1 / d1 の4体（.hero::after の4色バーと同じ並び）');
+  check(/matchMedia\('\(min-width:768px\)'\)\.matches\?CAST:\[CAST\[0\],CAST\[3\]\]/.test(html),
+    'スマホ（<768px）では両端の2体だけを挿入する');
+  check(/box\.setAttribute\('aria-hidden','true'\)/.test(html) && /im\.alt='';/.test(html),
+    '浮遊キャラは aria-hidden + alt="" の二重で読み上げから外す');
+  check(/im\.loading='lazy'/.test(html) && /im\.decoding='async'/.test(html),
+    '浮遊キャラは lazy / async（文字とCTAの描画を待たせない）');
+  // src はテンプレート連結なので、上の「画像が実在する」検査では
+  // ディレクトリ止まりでしか照合できない。4体を名指しで確かめる。
+  {
+    const cast = ['a1', 'b3', 'c1', 'd1'].map(c => `images/chars/sm/${c}.webp`);
+    const gone = cast.filter(f => !fs.existsSync(path.join(ROOT, f)));
+    check(gone.length === 0, `浮遊キャラ4体の素材が実在する${gone.length ? ' → 欠落: ' + gone.join(', ') : ''}`);
+    if (gone.length === 0) {
+      const size = f => fs.statSync(path.join(ROOT, f)).size;
+      const sp = size(cast[0]) + size(cast[3]);      // スマホは両端の2体
+      const pc = cast.reduce((s, f) => s + size(f), 0);
+      // 帯の廃止で 16枚（sm/ 全部）の取得が消えた。装飾を足して通信量は減る側に居ること。
+      check(pc <= 100 * 1024,
+        `浮遊キャラの通信量が上限内（スマホ ${(sp / 1024).toFixed(1)}KB / PC ${(pc / 1024).toFixed(1)}KB ≦ 100KB）`);
+    }
+  }
+
+  // (5) 装飾円とシルエット（判断⑧⑪）
+  check(/\.hero \.hero-orb\{display:none;\}/.test(html),
+    'ヒーローの装飾円 .o1/.o2/.o3 は出さない（DOM は残す）');
+  check(/class="hero-orb o1"/.test(html), '装飾円の DOM は消していない（結果画面の .ro とは別物）');
+  check(/\.hero-sil,\.result-sil,\.tc-sil\{display:none;\}/.test(html),
+    '.hero-sil / .result-sil / .tc-sil は display:none のまま維持');
+
+  // (6) 文言（判断⑫⑭）
+  check(/id="cta-hero"[^>]*>20問すべてに答える →</.test(html),
+    'ヒーローCTAの文言が「20問すべてに答える →」');
+  check(/set\('cta-hero','20問すべてに答える →'/.test(html),
+    'updateCtas() の未回答時の文言もヒーローCTAだけ差し替えている');
+  check(/set\('cta-grid','診断をはじめる →'/.test(html),
+    '16タイプ節のCTAは「診断をはじめる →」のまま（ヒーローだけを変えた）');
+  const sub = (html.match(/<p class="hero-sub">([\s\S]*?)<\/p>/) || [])[1] || '';
+  check(!!sub && !/本格/.test(sub),
+    `.hero-sub から「本格」（検証できない自称）が落ちている: ${sub.replace(/<br>/g, ' / ')}`);
+  check(/職種の例/.test(sub), '.hero-sub に「職種の例」が入っている（3ステップの3項目めの受け皿）');
+  check(/探し方のヒント/.test(sub), '.hero-sub の「探し方のヒント」は残っている');
 }
 
 // --- 回答UI：A / B が画面に出ていること（参考実装 quiz-vertical.js の構成）---

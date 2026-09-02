@@ -1,8 +1,8 @@
 // measure-heads — キャラ画像の「頭頂の縦位置」を実測し、
-//                  .tc / .cc の object-position を算出する。
+//                  .tc の object-position を算出する。
 //
 // なぜ要るか:
-//   .tc img / .cc img は object-fit:cover で、画像（縦長）を横長寄りの枠に嵌めている。
+//   .tc img は object-fit:cover で、画像（縦長）を横長寄りの枠に嵌めている。
 //   このとき縦方向が切り取られるので、object-position の Y をどこに置くかで
 //   頭が枠外に出るかどうかが決まる。全16体で固定値（50% 6%）にしていたが、
 //   頭頂の位置はキャラごとに 1.2%〜9.2% とばらついており、固定値では
@@ -109,7 +109,7 @@ const MEASURE = `(async()=>{
 const FRAMES = `(()=>{
   const r=s=>{const e=document.querySelector(s);if(!e)return null;
     const b=e.getBoundingClientRect();return {w:+b.width.toFixed(2),h:+b.height.toFixed(2)};};
-  return JSON.stringify({vw:innerWidth,tc:r('#type-overview .tc img'),cc:r('.char-strip-track .cc img'),
+  return JSON.stringify({vw:innerWidth,tc:r('#type-overview .tc img'),
                          res:r('.res-char'),tp:r('.tp-img'),sb:r('.sb-img')});
 })()`;
 
@@ -135,7 +135,7 @@ for (const c of CODES) {
 }
 if (smWarn) {
   console.log(`\n★ sm/ 版と頭頂が1ポイント以上ずれている画像が ${smWarn} 件あります。`);
-  console.log('  .cc（sm/ を使う）には sm/ 側の実測値を使うこと。');
+  console.log('  sm/ を使う箇所（.hero-cast の .hc など）には sm/ 側の実測値を使うこと。');
 } else {
   console.log('\n  sm/ 版は縮小のみで頭頂の位置は同じ（差はすべて1ポイント未満）。--head は共用してよい。');
 }
@@ -144,17 +144,17 @@ console.log('\n=== 枠のサイズと可視率 f = 枠高 / (枠幅 × 画像比
 console.log('  f が小さいほど縦を強く切り取る。f>=1 なら縦の切り取りは起きない（Y は無関係）。');
 const ratio = heads.a1.big.h / heads.a1.big.w;
 const fOf = (fr) => fr ? +(fr.h / (fr.w * ratio)).toFixed(3) : null;
-const worst = { tc: 1, cc: 1 };
+const worst = { tc: 1 };
 for (const fr of frames) {
-  const line = ['tc', 'cc', 'res', 'tp', 'sb'].map(k => {
+  const line = ['tc', 'res', 'tp', 'sb'].map(k => {
     const f = fOf(fr[k]);
     if (f === null) return `${k}:—`;
-    if (k === 'tc' || k === 'cc') worst[k] = Math.min(worst[k], f);
+    if (k === 'tc') worst[k] = Math.min(worst[k], f);
     return `${k}:${fr[k].w}x${fr[k].h} f=${f}${f >= 1 ? '(切取なし)' : ''}`;
   }).join('  ');
   console.log(`  vw=${String(fr.vw).padStart(3)}  ${line}`);
 }
-console.log(`\n  採用する f（最小＝最も強く切り取る条件）: .tc=${worst.tc} / .cc=${worst.cc}`);
+console.log(`\n  採用する f（最小＝最も強く切り取る条件）: .tc=${worst.tc}`);
 console.log('  ※ f が小さいほど必要な Y も小さくなる。最小の f で決めた Y は、');
 console.log('    それより f が大きい（＝切り取りが弱い）幅でも頭が入る。だから最小を採る。');
 
@@ -162,11 +162,10 @@ console.log('    それより f が大きい（＝切り取りが弱い）幅で
 const yFor = (head, f) => Math.max(0, Math.min(100, +(((head - 100 * MARGIN * f) / (1 - f)).toFixed(1))));
 const off = f => +(100 * MARGIN * f).toFixed(3);   // 分子の定数項
 const den = f => +(1 - f).toFixed(3);              // 分母 (1 − f)
-const fr390 = frames.find(f => f.vw === 390);
 
 console.log(`\n=== index.html に貼るCSS（余白 m=${MARGIN}）===`);
 console.log('/* --- キャラ画像の頭が切れないようにする（object-position の実測駆動）-------');
-console.log('   .tc img / .cc img は縦長画像（800x1200）を横長寄りの枠に object-fit:cover で');
+console.log('   .tc img は縦長画像（800x1200）を横長寄りの枠に object-fit:cover で');
 console.log('   嵌めるため、縦が切り取られる。切り取り位置を全16体で固定していたが、');
 console.log(`   頭頂の位置は ${Math.min(...CODES.map(c => heads[c].big.head))}%〜${Math.max(...CODES.map(c => heads[c].big.head))}% とばらついており、固定値では両端のどちらかが必ず切れる。`);
 console.log('');
@@ -179,17 +178,15 @@ console.log(`     m = ${MARGIN}`);
 console.log(`     .tc img … 枠幅は可変（vw=480 で ${frames[0].tc.w}px 〜 vw=320 で ${frames[frames.length - 1].tc.w}px）。`);
 console.log(`               f は ${worst.tc}〜${Math.max(...frames.map(x => fOf(x.tc)))}。最も強く切り取る f=${worst.tc} で決める。`);
 console.log('               （f が大きい幅では余白が増えるだけで、頭は必ず入る）');
-console.log(`     .cc img … 枠 ${fr390.cc.w}x${fr390.cc.h} 固定。f=${worst.cc}`);
 console.log('   .res-char / .tp-img / .sb-img は f>=1 で縦の切り取りが起きないため対象外。 */');
 for (const c of CODES) {
-  console.log(`.tc:has(img[src*="chars/${c}"]),.cc:has(img[src*="sm/${c}"]){--head:${heads[c].big.head};}`);
+  console.log(`.tc:has(img[src*="chars/${c}"]){--head:${heads[c].big.head};}`);
 }
 console.log(`.tc img{object-position:50% clamp(0%,calc((var(--head,6) * 1% - ${off(worst.tc)}%) / ${den(worst.tc)}),100%);}`);
-console.log(`.cc img{object-position:50% clamp(0%,calc((var(--head,5) * 1% - ${off(worst.cc)}%) / ${den(worst.cc)}),100%);}`);
 
 console.log('\n=== 算出される Y（目視確認用。CSSには書かない）===');
-console.log('code  head    .tc の Y   .cc の Y');
+console.log('code  head    .tc の Y');
 for (const c of CODES) {
-  console.log(`${c}    ${String(heads[c].big.head).padStart(4)}%  ${String(yFor(heads[c].big.head, worst.tc)).padStart(8)}%  ${String(yFor(heads[c].big.head, worst.cc)).padStart(7)}%`);
+  console.log(`${c}    ${String(heads[c].big.head).padStart(4)}%  ${String(yFor(heads[c].big.head, worst.tc)).padStart(8)}%`);
 }
 process.exit(0);

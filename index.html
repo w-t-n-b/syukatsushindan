@@ -52,9 +52,10 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .page-in{animation:pageIn .34s cubic-bezier(.33,1,.68,1) forwards;}
 @keyframes pageIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
 /* padding-bottom は持たせない。.wrap は「画面の最後の塊」だった頃の名残で
-   下に 100px を持っていたが、いまは LP の中間セクション（How it works /
+   下に 100px を持っていたが、いまは LP の中間セクション（LP埋め込み質問 /
    全16タイプ）にも使われている。そこでは中身の下に 100px の空白が居座り、
-   .steps の下端から .type-grid の上端までが 329px 空く原因になっていた。
+   当時あった「3ステップ」の下端から .type-grid の上端までが 329px 空く
+   原因になっていた（3ステップの節そのものは後に削除した）。
    セクション間の空きは、各セクション側の padding（40px + 40px）で決める。 */
 .wrap{max-width:480px;margin:0 auto;padding:0 16px;}
 .rpl{position:relative;overflow:hidden;}
@@ -93,7 +94,10 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
    片数や色を削るのではなく機能ごと削除している（仕様 §C-5・オーナー判断）。 */
 
 /* HERO */
-.hero{min-height:100svh;background:#edf3fd;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 16px 60px;position:relative;overflow:hidden;}
+/* min-height:100svh は持たない。高さは中身の積算そのもの（420〜477px）。
+   ビューポートを1画面ぶん占有していたぶんを削って、ファーストビューに
+   最初の質問カードを入れる（docs/design/hero-floating-characters.md 判断②）。 */
+.hero{background:#edf3fd;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 16px 60px;position:relative;overflow:hidden;}
 .hero-orb{position:absolute;border-radius:50%;filter:none;pointer-events:none;}
 .o1{width:300px;height:300px;background:#dbe8fb;border:2px solid rgba(15,23,42,.10);top:-110px;right:-90px;opacity:1;}
 .o2{width:170px;height:170px;background:transparent;border:14px solid rgba(207,154,36,.28);bottom:-50px;left:-46px;opacity:1;}
@@ -123,23 +127,11 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .cont-sub{font-size:.7rem;color:var(--mid);margin-top:2px;display:block;}
 .cont-arrow{color:var(--forest);font-weight:900;}
 
-/* CHAR SCROLL STRIP */
-.char-strip-outer{width:100%;overflow:hidden;margin-bottom:28px;position:relative;}
-.char-strip-outer::before,.char-strip-outer::after{content:'';position:absolute;top:0;bottom:0;width:62px;z-index:2;pointer-events:none;}
-.char-strip-outer::before{left:0;background:linear-gradient(90deg,#edf3fd 0%,rgba(237,243,253,0) 100%);}
-.char-strip-outer::after{right:0;background:linear-gradient(270deg,#edf3fd 0%,rgba(237,243,253,0) 100%);}
-.char-strip-track{display:flex;gap:14px;width:max-content;animation:csScroll 34s linear infinite;}
-.char-strip-track:hover{animation-play-state:paused;}
-@keyframes csScroll{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
-.cc{flex-shrink:0;background:var(--paper);border:1.5px solid var(--navy);border-radius:7px;padding:14px 10px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;box-shadow:3px 3px 0 rgba(15,23,42,.16);width:92px;cursor:pointer;transition:transform .2s,box-shadow .2s;position:relative;overflow:hidden;}
-.cc::before{content:'';position:absolute;top:0;right:0;width:20px;height:6px;background:var(--blue2);}
-.cc:nth-child(4n+2)::before{background:var(--lav);}
-.cc:nth-child(4n+3)::before{background:var(--forest);}
-.cc:nth-child(4n)::before{background:var(--must);}
-.cc:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 rgba(15,23,42,.18);}
-.cc img{width:64px;height:64px;object-fit:contain;}
-.cc-code{font-family:var(--disp);font-size:11px;font-weight:700;color:var(--blue2);letter-spacing:1.5px;margin-top:2px;}
-.cc-name{font-size:6.5px;color:var(--mid);text-align:center;line-height:1.5;font-weight:700;}
+/* キャラのスライドする帯（.char-strip-outer / .char-strip-track / .cc /
+   @keyframes csScroll）は廃止した。跡地には何も置かない。帯が持っていた
+   margin-bottom:28px だけを .hero-sub の下へ移してある。
+   背景に薄く浮かぶキャラ（.hero-cast / .hc）が役割を引き継ぐ。
+   詳細は docs/design/hero-floating-characters.md §2。 */
 
 /* BUTTONS */
 .btn{display:block;width:100%;padding:18px 24px;background:var(--blue2);color:#fff;border:1.5px solid var(--navy);font-family:var(--disp);font-size:1.05rem;font-weight:700;letter-spacing:2px;cursor:pointer;text-align:center;border-radius:9px;box-shadow:4px 4px 0 var(--navy);transition:transform .14s,box-shadow .14s,background .2s;position:relative;overflow:hidden;}
@@ -150,15 +142,10 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .btn-ghost:hover{border-color:var(--blue2);color:var(--blue2);background:var(--blue-l);}
 .btn-wrap{display:flex;flex-direction:column;gap:0;width:100%;max-width:320px;margin:0 auto;}
 
-/* STEPS */
-.steps{display:flex;align-items:flex-start;position:relative;margin-bottom:0;}
-.steps::before{content:'';position:absolute;top:22px;left:calc(16.6% + 10px);right:calc(16.6% + 10px);height:2px;background:var(--blue-m);z-index:0;}
-.step{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;position:relative;z-index:1;}
-.step-n{width:44px;height:44px;border-radius:50%;background:var(--blue2);color:#fff;font-family:var(--disp);font-size:1rem;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:2px 2px 0 var(--navy);border:2px solid var(--navy);}
-.step:nth-child(2) .step-n{background:var(--verm);}
-.step:nth-child(3) .step-n{background:var(--forest);}
-.step-lbl{font-size:9px;font-weight:900;color:var(--navy);letter-spacing:1px;text-align:center;line-height:1.5;}
-.step-desc{font-size:8px;color:var(--light);text-align:center;}
+/* 「3ステップで完了」の節（.steps / .step / .step-n / .step-lbl /
+   .step-desc）はセクションごと削除した（オーナー決定）。伝えていた3項目
+   （20問・約3分／タイプ判定／職種の例）は .hero-sub と #lq-done に残る。
+   詳細は docs/design/hero-floating-characters.md 判断⑨。 */
 
 /* TYPE GRID */
 .type-cat-hd{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
@@ -409,8 +396,8 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .hero-title,.sec-title,.res-type-name{letter-spacing:var(--ls-disp);}
 .hero-badge,.sub-head,.rb-title,.ca-lbl{letter-spacing:var(--ls-lbl);}
 /* 欧文のみの文字列に --lat を限定（混植を止める） */
-.res-code,.cc-code,.tc-code,.sub-code,.prog-num,.q-badge,.res-announce,
-.hdr-logo,.d-title,.step-n,.co-rank,.sec-lbl{
+.res-code,.tc-code,.sub-code,.prog-num,.q-badge,.res-announce,
+.hdr-logo,.d-title,.co-rank,.sec-lbl{
   font-family:var(--lat);letter-spacing:var(--ls-lat);
 }
 
@@ -441,9 +428,12 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .o3{background:rgba(139,132,182,.30);}
 .ro1{width:230px;height:230px;background:transparent;border:18px solid rgba(255,255,255,.07);top:-78px;right:-64px;}
 .ro2{width:130px;height:130px;background:var(--cat);opacity:.26;bottom:-40px;left:-34px;}
-/* 装飾のシルエットは出さない。素材が不透過だった頃は「低透明度の白い矩形」に
-   しかならず消していた。透過素材ではシルエットとして成立するようになったが、
-   復活させるかは意匠の判断なので現状は出さないまま（戻すならこの1行を消す）。 */
+/* 透過素材でもこの3つは出さない（決定済み）。理由:
+   .hero-sil は src が a3 で、暗い面では髪と袖しか残らない／
+   .result-sil は .char-frame の同じ絵の真後ろに重なり二重像になる／
+   .tc-sil は .tc の地が --paper（明るい面）なので汚れになる。
+   ヒーローの背景は .hero-cast / .hc が担う。
+   詳細は docs/design/hero-floating-characters.md §3-6。 */
 .hero-sil,.result-sil,.tc-sil{display:none;}
 
 /* 暗い面に載る文字 */
@@ -527,26 +517,9 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .famous-box::before{background:var(--cat);height:5px;}
 .sh{border:var(--bd) solid var(--navy);border-radius:var(--r-1);box-shadow:var(--sh-1);}
 
-/* --- #3 続き キャラマーキー：端のフェードは #edf3fd 直書きなので必ず直す -- */
-.char-strip-outer::before{background:linear-gradient(90deg,var(--ink-field) 0%,rgba(19,32,67,0) 100%);}
-.char-strip-outer::after{background:linear-gradient(270deg,var(--ink-field) 0%,rgba(19,32,67,0) 100%);}
-.char-strip-track{gap:14px;animation-duration:44s;}
-.cc{--cat:#1a56db;--cat-ink:#123c9b;
-  width:118px;padding:0 0 9px;background:var(--paper);
-  border:var(--bd) solid var(--navy);border-radius:var(--r-1);
-  box-shadow:var(--sh-1);overflow:hidden;gap:0;}
-.cc:has(img[src*="sm/b"]){--cat:#1d6b4c;--cat-ink:#14523a;}
-.cc:has(img[src*="sm/c"]){--cat:#c8412e;--cat-ink:#a4301f;}
-.cc:has(img[src*="sm/d"]){--cat:#4b4483;--cat-ink:#3d376c;}
-.cc img{width:100%;height:132px;object-fit:cover;
-  display:block;margin:0 0 7px;border-bottom:var(--bd) solid var(--navy);}
-/* object-position は下の「キャラ画像の頭が切れないようにする」ブロックで
-   キャラごとに算出している（固定値にすると頭頂の低いキャラが切れる）。 */
-.cc::before,.cc:nth-child(4n)::before,.cc:nth-child(4n+2)::before,.cc:nth-child(4n+3)::before{
-  top:auto;bottom:0;left:0;right:auto;width:100%;height:4px;background:var(--cat);}
-.cc-code{color:var(--cat-ink);font-size:13px;}
-.cc-name{font-size:10px;line-height:1.45;padding:0 5px;}   /* 6.5px は判読不能だった */
-.cc:hover{transform:translate(-2px,-2px);box-shadow:var(--sh-2);}
+/* --- #3 続き キャラマーキーの v2 上書きは、帯の廃止に伴ってすべて撤去した。
+       カテゴリ4色（--cat / --cat-ink）の注入は .tc / .result-hero / .type-peek
+       にも独立に書かれているので、体系は欠けていない。 */
 
 /* --- #10 16タイプグリッド：4列 → 2列。顔 約7px → 約49px ----------------- */
 .type-grid{grid-template-columns:repeat(2,1fr);gap:10px;}
@@ -573,8 +546,7 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
    素材が不透過だった頃は、この padding で空いた左右の余白に画像の地色
    （実測平均 #f7efe2）を敷いて継ぎ目を隠していた。透過素材では余白に
    カードの地色（--paper）がそのまま出るので、地色の指定は撤去する。 */
-.tc:has(img[src*="chars/c4"]) img,
-.cc:has(img[src*="sm/c4"]) img{
+.tc:has(img[src*="chars/c4"]) img{
   box-sizing:border-box;padding:0 18.6%;
   object-position:50% 16%;
 }
@@ -590,7 +562,7 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 
 /* --- キャラ画像の切り取り位置（現在は無効。下記の経緯のため残している）---
 
-   ★現状: .tc img / .cc img は枠を素材と同じ 2:3 にしたので縦の切り取りが起きない。
+   ★現状: .tc img は枠を素材と同じ 2:3 にしたので縦の切り取りが起きない。
      したがって以下の object-position は効いていない（f=1 で clamp が 0% を返す）。
      枠を再び横長にした場合にだけ必要になるので、算出方法ごと残してある。
      --head 自体は実測データとして有効（`make heads` で取り直せる）。
@@ -620,28 +592,25 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
                最も強く切り取る f=0.397 で決める。f が大きい幅では頭の上の余白が
                増えるだけなので、この1式で全幅をカバーできる。
                → 定数: 100·m·f = 1.588 / (1 − f) = 0.603
-     .cc img … 枠 114x132 固定。f=0.772
-               → 定数: 100·m·f = 3.088 / (1 − f) = 0.228
    .res-char（262x396）/ .tp-img（96x144）/ .sb-img（64x96）は f>=1 で
    縦の切り取りが起きないため対象外。触らないこと。 */
-.tc:has(img[src*="chars/a1"]),.cc:has(img[src*="sm/a1"]){--head:2.8;}
-.tc:has(img[src*="chars/a2"]),.cc:has(img[src*="sm/a2"]){--head:1.4;}
-.tc:has(img[src*="chars/a3"]),.cc:has(img[src*="sm/a3"]){--head:2.6;}
-.tc:has(img[src*="chars/a4"]),.cc:has(img[src*="sm/a4"]){--head:2.4;}
-.tc:has(img[src*="chars/b1"]),.cc:has(img[src*="sm/b1"]){--head:7;}
-.tc:has(img[src*="chars/b2"]),.cc:has(img[src*="sm/b2"]){--head:4.2;}
-.tc:has(img[src*="chars/b3"]),.cc:has(img[src*="sm/b3"]){--head:2.9;}
-.tc:has(img[src*="chars/b4"]),.cc:has(img[src*="sm/b4"]){--head:1.3;}
-.tc:has(img[src*="chars/c1"]),.cc:has(img[src*="sm/c1"]){--head:2.8;}
-.tc:has(img[src*="chars/c2"]),.cc:has(img[src*="sm/c2"]){--head:3.9;}
-.tc:has(img[src*="chars/c3"]),.cc:has(img[src*="sm/c3"]){--head:2.1;}
-.tc:has(img[src*="chars/c4"]),.cc:has(img[src*="sm/c4"]){--head:9.1;}
-.tc:has(img[src*="chars/d1"]),.cc:has(img[src*="sm/d1"]){--head:2.9;}
-.tc:has(img[src*="chars/d2"]),.cc:has(img[src*="sm/d2"]){--head:1.1;}
-.tc:has(img[src*="chars/d3"]),.cc:has(img[src*="sm/d3"]){--head:2.9;}
-.tc:has(img[src*="chars/d4"]),.cc:has(img[src*="sm/d4"]){--head:5.3;}
+.tc:has(img[src*="chars/a1"]){--head:2.8;}
+.tc:has(img[src*="chars/a2"]){--head:1.4;}
+.tc:has(img[src*="chars/a3"]){--head:2.6;}
+.tc:has(img[src*="chars/a4"]){--head:2.4;}
+.tc:has(img[src*="chars/b1"]){--head:7;}
+.tc:has(img[src*="chars/b2"]){--head:4.2;}
+.tc:has(img[src*="chars/b3"]){--head:2.9;}
+.tc:has(img[src*="chars/b4"]){--head:1.3;}
+.tc:has(img[src*="chars/c1"]){--head:2.8;}
+.tc:has(img[src*="chars/c2"]){--head:3.9;}
+.tc:has(img[src*="chars/c3"]){--head:2.1;}
+.tc:has(img[src*="chars/c4"]){--head:9.1;}
+.tc:has(img[src*="chars/d1"]){--head:2.9;}
+.tc:has(img[src*="chars/d2"]){--head:1.1;}
+.tc:has(img[src*="chars/d3"]){--head:2.9;}
+.tc:has(img[src*="chars/d4"]){--head:5.3;}
 .tc img{object-position:50% clamp(0%,calc((var(--head,6) * 1% - 3.97%) / 0.603),100%);}
-.cc img{object-position:50% clamp(0%,calc((var(--head,5) * 1% - 7.72%) / 0.228),100%);}
 
 /* --- 診断画面：軸の色手がかり（JS inline）は残し、枠とタイポだけ担当 ----- */
 .prog-area{background:var(--paper);border-bottom:var(--bd-heavy) solid var(--navy);}
@@ -1026,7 +995,10 @@ body[data-screen="screen-loading"] .ftr{display:none;}
 .hero-title{font-size:clamp(1.62rem,8vw,3rem);}
 .hero-badge{margin-bottom:16px;}
 .hero-title{margin-bottom:12px;}
-.hero-sub{margin-bottom:16px;}
+/* 16px だと本文段落と朱色の大きなCTAが密着し、CTAが段落の続きに見える。
+   廃止したキャラ帯（.char-strip-outer）が持っていた 28px をそのまま移送している
+   （新しい値を発明していない）。docs/design/hero-floating-characters.md §2-5。 */
+.hero-sub{margin-bottom:28px;}
 
 /* --- C-6: 16タイプ一覧のタップ先。結果全文ではなくタイプ紹介を出す --------
    .r-panel / .subtype-card の意匠を流用し、押した .tc の行の直後に展開する。 */
@@ -1071,6 +1043,57 @@ body[data-screen="screen-loading"] .ftr{display:none;}
 /* 相性キャラは押せなくなったので、押せるようには見せない */
 .compat-cbox img{cursor:default;}
 .compat-cbox img:hover{transform:none;}
+
+/* ==========================================================================
+   ヒーローの浮遊キャラ — docs/design/hero-floating-characters.md §3-4
+   寸法はすべて px。理由: .hero{min-height:100svh} を外した結果、ヒーローの
+   高さは 420〜477px でビューポートにほぼ依らなくなった。svh はもう
+   「.hero と同じ物差し」ではない（判断⑬）。
+   ========================================================================== */
+/* 装飾円はヒーローでは出さない。ヒーローが 434px になり装飾層と文字塊が同じ帯を
+   共有するため、円と .hc が重なると見出し2行目が AA（3:1）を割る。DOM は残す
+   （判断⑪）。結果画面の .ro1 / .ro2 は対象外。 */
+.hero .hero-orb{display:none;}
+
+.hero-cast{
+  position:absolute; inset:0;      /* .hero の padding box いっぱい */
+  z-index:0;                       /* .hero-inner は z-index:1。必ずその下 */
+  overflow:hidden;                 /* .hero の overflow:hidden に頼らず、層として自足させる */
+  pointer-events:none;
+}
+.hc{
+  position:absolute; display:block; width:auto;
+  top:66px;                        /* 固定ヘッダー（60px）の直下 */
+  height:210px;
+  opacity:var(--hc-a,.18);
+  /* 下端を溶かす。足で「立たせない」ことが浮遊の条件であり、同時に暗色に
+     なりがちな下半身（＝消えて汚れに見える部分）を意図的に落とす。
+     ★ マスクはコントラストの装置ではない。見出しはマスクが 1.0 の帯に載るので、
+        α の上限そのものが下限を決める（§7-1）。 */
+  -webkit-mask-image:linear-gradient(180deg,#000 0 52%,transparent 88%);
+          mask-image:linear-gradient(180deg,#000 0 52%,transparent 88%);
+  animation:hcFloat var(--hc-t,11s) ease-in-out infinite var(--hc-d,0s);
+}
+/* 0% と 100% がともに translateY(0)。prefers-reduced-motion の全体規則
+   （animation-duration:.01ms）で止めても設計位置で静止する（§7-3）。 */
+@keyframes hcFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(var(--hc-y,-6px));}}
+
+/* 手前の2体（端。スマホでもこの2体だけを出す） */
+.hc-1{left:-6vw;  --hc-a:.18; --hc-y:-6px; --hc-t:11s; --hc-d:0s;}
+.hc-4{right:-8vw; --hc-a:.16; --hc-y:-5px; --hc-t:14s; --hc-d:-2s;}
+/* 奥の2体（768px 以上でのみ挿入する。小さく・薄くして奥行きを作る） */
+.hc-2{left:24vw;  height:190px; --hc-a:.13; --hc-y:-4px; --hc-t:13s; --hc-d:-4s;}
+.hc-3{right:24vw; height:190px; --hc-a:.13; --hc-y:-4px; --hc-t:12s; --hc-d:-7s;}
+
+@media (min-width:768px){
+  .hc-1,.hc-4{height:270px;}      /* CTA上端 368px に対し下端 336px＝32px の余裕 */
+  .hc-2,.hc-3{height:240px;}
+  .hc-1{left:-3vw;} .hc-4{right:-4vw;}
+}
+/* 共有リンクから来た人（.shared-banner が入りヒーローが埋まる）には出さない */
+.hero:has(.shared-banner) .hero-cast{display:none;}
+/* 動きの抑制。全体規則でも止まるが、明示する（§7-3） */
+@media (prefers-reduced-motion:reduce){.hc{animation:none;}}
 </style>
 </head>
 <body data-screen="screen-title">
@@ -1106,67 +1129,15 @@ body[data-screen="screen-loading"] .ftr{display:none;}
     <div class="hero-inner">
       <div class="hero-badge">就活キャリア診断</div>
       <h1 class="hero-title">あなたの仕事タイプ、<em>16Typesから見つける。</em></h1>
-      <p class="hero-sub">20問・約3分でわかる本格キャリアタイプ診断。<br>あなたに向いている仕事の傾向と、探し方のヒントまで。</p>
+      <p class="hero-sub">20問・約3分でわかるキャリアタイプ診断。<br>あなたに向いている職種の例と、探し方のヒントまで。</p>
       <div class="cont-banner" id="cont-banner" style="display:none;" onclick="continueDiag()">
         <div class="cont-icon">💾</div>
         <div class="cont-body"><span class="cont-title">前回の途中から続ける</span><span class="cont-sub" id="cont-sub">Q?まで回答済み</span></div>
         <span class="cont-arrow">→</span>
       </div>
 
-      <!-- CHAR STRIP with ORIGINAL type names -->
-      <div class="char-strip-outer">
-        <div class="char-strip-track" id="char-strip-track">
-          <div class="cc"><img src="images/chars/sm/a1.webp" alt="HALS"><div class="cc-code">HALS</div><div class="cc-name">オンオフのエース</div></div>
-          <div class="cc"><img src="images/chars/sm/a2.webp" alt="HALG"><div class="cc-code">HALG</div><div class="cc-name">あったかリーダー</div></div>
-          <div class="cc"><img src="images/chars/sm/a3.webp" alt="HAWS"><div class="cc-code">HAWS</div><div class="cc-name">全力キャプテン</div></div>
-          <div class="cc"><img src="images/chars/sm/a4.webp" alt="HAWG"><div class="cc-code">HAWG</div><div class="cc-name">熱血プレイヤー</div></div>
-          <div class="cc"><img src="images/chars/sm/b1.webp" alt="HBLS"><div class="cc-code">HBLS</div><div class="cc-name">ナチュラルケアリスト</div></div>
-          <div class="cc"><img src="images/chars/sm/b2.webp" alt="HBLG"><div class="cc-code">HBLG</div><div class="cc-name">ほっこりサポーター</div></div>
-          <div class="cc"><img src="images/chars/sm/b3.webp" alt="HBWS"><div class="cc-code">HBWS</div><div class="cc-name">黒子のプロデューサー</div></div>
-          <div class="cc"><img src="images/chars/sm/b4.webp" alt="HBWG"><div class="cc-code">HBWG</div><div class="cc-name">まっすぐガーディアン</div></div>
-          <div class="cc"><img src="images/chars/sm/c1.webp" alt="DALS"><div class="cc-code">DALS</div><div class="cc-name">ひらめきクリエイター</div></div>
-          <div class="cc"><img src="images/chars/sm/c2.webp" alt="DALG"><div class="cc-code">DALG</div><div class="cc-name">じっくりクラフター</div></div>
-          <div class="cc"><img src="images/chars/sm/c3.webp" alt="DAWS"><div class="cc-code">DAWS</div><div class="cc-name">突き抜けパイオニア</div></div>
-          <div class="cc"><img src="images/chars/sm/c4.webp" alt="DAWG"><div class="cc-code">DAWG</div><div class="cc-name">のめり込みビルダー</div></div>
-          <div class="cc"><img src="images/chars/sm/d1.webp" alt="DBLS"><div class="cc-code">DBLS</div><div class="cc-name">冷静なブレイン</div></div>
-          <div class="cc"><img src="images/chars/sm/d2.webp" alt="DBLG"><div class="cc-code">DBLG</div><div class="cc-name">きっちり参謀</div></div>
-          <div class="cc"><img src="images/chars/sm/d3.webp" alt="DBWS"><div class="cc-code">DBWS</div><div class="cc-name">鉄壁コントローラー</div></div>
-          <div class="cc"><img src="images/chars/sm/d4.webp" alt="DBWG"><div class="cc-code">DBWG</div><div class="cc-name">コツコツマイスター</div></div>
-          <!-- 2周目 (シームレスループ用) -->
-          <div class="cc"><img src="images/chars/sm/a1.webp" alt="HALS"><div class="cc-code">HALS</div><div class="cc-name">オンオフのエース</div></div>
-          <div class="cc"><img src="images/chars/sm/a2.webp" alt="HALG"><div class="cc-code">HALG</div><div class="cc-name">あったかリーダー</div></div>
-          <div class="cc"><img src="images/chars/sm/a3.webp" alt="HAWS"><div class="cc-code">HAWS</div><div class="cc-name">全力キャプテン</div></div>
-          <div class="cc"><img src="images/chars/sm/a4.webp" alt="HAWG"><div class="cc-code">HAWG</div><div class="cc-name">熱血プレイヤー</div></div>
-          <div class="cc"><img src="images/chars/sm/b1.webp" alt="HBLS"><div class="cc-code">HBLS</div><div class="cc-name">ナチュラルケアリスト</div></div>
-          <div class="cc"><img src="images/chars/sm/b2.webp" alt="HBLG"><div class="cc-code">HBLG</div><div class="cc-name">ほっこりサポーター</div></div>
-          <div class="cc"><img src="images/chars/sm/b3.webp" alt="HBWS"><div class="cc-code">HBWS</div><div class="cc-name">黒子のプロデューサー</div></div>
-          <div class="cc"><img src="images/chars/sm/b4.webp" alt="HBWG"><div class="cc-code">HBWG</div><div class="cc-name">まっすぐガーディアン</div></div>
-          <div class="cc"><img src="images/chars/sm/c1.webp" alt="DALS"><div class="cc-code">DALS</div><div class="cc-name">ひらめきクリエイター</div></div>
-          <div class="cc"><img src="images/chars/sm/c2.webp" alt="DALG"><div class="cc-code">DALG</div><div class="cc-name">じっくりクラフター</div></div>
-          <div class="cc"><img src="images/chars/sm/c3.webp" alt="DAWS"><div class="cc-code">DAWS</div><div class="cc-name">突き抜けパイオニア</div></div>
-          <div class="cc"><img src="images/chars/sm/c4.webp" alt="DAWG"><div class="cc-code">DAWG</div><div class="cc-name">のめり込みビルダー</div></div>
-          <div class="cc"><img src="images/chars/sm/d1.webp" alt="DBLS"><div class="cc-code">DBLS</div><div class="cc-name">冷静なブレイン</div></div>
-          <div class="cc"><img src="images/chars/sm/d2.webp" alt="DBLG"><div class="cc-code">DBLG</div><div class="cc-name">きっちり参謀</div></div>
-          <div class="cc"><img src="images/chars/sm/d3.webp" alt="DBWS"><div class="cc-code">DBWS</div><div class="cc-name">鉄壁コントローラー</div></div>
-          <div class="cc"><img src="images/chars/sm/d4.webp" alt="DBWG"><div class="cc-code">DBWG</div><div class="cc-name">コツコツマイスター</div></div>
-        </div>
-      </div>
-
       <div class="btn-wrap">
-        <button class="btn rpl" id="cta-hero" onclick="addRipple(event,this);continueOrStart('hero')">診断をはじめる →</button>
-      </div>
-    </div>
-  </div>
-
-  <div style="background:var(--w);padding:40px 0;">
-    <div class="wrap">
-      <div class="sec-lbl">How it works</div>
-      <div class="sec-title">3ステップで完了</div>
-      <p class="sec-sub">4つの軸と20問で、あなたの働き方の傾向を分類します。</p>
-      <div class="steps">
-        <div class="step"><div class="step-n">1</div><div class="step-lbl">20問<br>回答</div><div class="step-desc">約3分</div></div>
-        <div class="step"><div class="step-n">2</div><div class="step-lbl">タイプ<br>判定</div><div class="step-desc">即時</div></div>
-        <div class="step"><div class="step-n">3</div><div class="step-lbl">職種<br>の例</div><div class="step-desc">業界別</div></div>
+        <button class="btn rpl" id="cta-hero" onclick="addRipple(event,this);continueOrStart('hero')">20問すべてに答える →</button>
       </div>
     </div>
   </div>
@@ -1850,7 +1821,10 @@ function renderProgSeg(id,curGroup){
 function updateCtas(){
   const rem=Qs.length-curQ,fresh=curQ<=0;
   const set=(id,base,cont)=>{const el=document.getElementById(id);if(el)el.textContent=fresh?base:cont;};
-  set('cta-hero','診断をはじめる →',`残り${rem}問を続ける →`);
+  /* ヒーローCTAだけ「診断をはじめる」ではない。同じ画面に質問カードが
+     見えるようになり、「はじめる」が下の質問に答えることも指してしまうため
+     （docs/design/hero-floating-characters.md 判断⑫）。 */
+  set('cta-hero','20問すべてに答える →',`残り${rem}問を続ける →`);
   set('cta-grid','診断をはじめる →',`残り${rem}問を続ける →`);
   set('cta-drawer','▶ 診断をはじめる',`▶ 残り${rem}問を続ける`);
   const sb=document.querySelector('.sb-cta');
@@ -2496,6 +2470,31 @@ function renderSharedBanner(code){
   scores[3]=code[2]==='L'?5:-5;
   scores[4]=code[3]==='S'?5:-5;
   showResult(true,'shared');
+})();
+
+/* ヒーローの浮遊キャラ（装飾）。docs/design/hero-floating-characters.md §6-1
+   ★ ?type= / ?ref=share の IIFE より後に置くこと（.shared-banner の判定のため）。
+   静的HTMLではなく JS で作る理由: (1) スマホでは2枚しか使わないので4枚ぶんの
+   タグを配らない (2) プリロードスキャナに拾わせない（書体・見出しより後でよい）
+   (3) 失敗しても何も壊れない。 */
+(function heroCast(){
+  const hero=document.querySelector('#screen-title .hero');
+  const inner=hero&&hero.querySelector('.hero-inner');
+  if(!inner||hero.querySelector('.hero-cast'))return;
+  if(hero.querySelector('.shared-banner'))return;          /* 共有リンク着地時は出さない */
+  /* 左→右。.hero::after の4色（a=青 / b=緑 / c=朱 / d=紫）と同じ並び */
+  const CAST=[['a1',1],['b3',2],['c1',3],['d1',4]];
+  const pick=matchMedia('(min-width:768px)').matches?CAST:[CAST[0],CAST[3]];
+  const box=document.createElement('div');
+  box.className='hero-cast'; box.setAttribute('aria-hidden','true');
+  for(const [code,slot] of pick){
+    const im=new Image(400,600);
+    im.className='hc hc-'+slot;
+    im.src='images/chars/sm/'+code+'.webp';
+    im.alt=''; im.loading='lazy'; im.decoding='async';
+    box.appendChild(im);
+  }
+  hero.insertBefore(box,inner);                            /* 装飾円の後・.hero-inner の前 */
 })();
 </script>
 </body>
