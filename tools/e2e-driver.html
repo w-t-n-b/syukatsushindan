@@ -420,7 +420,10 @@ try{
     chk(posOf(d,'lq').join(',')==='0,1,2,3,4','LPは出題位置 0-4（Q1-5）: '+posOf(d,'lq').join(','));
     chk([...d.querySelectorAll('#lq-list .q-badge')].map(x=>x.textContent).join(',')==='Q1,Q2,Q3,Q4,Q5','LPの番号は Q1〜Q5');
     chk(!d.getElementById('lq-done').classList.contains('on'),'開いた直後は .lq-done 非表示');
-    chk(d.getElementById('lq-remain').textContent==='あと5問','LPにも残数が出る: '+d.getElementById('lq-remain').textContent);
+    /* LP は平常時に残数を出さない（オーナー判断）。要素は残すが display:none。
+       未回答のまま「次へ」を押したときの警告文の器としてだけ使う（下の 457 行）。 */
+    chk(d.getElementById('lq-remain').style.display==='none',
+        'LPは平常時に残数を出さない: display='+d.getElementById('lq-remain').style.display);
     chk(d.querySelectorAll('#lq-list .spec-track[role="radiogroup"]').length===5,'5問ぶんが独立したラジオグループ');
     chk(!d.getElementById('lq-back'),'LPの「1つ前の質問に戻る」は廃止された');
 
@@ -452,11 +455,12 @@ try{
     chk(!d.getElementById('screen-quiz').classList.contains('active'),'5問目のあとも自動遷移しない（§B-1）');
     chk(d.getElementById('lq-done').classList.contains('on'),'5問そろうと .lq-done が出る');
     chk(d.querySelectorAll('#lq-list .q-card').length===5,'.lq-done を出しても5問は消えない（選び直せる。§C-3）');
-    // LP面では、5問そろうと直上に .lq-done「ここまで5問。」が出るので残数は隠す
-    // （同じことの言い直しになる。wording-audit.md L-3）
-    chk(d.getElementById('lq-remain').style.display==='none','LPの残数表示は5問そろうと消える: display='+d.getElementById('lq-remain').style.display);
+    // LP面は平常時いっさい残数を出さない（オーナー判断）。5問そろっても同じ。
+    chk(d.getElementById('lq-remain').style.display==='none','LPは5問そろっても残数を出さない: display='+d.getElementById('lq-remain').style.display);
     chk(getComputedStyle(d.getElementById('q-remain')).display!=='none','診断画面側（#q-remain）はそのまま出る');
-    chk(/残り15問/.test(d.getElementById('lq-continue').textContent),'#lq-continue に「残り15問」: '+d.getElementById('lq-continue').textContent);
+    // 「残り15問を続ける →」は冗長だったので「次へ →」に。診断画面の #q-next と同じ語・同じ矢印。
+    chk(d.getElementById('lq-continue').textContent.trim()==='次へ →','#lq-continue は「次へ →」: '+d.getElementById('lq-continue').textContent);
+    chk(!/残り\d+問/.test(d.getElementById('lq-continue').textContent),'#lq-continue に残数を書かない');
     chk(/残り15問を続ける/.test(d.getElementById('cta-grid').textContent),'16タイプ節CTAの文言が「残り15問を続ける →」: '+d.getElementById('cta-grid').textContent);
 
     // Q1-5 は LP にしか無いので、診断画面側に同じ出題位置の目盛は存在しない
@@ -495,7 +499,8 @@ try{
         d.getElementById('screen-title').classList.contains('active'),
         entry+': LPで1〜4問の人は画面遷移しない（#lp-quiz へスクロールするだけ）');
     chk(d.querySelectorAll('#lq-list .sdw.sel').length===3,entry+': その3問はLP上で選択済みのまま');
-    chk(d.getElementById('lq-remain').textContent==='あと2問',entry+': 残りは2問: '+d.getElementById('lq-remain').textContent);
+    /* LP は平常時に残数を出さない。3問答えた状態でも隠れたまま。 */
+    chk(d.getElementById('lq-remain').style.display==='none',entry+': LPは残数を出さない: display='+d.getElementById('lq-remain').style.display);
     // 未回答（0問）でも同じ
     await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(300);
     w.continueOrStart(entry); await sleep(400);

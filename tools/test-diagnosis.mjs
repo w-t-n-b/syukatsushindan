@@ -491,7 +491,8 @@ console.log('[test] Q1-5 は LP のみ（2つの入口の解消）');
   check(T.__positions('lq').join(',') === '0,1,2,3,4', `LPに出題位置 0-4 が並ぶ: ${T.__positions('lq').join(',')}`);
   check(badges(T, 'lq') === 'Q1,Q2,Q3,Q4,Q5', `LPは Q1〜Q5: ${badges(T, 'lq')}`);
   check(T.document.querySelectorAll('#lq-list .q-card').length === 5, 'LPのカードは5枚');
-  check(T.__byId.get('lq-remain').textContent === 'あと5問', 'LPにも残数が出る');
+  // LP は平常時に残数を出さない（オーナー判断）。要素は警告文の器として残す。
+  check(T.__byId.get('lq-remain').style.display === 'none', 'LPは平常時に残数を出さない');
 
   // 2つの面の出題位置が1つも重ならない（これが「入口が1つ」の実体）
   const lp = T.__positions('lq'), qz = T.__positions('q');
@@ -561,8 +562,10 @@ console.log('[test] LPで5問答えたあとの接続');
   [0, 1].forEach(pos => answerLp(U, pos, 2));
   U.lqContinue();
   check(!U.__byId.get('screen-quiz').classList.contains('active'),
-    'LPに未回答があるうちは「残り15問を続ける」で進まない（§B-2）');
+    'LPに未回答があるうちは「次へ」で進まない（§B-2）');
   check(U.__byId.get('lq-remain').classList.contains('warn'), 'LP側も残数が警告状態になる');
+  // 平常時は隠しているので、警告のときだけ現れることを確かめる
+  check(U.__byId.get('lq-remain').style.display !== 'none', '警告のときだけLPに残数が現れる');
 }
 
 // 残る4つの入口の行き先（continueOrStart）

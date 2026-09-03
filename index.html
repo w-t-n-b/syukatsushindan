@@ -1250,9 +1250,13 @@ body[data-screen="screen-loading"] .ftr{display:none;}
                ここが持つ固有の情報は所要時間だけ（wording-audit.md L-2）。 -->
           <div class="lq-done-meta">約2分</div>
         </div>
+        <!-- LP では平常時に残数（「あと◯問」）を出さない（オーナー判断）。
+             ただし要素は残す。未回答のまま「次へ」を押したときの警告文が
+             ここに出るため、消すと警告そのものが出なくなる（requireComplete）。
+             診断画面の #q-remain は平常時も出す（あちらは残数が唯一の進行の手がかり）。 -->
         <div class="q-nav">
-          <div class="q-remain" id="lq-remain" role="status" aria-live="polite">あと5問</div>
-          <button class="btn rpl" id="lq-continue" onclick="addRipple(event,this);lqContinue()">残り15問を続ける →</button>
+          <div class="q-remain" id="lq-remain" role="status" aria-live="polite" style="display:none;"></div>
+          <button class="btn rpl" id="lq-continue" onclick="addRipple(event,this);lqContinue()">次へ →</button>
         </div>
       </div>
     </div>
@@ -1966,10 +1970,10 @@ function updateRemain(tg){
   el.classList.remove('warn');
   el.classList.toggle('done',n===0);
   el.textContent=n===0?`${PAGE_SIZE}問すべて回答済み`:`あと${n}問`;
-  /* LP面だけ、5問そろったら残数を隠す。すぐ上に .lq-done「ここまで5問。」が
-     出るので、直下の「5問すべて回答済み」は同じことの言い直しになる。
-     診断画面（#q-remain）は .lq-done が無いのでそのまま出す（wording-audit.md L-3）。 */
-  el.style.display=(tg==='lp'&&n===0)?'none':'';
+  /* LP面は平常時いっさい出さない（オーナー判断）。ここに出るのは
+     requireComplete() の警告文だけで、それは向こうで display を戻す。
+     診断画面（#q-remain）は残数が唯一の進行の手がかりなので常時出す。 */
+  el.style.display=(tg==='lp')?'none':'';
 }
 
 /* 1問ぶんのカード。LP と診断画面で同一の HTML を吐く。 */
@@ -2078,6 +2082,8 @@ function requireComplete(tg){
   if(n===0)return true;
   const el=document.getElementById(f.remain);
   if(el){el.classList.remove('done');el.classList.add('warn');
+         /* LP面は平常時 display:none にしてあるので、警告のときだけ出す */
+         el.style.display='';
          el.textContent=`未回答が${n}問あります。すべて答えると次へ進めます。`;}
   const pos=pagePositions(p).filter(i=>typeof ans[i]!=='number')[0];
   const card=document.querySelector(`#${f.list} .q-card[data-pos="${pos}"]`);
