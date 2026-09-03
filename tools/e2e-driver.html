@@ -148,7 +148,7 @@ try{
       const wantPos=[0,1,2,3,4].map(k=>p*5+k);
       if(pos.join(',')!==wantPos.join(',')){chk(false,want+': ページ'+(p+1)+' の出題位置ずれ '+pos.join(','));break;}
       const pt=d.getElementById('prog-text').textContent;
-      if(pt!==(p+1)+' / 4 ページ（Q'+(p*5+1)+'-'+(p*5+5)+'）'){chk(false,want+': 進捗表示ずれ '+pt);break;}
+      if(pt!=='Q'+(p*5+1)+'-'+(p*5+5)+' / 全20問'){chk(false,want+': 進捗表示ずれ '+pt);break;}
       if(want==='HALS'&&p===1){
         const grp=d.querySelectorAll('#prog-seg .ps-group').length;
         const cell=d.querySelectorAll('#prog-seg .ps-cell').length;
@@ -310,6 +310,16 @@ try{
   catBtns[3].click(); await sleep(300);
   const dbTop=d.getElementById('type-cat-DB').getBoundingClientRect().top+w.pageYOffset-70;
   chk(scrolledTo!==null&&Math.abs(scrolledTo-dbTop)<2,'DB系ボタンはDB系の見出しへスクロールする: 指定y='+scrolledTo+' / 期待='+Math.round(dbTop));
+  // ヒーローCTA（未回答）は画面を切り替えず #lp-quiz へ送る（wording-audit.md §2 案B）
+  chk(d.getElementById('cta-hero').textContent==='最初の質問へ ↓',
+      '未回答時のヒーローCTAの文言: '+d.getElementById('cta-hero').textContent);
+  scrolledTo=null;
+  d.getElementById('cta-hero').click(); await sleep(300);
+  const lqTop0=d.getElementById('lp-quiz').getBoundingClientRect().top+w.pageYOffset-70;
+  chk(!d.getElementById('screen-quiz').classList.contains('active'),
+      '未回答のヒーローCTAで診断画面に遷移しない（同じ Q1-5 を全画面で出し直さない）');
+  chk(scrolledTo!==null&&Math.abs(scrolledTo-lqTop0)<2,
+      'ヒーローCTAは #lp-quiz へスクロールする: 指定y='+scrolledTo+' / 期待='+Math.round(lqTop0));
   w.scrollTo=realScrollTo;
 
   // ---------- G. 途中復帰 ----------
@@ -324,7 +334,7 @@ try{
   chk(d.getElementById('cont-banner').style.display==='flex','途中離脱→リロードで #cont-banner が出る');
   w.continueDiag(); await sleep(120);
   chk(d.getElementById('screen-quiz').classList.contains('active'),'8問答えた人は #screen-quiz に復帰する');
-  chk(d.getElementById('prog-text').textContent==='2 / 4 ページ（Q6-10）',
+  chk(d.getElementById('prog-text').textContent==='Q6-10 / 全20問',
       '復帰先は最初の未完了ページ（2ページ目）: '+d.getElementById('prog-text').textContent);
   chk(w.eval('curQ')===8,'回答数8が復元される: '+w.eval('curQ'));
   chk(d.querySelectorAll('#q-list .sdw.sel').length===3,'2ページ目の答えた3問が選択済みで復帰する');
@@ -397,7 +407,10 @@ try{
     chk(!d.getElementById('screen-quiz').classList.contains('active'),'5問目のあとも自動遷移しない（§B-1）');
     chk(d.getElementById('lq-done').classList.contains('on'),'5問そろうと .lq-done が出る');
     chk(d.querySelectorAll('#lq-list .q-card').length===5,'.lq-done を出しても5問は消えない（選び直せる。§C-3）');
-    chk(d.getElementById('lq-remain').textContent==='5問すべて回答済み','残数表示が完了になる: '+d.getElementById('lq-remain').textContent);
+    // LP面では、5問そろうと直上に .lq-done「ここまで5問。」が出るので残数は隠す
+    // （同じことの言い直しになる。wording-audit.md L-3）
+    chk(d.getElementById('lq-remain').style.display==='none','LPの残数表示は5問そろうと消える: display='+d.getElementById('lq-remain').style.display);
+    chk(getComputedStyle(d.getElementById('q-remain')).display!=='none','診断画面側（#q-remain）はそのまま出る');
     chk(/残り15問/.test(d.getElementById('lq-continue').textContent),'#lq-continue に「残り15問」: '+d.getElementById('lq-continue').textContent);
     chk(/残り15問を続ける/.test(d.getElementById('cta-hero').textContent),'ヒーローCTAの文言が「残り15問を続ける →」: '+d.getElementById('cta-hero').textContent);
 
@@ -408,7 +421,7 @@ try{
 
     d.getElementById('lq-continue').click(); await sleep(400);
     chk(d.getElementById('screen-quiz').classList.contains('active'),'#lq-continue で診断画面へ');
-    chk(d.getElementById('prog-text').textContent==='2 / 4 ページ（Q6-10）','診断画面は2ページ目から: '+d.getElementById('prog-text').textContent);
+    chk(d.getElementById('prog-text').textContent==='Q6-10 / 全20問','診断画面は2ページ目から: '+d.getElementById('prog-text').textContent);
     chk(posOf(d,'q').join(',')==='5,6,7,8,9','2ページ目の出題位置: '+posOf(d,'q').join(','));
     chk(d.querySelectorAll('#prog-seg .ps-cell.done').length===5,'診断画面の .prog-seg が5つ塗られた状態で始まる');
     // 位置0(軸1:+2) 1(軸2:+2) 2(軸3:+2) 3(軸4:-1) 4(軸1:+2)
@@ -417,18 +430,22 @@ try{
         'LPと診断画面が同一 class（.q-card / .spec-track / .sdw）を使い回している');
   }
 
-  // LPで3問答えてヒーローCTA → 回答が消えず、診断画面の1ページ目へ（§A-2 の表）
+  // LPで3問答えてヒーローCTA → 回答が消えず、同じページの #lp-quiz へ戻る
+  // （wording-audit.md §2 案B。押した先に同じ Q1-5 を全画面で出し直さない）
   await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(400);
   {
     for(const pos of [0,1,2]) w.pick(dot(d,'lq',pos,2));
     const before=w.eval('JSON.stringify(scores)');
+    chk(d.getElementById('cta-hero').textContent==='続きから答える ↓',
+        'LPで1〜4問のときのヒーローCTAの文言: '+d.getElementById('cta-hero').textContent);
     d.getElementById('cta-hero').click(); await sleep(500);
     chk(w.eval('curQ')===3,'ヒーローCTAで回答数が 0 にリセットされない: '+w.eval('curQ'));
     chk(w.eval('JSON.stringify(scores)')===before,'ヒーローCTAで回答が消えない: '+before);
-    chk(d.getElementById('screen-quiz').classList.contains('active')&&w.eval('curPage')===0,
-        'LPで1〜4問の人は診断画面の1ページ目へ');
-    chk(d.querySelectorAll('#q-list .sdw.sel').length===3,'その3問が選択済みで表示される');
-    chk(d.getElementById('q-remain').textContent==='あと2問','残りは2問: '+d.getElementById('q-remain').textContent);
+    chk(!d.getElementById('screen-quiz').classList.contains('active')&&
+        d.getElementById('screen-title').classList.contains('active'),
+        'LPで1〜4問の人は画面遷移しない（#lp-quiz へスクロールするだけ）');
+    chk(d.querySelectorAll('#lq-list .sdw.sel').length===3,'その3問はLP上で選択済みのまま');
+    chk(d.getElementById('lq-remain').textContent==='あと2問','残りは2問: '+d.getElementById('lq-remain').textContent);
 
     // 診断画面で選び直すと LP にも反映される（逆方向の相互反映）
     w.pick(dot(d,'q',0,-3)); await sleep(30);
@@ -536,8 +553,10 @@ try{
     chk(d.querySelectorAll('.type-peek').length===0,'Esc で閉じる');
     // 紹介からの診断開始
     d.querySelector('#type-overview .tc[data-code="HALS"]').click(); await sleep(300);
-    chk(/自分のタイプを診断する/.test(d.querySelector('.tp-cta').textContent),
-        '紹介のCTAは「自分のタイプを診断する」: '+d.querySelector('.tp-cta').textContent.trim());
+    chk(/このタイプかどうか、20問で確かめる/.test(d.querySelector('.tp-cta').textContent),
+        '紹介のCTAは「このタイプかどうか、20問で確かめる」: '+d.querySelector('.tp-cta').textContent.trim());
+    // 共有バナーの .sb-cta（友達の結果を見ている人向け）とは別の文字列になる
+    chk(d.querySelector('.tp-cta').textContent.trim()!=='自分のタイプを診断する →','.tp-cta と .sb-cta が同じ文字列ではない');
     d.querySelector('.type-peek .tp-cta').click(); await sleep(500);
     chk(d.getElementById('screen-quiz').classList.contains('active'),'タイプ紹介のCTAから診断が始まる');
     chk(w.eval('curQ')===0&&w.eval('curPage')===0,'未回答なら1ページ目から');
@@ -672,7 +691,10 @@ try{
     chk(!/バランス型/.test(d.getElementById('screen-result').innerText),'タイプコードと食い違う「バランス型」を出さない');
     // 判定理由のタグも同じ向きで出る（合計0でコードと逆を書かない）
     const rbt=[...d.querySelectorAll('.rbt')].map(x=>x.textContent.trim());
-    chk(rbt.length===4&&/低/.test(rbt[0])&&/高/.test(rbt[1]),'判定理由のタグが判定と同じ向き: '+rbt.join(' / '));
+    chk(rbt.length===4&&/^対課題 /.test(rbt[0])&&/^攻め /.test(rbt[1])&&/^ワーク重視 /.test(rbt[2])&&/^自走型 /.test(rbt[3]),
+        '判定理由のタグが判定（DAWS）と同じ向きの軸名で出る: '+rbt.join(' / '));
+    // 「対人:高」「対人:低」は存在しない基準との比較を含意する（wording-audit.md R-2）
+    chk(!rbt.some(t=>/[高低]|:/.test(t)),'タグは「倒れた側の名前 ＋ %」だけ: '+rbt.join(' / '));
     w.clearSavedProgress();
   }
 
@@ -966,8 +988,10 @@ try{
     chk(!!note&&/僅差/.test(note.textContent),'説明が「僅差だった軸を反転したもの」であることに触れている');
     // 断定しない姿勢（診断で分かるのは傾向まで）と矛盾しないこと
     chk(!!note&&!/必ず|断言|確実|あなたは.*です。/.test(note.textContent),'説明が断定表現を含まない');
-    chk(card.querySelector('.sub-head').compareDocumentPosition(note)&Node.DOCUMENT_POSITION_FOLLOWING,
-        '説明は見出し（.sub-head）の直後にある');
+    // .sub-head「あなたのサブタイプ」は削除した（パネル見出し「サブタイプ」の
+    // 言い直しだった。wording-audit.md R-14）。説明はカードの先頭に来る。
+    chk(!card.querySelector('.sub-head'),'.sub-head（パネル見出しの言い直し）が無い');
+    chk(card.firstElementChild===note,'説明はサブタイプのカードの先頭にある');
   }
 
   // ---------- S. ヒーローの作り替え（浮遊キャラ / 3ステップ削除 / ファーストビュー）----------

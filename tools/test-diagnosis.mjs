@@ -336,7 +336,7 @@ console.log('[test] 1画面5問・全4ページ');
   check(T.document.querySelectorAll('#q-list .q-card').length === 5, 'カードは5枚');
   check(T.document.querySelectorAll('#q-list .spec-track').length === 5,
     '5問ぶんのラジオグループが独立して並ぶ');
-  check(T.__byId.get('prog-text').textContent === '1 / 4 ページ（Q1-5）',
+  check(T.__byId.get('prog-text').textContent === 'Q1-5 / 全20問',
     `進捗はページ単位: ${T.__byId.get('prog-text').textContent}`);
   check(T.__byId.get('back-btn').style.display === 'none', '1ページ目では「前のページに戻る」を出さない（§B-4）');
   check(T.__byId.get('q-next').textContent === '次へ →', `最終ページ以外は「次へ」: ${T.__byId.get('q-next').textContent}`);
@@ -360,7 +360,7 @@ console.log('[test] 1画面5問・全4ページ');
   T.nextPage();
   check(T.__eval('curPage') === 1, '5問そろえば次のページへ進む');
   check(T.__positions('q').join(',') === '5,6,7,8,9', `2ページ目は出題位置 5-9: ${T.__positions('q').join(',')}`);
-  check(T.__byId.get('prog-text').textContent === '2 / 4 ページ（Q6-10）',
+  check(T.__byId.get('prog-text').textContent === 'Q6-10 / 全20問',
     `進捗表示が追従する: ${T.__byId.get('prog-text').textContent}`);
   check(T.__byId.get('back-btn').style.display === 'flex', '2ページ目からは「前のページに戻る」が出る');
 
@@ -468,7 +468,7 @@ console.log('[test] LPで5問答えたあとの接続');
 
   T.lqContinue();
   check(T.__byId.get('screen-quiz').classList.contains('active'), '#lq-continue で診断画面へ進む');
-  check(T.__eval('curPage') === 1 && T.__byId.get('prog-text').textContent === '2 / 4 ページ（Q6-10）',
+  check(T.__eval('curPage') === 1 && T.__byId.get('prog-text').textContent === 'Q6-10 / 全20問',
     `診断画面は2ページ目から始まる: ${T.__byId.get('prog-text').textContent}`);
   check(T.__eval('JSON.stringify(scores)') === sc, '続行してもスコアが保持されている');
 
@@ -492,12 +492,15 @@ console.log('[test] 既存CTAの付け替え（continueOrStart）');
   T.continueOrStart('hero');
   check(T.__eval('curQ') === 3, `ヒーローCTAで回答数が 0 に戻らない（${T.__eval('curQ')}）`);
   check(T.__eval('JSON.stringify(scores)') === before, `回答が消えない: ${before}`);
-  check(T.__byId.get('screen-quiz').classList.contains('active') && T.__eval('curPage') === 0,
-    'LPで1〜4問の人は診断画面の1ページ目へ（答えた分が反映済みで選び直せる）');
-  check(T.document.querySelectorAll('#q-list .sdw.sel').length === 3,
-    'その3問が選択済みの状態で表示される');
-  check(T.__byId.get('cta-hero').textContent === '残り17問を続ける →',
-    `CTA文言が実際の残数と一致: ${T.__byId.get('cta-hero').textContent}`);
+  // wording-audit.md §2 案B：ヒーローCTAは5問そろうまで #lp-quiz へ送る。
+  // 押した先に、直下に見えているのと同じ Q1-5 を全画面で出し直さない。
+  check(!T.__byId.get('screen-quiz').classList.contains('active') &&
+        T.__byId.get('screen-title').classList.contains('active'),
+    'LPで1〜4問の人は画面遷移させず #lp-quiz へ戻す（同じ Q1-5 を出し直さない）');
+  check(T.document.querySelectorAll('#lq-list .sdw.sel').length === 3,
+    'その3問が選択済みの状態でLPに残っている');
+  check(T.__byId.get('cta-hero').textContent === '続きから答える ↓',
+    `CTA文言が呼び先（同じページの #lp-quiz）と一致: ${T.__byId.get('cta-hero').textContent}`);
 
   // 16タイプ節・ドロワーからも同じこと
   T.continueOrStart('grid');
@@ -513,13 +516,19 @@ console.log('[test] 既存CTAの付け替え（continueOrStart）');
   check(P.__eval('curPage') === 1,
     'LPで5問すべて答えた人がCTAを押すと2ページ目（1ページ目は完了しているため）');
 
-  // 1問も答えていない人は診断画面の1ページ目へ
+  // 1問も答えていない人は、ヒーローCTAでは #lp-quiz（最初の質問）へ。
+  // 16タイプ節・ドロワーからは従来どおり診断画面を1ページ目から開く。
   const F = load(TARGET, '');
   boot(F);
   F.continueOrStart('hero');
+  check(!F.__byId.get('screen-quiz').classList.contains('active') && F.__eval('curQ') === 0,
+    '未回答のヒーローCTAは #lp-quiz へ送る（§2 案B）');
+  check(F.__byId.get('cta-hero').textContent === '最初の質問へ ↓',
+    `未回答時のヒーローCTAの文言: ${F.__byId.get('cta-hero').textContent}`);
+  F.continueOrStart('grid');
   check(F.__byId.get('screen-quiz').classList.contains('active') &&
         F.__eval('curQ') === 0 && F.__eval('curPage') === 0,
-    '未回答なら診断画面を1ページ目から開く');
+    '16タイプ節のCTAは未回答なら診断画面を1ページ目から開く（変えていない）');
 
   // 共有リンクで来た人は #lp-quiz へ（現状維持）
   const S2 = load(TARGET, '');
@@ -563,7 +572,7 @@ console.log('[test] 途中復帰と保存キー（§E）');
   R2.continueDiag();
   check(R2.__byId.get('screen-quiz').classList.contains('active') &&
     R2.__eval('curPage') === 1 &&
-    R2.__byId.get('prog-text').textContent === '2 / 4 ページ（Q6-10）',
+    R2.__byId.get('prog-text').textContent === 'Q6-10 / 全20問',
     `8問ぶん進んだ人は2ページ目に復帰する: ${R2.__byId.get('prog-text').textContent}`);
   check(R2.__eval('curQ') === 8, `回答数が復元される（${R2.__eval('curQ')}）`);
 

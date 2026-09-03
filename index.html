@@ -291,7 +291,7 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .stat-marker{position:absolute;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:50%;border:2px solid var(--navy);box-shadow:2px 2px 0 rgba(15,23,42,.2);}
 .stat-result{font-size:.65rem;text-align:right;font-weight:900;letter-spacing:1px;}
 .subtype-card{background:var(--paper);border:1.5px solid var(--navy);border-radius:8px;padding:14px 16px;box-shadow:3px 3px 0 rgba(139,132,182,.4);}
-.sub-head{font-family:var(--disp);font-size:10px;font-weight:700;letter-spacing:3px;color:var(--lav);text-transform:uppercase;margin-bottom:10px;}
+/* .sub-head は削除した。パネル見出し「サブタイプ」の言い直しだった（wording-audit.md R-14）。 */
 /* サブタイプが何なのかは、これまで画面のどこにも書いていなかった（コードと
    キャラだけが出ていた）。getSubCode() は「いちばん僅差だった軸を1つだけ
    反転したタイプ」を返す＝「あと少しでこちらだった」という情報なので、
@@ -325,10 +325,11 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .ca-txt{font-size:.68rem;color:var(--mid);line-height:1.5;}
 .co-item{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);}
 .co-item:last-child{border-bottom:none;}
-.co-rank{width:28px;height:28px;border-radius:4px;background:var(--blue-l);border:1.5px solid var(--navy);color:var(--blue);font-family:var(--disp);font-size:.85rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+/* .co-rank（1〜5の連番）は削除した。同じパネルの .co-note が「掲載順に優劣はなく」と
+   書いているのに、画面が順位を表示していたため（wording-audit.md R-4）。
+   .co-info p（業界名の再掲）も同時に削除した（R-9）。 */
 .co-info{flex:1;}
 .co-info h4{font-size:.88rem;font-weight:700;color:var(--navy);}
-.co-info p{font-size:.68rem;color:var(--light);}
 .co-job{font-size:.65rem;font-weight:900;padding:2px 8px;background:var(--w);border:1px solid var(--navy);color:var(--blue2);border-radius:100px;white-space:nowrap;flex-shrink:0;}
 .ind-grid-sm{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
 .ind-sm{padding:12px 8px;background:var(--w);border:1.5px solid var(--navy);border-radius:6px;text-align:center;font-family:inherit;font-size:.78rem;font-weight:700;color:var(--ink);cursor:pointer;transition:transform .14s,box-shadow .14s;box-shadow:2px 2px 0 rgba(15,23,42,.14);}
@@ -389,15 +390,15 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 
 /* --- #5 #6 和文タイポグラフィ：面積の大きい文字に表示用書体を当てる ------- */
 .hero-title,.res-type-name,.sec-title,.q-text,.btn,.d-cta,.retry-btn,
-.hero-badge,.rb-title,.sub-head,.ca-lbl,.tc-pill,.av-result,.sh{
+.hero-badge,.rb-title,.ca-lbl,.tc-pill,.av-result,.sh{
   font-family:var(--jp-disp);font-weight:900;
   font-feature-settings:'palt' 1;font-kerning:normal;
 }
 .hero-title,.sec-title,.res-type-name{letter-spacing:var(--ls-disp);}
-.hero-badge,.sub-head,.rb-title,.ca-lbl{letter-spacing:var(--ls-lbl);}
+.hero-badge,.rb-title,.ca-lbl{letter-spacing:var(--ls-lbl);}
 /* 欧文のみの文字列に --lat を限定（混植を止める） */
 .res-code,.tc-code,.sub-code,.prog-num,.q-badge,.res-announce,
-.hdr-logo,.d-title,.co-rank,.sec-lbl{
+.hdr-logo,.d-title,.sec-lbl{
   font-family:var(--lat);letter-spacing:var(--ls-lat);
 }
 
@@ -688,7 +689,9 @@ body[data-screen="screen-loading"] .ftr{display:none;}
   border-top:var(--bd-hair) solid var(--border);padding-top:10px;margin:0;}
 
 /* --- 職種例の注記（実在企業名の順位表示を削除した箇所） ------------------ */
-.co-note{font-size:11px;line-height:1.8;color:var(--mid);
+/* .ind-lbl は業界チップの上に置く1行（wording-audit.md R-10）。
+   新しい色は作らず .co-note と同じ指定をそのまま使う（--mid on --paper2）。 */
+.co-note,.ind-lbl{font-size:11px;line-height:1.8;color:var(--mid);
   background:var(--paper2);border-left:3px solid var(--border2);
   padding:8px 10px;margin-bottom:12px;}
 
@@ -1127,9 +1130,9 @@ body[data-screen="screen-loading"] .ftr{display:none;}
 
 <nav class="drawer" id="drawer">
   <div class="d-title">Navigation</div>
-  <button class="d-link" onclick="gotoTop();closeDrawer()"><div class="d-icon">🏠</div>トップ</button>
+  <button class="d-link" onclick="gotoTop();closeDrawer()"><div class="d-icon" aria-hidden="true">🏠</div>トップ</button>
   <div class="d-div"></div>
-  <div class="d-title" style="margin-top:4px;">16 Types</div>
+  <div class="d-title" style="margin-top:4px;">16Types</div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 4px;">
     <button class="d-link" style="padding:10px 12px;" onclick="scrollToTypes('HA');closeDrawer()"><div class="d-icon" style="font-size:.7rem;font-weight:900;color:var(--blue2);">HA系</div>リーダー</button>
     <button class="d-link" style="padding:10px 12px;" onclick="scrollToTypes('HB');closeDrawer()"><div class="d-icon" style="font-size:.7rem;font-weight:900;color:#7c3aed;background:#ede9fe;">HB系</div>サポート</button>
@@ -1139,8 +1142,8 @@ body[data-screen="screen-loading"] .ftr{display:none;}
   <button class="d-cta" id="cta-drawer" onclick="continueOrStart('drawer');closeDrawer()">▶ 診断をはじめる</button>
   <div class="d-div"></div>
   <div class="d-title" style="margin-top:4px;">Site Info</div>
-  <a class="d-link" href="privacy.html"><div class="d-icon">🔒</div>プライバシーポリシー</a>
-  <a class="d-link" href="privacy.html#operator"><div class="d-icon">🏢</div>運営者情報</a>
+  <a class="d-link" href="privacy.html"><div class="d-icon" aria-hidden="true">🔒</div>プライバシーポリシー</a>
+  <a class="d-link" href="privacy.html#operator"><div class="d-icon" aria-hidden="true">🏢</div>運営者情報</a>
 </nav>
 
 <!-- TITLE -->
@@ -1149,17 +1152,20 @@ body[data-screen="screen-loading"] .ftr{display:none;}
     <div class="hero-orb o1"></div><div class="hero-orb o2"></div><div class="hero-orb o3"></div>
     <img class="hero-sil" src="images/chars/a3.webp" alt="" aria-hidden="true">
     <div class="hero-inner">
-      <div class="hero-badge">就活キャリア診断</div>
-      <h1 class="hero-title">あなたの仕事タイプ、<em>16Typesから見つける。</em></h1>
+      <div class="hero-badge">就活キャリアタイプ診断</div>
+      <!-- 320px では1行に収まらない（実測で9文字ぶんの幅しかない）。何もしないと
+           「キャリアタ／イプ、」と語の途中で割れるので、語だけ折り返させない。
+           390px 以上では1行のままなので見え方は変わらない。 -->
+      <h1 class="hero-title">あなたの<span style="white-space:nowrap;">キャリアタイプ</span>、<em>16Typesから見つける。</em></h1>
       <p class="hero-sub">20問・約3分でわかるキャリアタイプ診断。<br>あなたに向いている職種の例と、探し方のヒントまで。</p>
       <div class="cont-banner" id="cont-banner" style="display:none;" onclick="continueDiag()">
-        <div class="cont-icon">💾</div>
-        <div class="cont-body"><span class="cont-title">前回の途中から続ける</span><span class="cont-sub" id="cont-sub">Q?まで回答済み</span></div>
+        <div class="cont-icon" aria-hidden="true">💾</div>
+        <div class="cont-body"><span class="cont-title">前回の途中から続ける</span><span class="cont-sub" id="cont-sub">20問中?問に回答済み</span></div>
         <span class="cont-arrow">→</span>
       </div>
 
       <div class="btn-wrap">
-        <button class="btn rpl" id="cta-hero" onclick="addRipple(event,this);continueOrStart('hero')">20問すべてに答える →</button>
+        <button class="btn rpl" id="cta-hero" onclick="addRipple(event,this);continueOrStart('hero')">最初の質問へ ↓</button>
       </div>
     </div>
   </div>
@@ -1188,7 +1194,9 @@ body[data-screen="screen-loading"] .ftr{display:none;}
               <li>向いている職種の例</li>
             </ul>
           </div>
-          <div class="lq-done-meta">残り15問 / 約2分</div>
+          <!-- 「残り15問」は同じパネル内に .lq-done-txt と #lq-continue で2回出ている。
+               ここが持つ固有の情報は所要時間だけ（wording-audit.md L-2）。 -->
+          <div class="lq-done-meta">約2分</div>
         </div>
         <div class="q-nav">
           <div class="q-remain" id="lq-remain" role="status" aria-live="polite">あと5問</div>
@@ -1200,7 +1208,7 @@ body[data-screen="screen-loading"] .ftr{display:none;}
 
   <div id="type-section" style="background:var(--off);padding:40px 0;">
     <div class="wrap">
-      <div class="sec-lbl">All Types</div><div class="sec-title">全16タイプ一覧</div><p class="sec-sub">あなたはどれ？</p>
+      <div class="sec-lbl">All Types</div><div class="sec-title">全16タイプ一覧</div><p class="sec-sub">あなたに近いのはどれ？</p>
       <div id="type-overview"></div>
       <div style="margin-top:28px;"><button class="btn rpl" id="cta-grid" onclick="addRipple(event,this);continueOrStart('grid')">診断をはじめる →</button></div>
     </div>
@@ -1213,8 +1221,8 @@ body[data-screen="screen-loading"] .ftr{display:none;}
     <div class="prog-area">
       <div class="prog-seg" id="prog-seg" role="progressbar" aria-label="回答の進捗" aria-valuemin="0" aria-valuemax="20" aria-valuenow="0" aria-valuetext="20問中0問に回答済み"></div>
       <div class="prog-meta">
-        <div class="prog-num" id="prog-text" aria-hidden="true">1 / 4 ページ（Q1-5）</div>
-        <div class="prog-msg" id="prog-msg">さあはじめよう！</div>
+        <div class="prog-num" id="prog-text" aria-hidden="true">Q1-5 / 全20問</div>
+        <div class="prog-msg" id="prog-msg">全4ページの1ページ目です</div>
       </div>
     </div>
     <div class="quiz-inner">
@@ -1359,7 +1367,11 @@ const Qs=[
 ];
 
 /* ===== NEW UI FEATURES ===== */
-const REASON={HA:{h:"対人スコアが高く、人と関わる中で力を発揮するタイプ。",a:"攻めスコアも高く、自ら前に出てリードするスタイル。"},HB:{h:"対人スコアが高く、人との関係を大切にするタイプ。",a:"支えスコアが高く、縁の下でチームを支えるスタイル。"},DA:{h:"課題解決スコアが高く、問題に向き合うことに燃えるタイプ。",a:"攻めスコアが高く、新しいことに自ら挑戦するスタイル。"},DB:{h:"課題解決スコアが高く、データやロジックで考えるタイプ。",a:"支えスコアが高く、正確さと安定で組織を支えるスタイル。"}};
+/* 軸の呼び名は AX[] を正とする（判定・棒グラフ・タグと同じ名前を使う）。
+   「課題解決」は AX[1].r「対課題」と同じ軸の2つ目の名前だった。
+   「スコアが高く」も、比較する基準が無いので「〜の側に寄っており」に改めた
+   （docs/design/wording-audit.md R-3）。 */
+const REASON={HA:{h:"対人の側に寄っており、人と関わる中で力を発揮するタイプ。",a:"攻めの側にも寄っており、自ら前に出てリードするスタイル。"},HB:{h:"対人の側に寄っており、人との関係を大切にするタイプ。",a:"支えの側に寄っており、縁の下でチームを支えるスタイル。"},DA:{h:"対課題の側に寄っており、問題に向き合うことに燃えるタイプ。",a:"攻めの側に寄っており、新しいことに自ら挑戦するスタイル。"},DB:{h:"対課題の側に寄っており、データやロジックで考えるタイプ。",a:"支えの側に寄っており、正確さと安定で組織を支えるスタイル。"}};
 const REASON_L={LS:"ライフ重視×自走型で、プライベートを大切にしながら自分のペースで動くスタイル。",LG:"ライフ重視×育成型で、安定した環境で先輩から学びながら着実に成長するスタイル。",WS:"ワーク重視×自走型で、仕事に没頭し自分の裁量で突き進むスタイル。",WG:"ワーク重視×育成型で、仕事に全力で向き合いつつ先輩から技を吸収するスタイル。"};
 /* TYPE_PCT（タイプ別の割合）は削除した。
    実測データが存在せず、根拠のない統計を結果画面とシェア文に出していたため。
@@ -1398,7 +1410,9 @@ function qAt(i){return Qs[Q_ORDER[i]];}
 
 /* ページ単位の励まし。1問ずつ時代の20段階（PROG_MSGS）は、4ページになって
    段数が合わなくなったのでページ数ぶんに置き換えた（仕様 §B-5）。 */
-const PAGE_MSGS=["さあはじめよう！","いい調子です！","折り返しです！","最後のページです！"];
+/* 「いい調子です！」は、上手下手のない性格診断で内容のない賞賛になっていた。
+   Q-1 が手放した「ページ」の文脈をここが引き取る（wording-audit.md Q-2）。 */
+const PAGE_MSGS=["全4ページの1ページ目です","残りは3ページです","残りは2ページです","最後のページです"];
 
 /* ===== TYPE DATA (from ORIGINAL, field names adapted for new UI) ===== */
 const TD={
@@ -1418,7 +1432,7 @@ const TD={
     com:"相手の話をしっかり聞いてから自分の意見を伝える。対立を避けつつ、全員が納得する着地点を見つける。",
     sts:"チーム内で衝突が起きたとき。自分のサポート体制が整っていない環境。",
     grw:"「みんなに合わせすぎない」ことを意識すると、リーダーとしてさらに一段上に。",
-    why:"丁寧な対人スキルと安定志向を活かせる人材紹介や、クライアントとの関係構築が重要な広告営業が向いています。教育体制の整った大手企業との相性も◎。",
+    why:"丁寧な対人スキルと安定志向を活かせる人材紹介や、クライアントとの関係構築が重要な広告営業が向いています。",
     desc:"人との関わりが好きで、充実した研修のもとでスキルを磨きたい。WLBも確保したい安定志向。",
     good:["HALS","HBLG","HAWG"],gR:{team:"HALSのスピード感を温かく包み、HBLGの穏やかさと心地よいハーモニー。",senpai:"HBLGの穏やかさに包まれると安心して実力が出せる。",friend:"HAWGの熱量をうまく方向づけられる、刺激的な就活仲間に。"},
     bad:["DAWS","DBWS"],bR:{team:"DAWSの突き進むスタイルに振り回されがち。",senpai:"DBWSの冷徹さは温かさ重視のHALGにはストレスに。",friend:"真逆タイプなので距離を置きつつ刺激をもらう関係が良い。"}},
@@ -1428,7 +1442,7 @@ const TD={
     com:"エネルギッシュに場を引っ張る。熱量が高いため、周りを自然と動かしてしまう。",
     sts:"裁量を与えてもらえず、指示通りにしか動けない環境。チームの温度差が大きいとき。",
     grw:"全力が強みだからこそ、意図的に「引く」ことを覚えると、巻き込み力がさらに上がる。",
-    why:"この情熱と巻き込み力は、大きな案件を動かすプロデューサー職や、チームを率いる営業リーダーにぴったり。仕事にフルコミットできる環境で真価を発揮します。",
+    why:"この情熱と巻き込み力は、大きな案件を動かすプロデューサー職や、チームを率いる営業リーダーと重なります。仕事にフルコミットできる環境で強みが出やすくなります。",
     desc:"人との関わりの中で全力で働きたい。裁量を持ってチームを引っ張るリーダーシップ型。",
     good:["HAWG","DAWS","HBWS"],gR:{team:"HAWGの素直さと熱量が噛み合い最強タッグに。DAWSの突破力と組めば大きな成果。",senpai:"HBWSの裏方力が全力型を支えてくれる最高の組み合わせ。",friend:"DAWSとの就活仲間関係は互いに火花散らす最高の刺激に。"},
     bad:["DBLS","DBLG"],bR:{team:"DBLSの冷静さとは温度差が大きい。",senpai:"DBLGの慎重さがスピード感を重視するHAWSにはもどかしく映る。",friend:"焦りや温度差が出やすいため割り切ったつき合い方が良い。"}},
@@ -1458,7 +1472,7 @@ const TD={
     com:"穏やかで丁寧。相手のペースに合わせた会話ができる。急かされるのは苦手。",
     sts:"急な変化が多い環境。自分の意見を強く求められる場面。",
     grw:"「支える力」に自信を持ちつつ、自分の意見を小さくてもいいから発信する練習を。",
-    why:"この温かさと堅実さは、社員をケアする人事・総務や、お客様に寄り添うCS職にマッチ。研修が充実した企業で安心してスキルを磨ける環境が最適です。",
+    why:"この温かさと堅実さは、社員をケアする人事・総務や、お客様に寄り添うCS職にマッチ。研修が充実した企業で安心してスキルを磨ける環境と相性を確かめる価値があります。",
     desc:"人のサポートが好きで、研修が充実した環境で着実に成長したい。WLBも重視する安定志向。",
     good:["HALG","HBLS","DBLG"],gR:{team:"HALGの温かいリーダーシップの下で安心して力を発揮。",senpai:"HBLSとは穏やかな共鳴で居心地の良い環境に。",friend:"DBLGの丁寧さと相性抜群の就活仲間に。"},
     bad:["DAWS","HAWS"],bR:{team:"DAWSの突き進むスタイルに戸惑いがち。",senpai:"HAWSの圧倒的熱量はプレッシャーに感じることも。",friend:"テンポが違いすぎるので、刺激をもらう程度の距離感が良い。"}},
@@ -1478,7 +1492,7 @@ const TD={
     com:"言葉よりも行動で示すタイプ。約束したことは必ず守る。嘘やごまかしが苦手。",
     sts:"ルールが曖昧な環境。自分の努力の方向性が見えないとき。",
     grw:"真面目さは最大の武器。あとは「完璧じゃなくてもOK」と自分を許す余裕を持てると楽になる。",
-    why:"この誠実さと丁寧さは、組織の安定運営を担う人事・総務で高く評価されます。メンター制度が整った企業で着実にキャリアを積むスタイルが◎。",
+    why:"この誠実さと丁寧さは、組織の安定運営を担う人事・総務で求められる資質と重なります。メンター制度が整った企業で着実にキャリアを積むスタイルが合っています。",
     desc:"仕事に全力で向き合い、先輩のもとで丁寧にスキルを磨きながら組織に貢献するタイプ。",
     good:["HAWG","DBWG","DBLG"],gR:{team:"HAWGの素直さと信頼で結ばれる最高の組み合わせ。",senpai:"DBWGのコツコツ型と最高の相性で安心して学べる。",friend:"DBLGの丁寧さとも通じ合える就活仲間に。"},
     bad:["HALS","DALS"],bR:{team:"HALSのメリハリ型は真面目なHBWGには軽く映ることも。",senpai:"DALSの自由奔放さがルール重視のHBWGにはストレス。",friend:"就活観が違うため、刺激として割り切ると良い関係に。"}},
@@ -1498,7 +1512,7 @@ const TD={
     com:"必要なことを端的に、正確に伝える。無駄な会話は少ないが、技術的な話になると熱くなる。",
     sts:"スピード重視で質を犠牲にする環境。教わる機会がなく放置されるとき。",
     grw:"完璧を目指しすぎず「80点でまず出す」を意識すると、成果が目に見えて増える。",
-    why:"この堅実さと専門性への志向は、技術力を積み上げるエンジニアやデザイナー、データを扱うマーケ職に向いています。研修が充実した大手企業との相性◎。",
+    why:"この堅実さと専門性への志向は、技術力を積み上げるエンジニアやデザイナー、データを扱うマーケ職に向いています。",
     desc:"専門性をじっくり磨きたい。研修のもとで確実にスキルを積み上げ、安定した働き方をしたい。",
     good:["DALS","DBLG","DAWG"],gR:{team:"DALSの発想を形に落とし込める最高の組み合わせ。",senpai:"DBLGの正確さと高め合える理想の関係。",friend:"DAWGの探究心と深い技術トークが可能な就活仲間に。"},
     bad:["HAWS","HALS"],bR:{team:"HAWSのスピード感がじっくり派のDALGにはプレッシャー。",senpai:"HALSのメリハリ型とは仕事のテンポが合いにくい。",friend:"価値観の違いを理解した上でつき合うと刺激になる。"}},
@@ -1508,7 +1522,7 @@ const TD={
     com:"結論ファーストで端的。議論より行動を重視する。スピード感のない会話にはイライラしがち。",
     sts:"前例踏襲を求められる環境。意思決定が遅い組織。自分の裁量がないとき。",
     grw:"突き進む力に「巻き込む力」を加えると、一人では到達できない高みに行ける。",
-    why:"この突破力と集中力は、難題を解くコンサルタントや、ゼロから事業を立ち上げる事業企画・PMにぴったり。スタートアップ的な環境でも活躍できます。",
+    why:"この突破力と集中力は、難題を解くコンサルタントや、ゼロから事業を立ち上げる事業企画・PMと重なります。スタートアップ的な環境でも活躍できます。",
     desc:"技術やプロダクトに全力で向き合う。スタートアップ的なスピード感と裁量で事業を推進するタイプ。",
     good:["HAWS","DBWS","DAWG"],gR:{team:"HAWSの巻き込み力と合わされば最強。",senpai:"DBWSの冷静な制御が暴走を防ぐ良いブレーキに。",friend:"DAWGの深掘り力が品質を担保してくれる最高の就活仲間に。"},
     bad:["HBLG","HBLS"],bR:{team:"HBLGの穏やかさとはスピード感が合わない。",senpai:"HBLSの慎重さがDAWSにはブレーキに感じる。",friend:"テンポが違いすぎるので、刺激をもらう程度の距離感が良い。"}},
@@ -1518,7 +1532,7 @@ const TD={
     com:"技術的な話題では饒舌になるが、雑談は苦手な面も。信頼した相手には深く心を開く。",
     sts:"表面的にしか取り組めない環境。技術を軽視する文化。",
     grw:"のめり込む力を活かしつつ「全体像を見る」視点を意識すると、リードエンジニアへの道が開ける。",
-    why:"この技術への情熱と学ぶ姿勢は、大手企業の技術職や研究職、データ系のマーケ職で真価を発揮。メンター制度のある環境で腕を磨くのが最適です。",
+    why:"この技術への情熱と学ぶ姿勢は、大手企業の技術職や研究職、データ系のマーケ職で強みが出やすくなります。メンター制度のある環境と相性を確かめる価値があります。",
     desc:"ものづくりに情熱を注ぎつつ、組織的なサポートの中で成長。大手の技術職や研究職にも向く。",
     good:["DAWS","HBWS","DALG"],gR:{team:"DAWSの推進力の下で技術を極められる。",senpai:"HBWSの裏方力と深いレベルで協業できる。",friend:"DALGの品質志向と切磋琢磨できる就活仲間に。"},
     bad:["HALS","HAWS"],bR:{team:"HALSのメリハリ型は深掘り派のDAWGには表面的に映る。",senpai:"HAWSの熱量は対人ベースでDAWGとは方向が違う。",friend:"就活スタイルが違うので、刺激として割り切った関係が良い。"}},
@@ -1527,7 +1541,7 @@ const TD={
     str:"論理的思考力と、感情に流されない冷静さ。複雑な問題を構造的に整理する力。",
     com:"事実ベースで話す。感情論が飛び交う場では一歩引いて「で、ファクトは？」と問いかけるタイプ。",
     sts:"感情的な議論に巻き込まれるとき。データなしに意思決定される環境。",
-    grw:"ロジックは最強の武器。ここに「相手の感情を動かす伝え方」が加わると、影響力が飛躍的に増す。",
+    grw:"ロジックは最強の武器。ここに「相手の感情を動かす伝え方」が加わると、伝わる範囲が広がる。",
     why:"この分析力と俯瞰力は、経営企画やデータアナリスト、社内SEのように組織の意思決定を裏から支える仕事にフィットします。",
     desc:"データやロジックで組織を支える。プライベートも大事にしつつ、自分のペースで分析・改善を回す。",
     good:["HBLS","DALS","DBLG"],gR:{team:"HBLSの気配りが冷静さを和らげ、チームに温かみをプラス。",senpai:"DALSの発想力に分析で道筋をつける最高の組み合わせ。",friend:"DBLGの正確さとは最強の分析タッグを組める就活仲間に。"},
@@ -1535,10 +1549,10 @@ const TD={
   DBLG:{name:"きっちり参謀",icon:"📐",tag:"正確さとルールで組織の最後の砦に",kw:["精緻","正確性","堅実"],jobs:["経理・財務","データアナリスト","法務"],
     per:"正確さと丁寧さが武器のタイプ。数字やルールに強く、曖昧なことをきちんと整理するのが得意です。安定した環境でしっかり教わりながらスキルを高めたいという堅実さがあり、細部へのこだわりが周囲の信頼につながります。",
     str:"ミスを見逃さない精緻さと、ルール・手順を守り切る確実性。「最後の砦」のような存在。",
-    com:"正確で丁寧な報告が得意。口頭より文書の方が真価を発揮する。曖昧な指示が苦手。",
+    com:"正確で丁寧な報告が得意。口頭より文書の方が強みが出る。曖昧な指示が苦手。",
     sts:"ルールが曖昧でカオスな環境。大雑把な人と組むとき。",
     grw:"正確さを保ちつつ「大局観」も身につけると、参謀からリーダーへの道が見えてくる。",
-    why:"この精緻さと安定志向は、ミスが許されない経理・財務や法務、正確なデータ分析が求められるアナリスト職に最適。研修のしっかりした企業で専門性を磨けます。",
+    why:"この精緻さと安定志向は、ミスが許されない経理・財務や法務、正確なデータ分析が求められるアナリスト職と相性を確かめる価値があります。研修のしっかりした企業で専門性を磨けます。",
     desc:"数字やデータに強く、充実した研修のもとで着実に専門性を高めたい。安定した環境を好む。",
     good:["DBLS","HBLG","HBWG"],gR:{team:"DBLSとは最強の分析タッグを組める。",senpai:"HBLGの温かさに安心して力を発揮できる。",friend:"HBWGの誠実さと深く通じ合える就活仲間に。"},
     bad:["HAWS","DAWS"],bR:{team:"HAWSのスピード感はDBLGにはストレスになりやすい。",senpai:"DAWSの「前例なし」が慎重派のDBLGには不安要素。",friend:"就活スタイルが違うので、情報交換程度の距離感が良い。"}},
@@ -1548,7 +1562,7 @@ const TD={
     com:"端的で論理的。無駄を嫌い、要点だけを伝える。部下には厳しいが、信頼は厚い。",
     sts:"権限が与えられず、裁量がないとき。非論理的な意思決定が横行する環境。",
     grw:"制御力に「人を育てる」視点を加えると、経営者としての器がさらに広がる。",
-    why:"この冷静な制御力と仕事への没頭は、経営の根幹を支える経営企画や、論理で課題を解くコンサルで力を発揮。裁量のあるポジションで真価を発揮します。",
+    why:"この冷静な制御力と仕事への没頭は、経営の根幹を支える経営企画や、論理で課題を解くコンサルで力を発揮。裁量のあるポジションで強みが出やすくなります。",
     desc:"仕事にのめり込み、データとロジックで組織の土台を固める。裁量を持って経営を支えるタイプ。",
     good:["DAWS","HBWS","DBLS"],gR:{team:"DAWSの突破力を冷静に制御する最強コンビ。",senpai:"HBWSの裏方力と戦略が噛み合う理想の関係。",friend:"DBLSとは論理で通じ合える最高の就活仲間に。"},
     bad:["HALG","HBLG"],bR:{team:"HALGの感情ベースの判断はDBWSには非効率に映る。",senpai:"HBLGの穏やかさがスピード感を求めるDBWSにはもどかしい。",friend:"価値観の違いを認識した上でつき合うと良い。"}},
@@ -1557,9 +1571,9 @@ const TD={
     str:"忍耐力と、品質に妥協しない職人魂。「この人が最終チェックしたなら大丈夫」という信頼。",
     com:"寡黙だが、専門分野の話になると頼れるアドバイザーに。言葉少なだが重みがある。",
     sts:"雑に仕事を進めることを求められるとき。自分のペースを乱されること。",
-    grw:"品質へのこだわりは唯一無二の強み。ここに「速さ」を少しずつ加えると市場価値が急上昇する。",
-    why:"この緻密さと粘り強さは、正確さが命の経理・財務や法務、品質管理で真価を発揮。師匠のもとで技を磨く職人的なキャリアパスが合っています。",
-    desc:"仕事に全力で向き合い、先輩のもとで丁寧にスキルを磨く。専門職で真価を発揮するタイプ。",
+    grw:"品質へのこだわりは唯一無二の強み。ここに「速さ」を少しずつ加えると扱える仕事の幅が広がる。",
+    why:"この緻密さと粘り強さは、正確さが命の経理・財務や法務、品質管理で強みが出やすくなります。師匠のもとで技を磨く職人的なキャリアパスが合っています。",
+    desc:"仕事に全力で向き合い、先輩のもとで丁寧にスキルを磨く。専門職で強みが出やすいタイプ。",
     good:["HBWG","DBLG","DALG"],gR:{team:"HBWGの誠実さと最高の相性でチームが安定する。",senpai:"DBLGの正確さと切磋琢磨できる理想の関係。",friend:"DALGの品質志向と深いレベルで通じ合える就活仲間に。"},
     bad:["HALS","DAWS"],bR:{team:"HALSのメリハリ型はコツコツ派のDBWGには表面的に映る。",senpai:"DAWSのスピード重視は品質重視のDBWGにはストレス。",friend:"就活ペースが全然違うので、刺激として割り切った関係が良い。"}}
 };
@@ -1651,13 +1665,16 @@ const CODE_IMG={HALS:'a1',HALG:'a2',HAWS:'a3',HAWG:'a4',HBLS:'b1',HBLG:'b2',HBWS
 function codeImg(code){return CODE_IMG[code]||code.toLowerCase();}
 
 function buildTypeOverview(){
-  const cats=[['HA','リーダー系','pa','#2563eb',['HALS','HALG','HAWS','HAWG']],['HB','サポート系','pb','#7c3aed',['HBLS','HBLG','HBWS','HBWG']],['DA','推進系','pc','#0f766e',['DALS','DALG','DAWS','DAWG']],['DB','分析系','pd','#334155',['DBLS','DBLG','DBWS','DBWG']]];
+  /* ラベルは「系」を付けない。ピルが「${cat}系 — ${lbl}」なので、付けると
+     1つのピルに「系」が2回出る。ドロワーの系統ボタン（HA系＋リーダー）とも
+     表記が割れていた（wording-audit.md T-1）。 */
+  const cats=[['HA','リーダー','pa','#2563eb',['HALS','HALG','HAWS','HAWG']],['HB','サポート','pb','#7c3aed',['HBLS','HBLG','HBWS','HBWG']],['DA','推進','pc','#0f766e',['DALS','DALG','DAWS','DAWG']],['DB','分析','pd','#334155',['DBLS','DBLG','DBWS','DBWG']]];
   let h='';
   cats.forEach(([cat,lbl,pill,col,codes])=>{
     h+=`<div id="type-cat-${cat}" style="margin-bottom:20px;"><div class="type-cat-hd"><div class="tc-pill ${pill}">${cat}系 — ${lbl}</div><div class="tc-line"></div></div><div class="type-grid">`;
     codes.forEach(code=>{
       const t=TD[code];
-      h+=`<div class="tc" data-code="${code}" tabindex="-1" onclick="openTypePeek('${code}',this)"><div class="tc-sil" style="background-image:url('images/chars/sm/${codeImg(code)}.webp');"></div><img src="images/chars/${codeImg(code)}.webp" alt="${code}"><div class="tc-code" style="color:${col};">${code}</div><div class="tc-name">${t.name}</div></div>`;
+      h+=`<div class="tc" data-code="${code}" tabindex="-1" onclick="openTypePeek('${code}',this)"><div class="tc-sil" style="background-image:url('images/chars/sm/${codeImg(code)}.webp');"></div><img src="images/chars/${codeImg(code)}.webp" alt=""><div class="tc-code" style="color:${col};">${code}</div><div class="tc-name">${t.name}</div></div>`;
     });
     h+=`</div></div>`;
   });
@@ -1683,7 +1700,10 @@ function checkSavedProgress(){
     const d=JSON.parse(s);
     if(d.curQ>0&&d.curQ<Qs.length){
       const b=document.getElementById('cont-banner');
-      if(b){b.style.display='flex';document.getElementById('cont-sub').textContent=`Q${d.curQ}まで回答済み（残り${Qs.length-d.curQ}問）`;}
+      /* curQ は「回答済みの問数」であって到達位置ではない。歯抜けに答えると
+         「Q3まで回答済み」が事実と食い違う（wording-audit.md H-5）。
+         .prog-seg の aria-valuetext と同じ文型に揃える。 */
+      if(b){b.style.display='flex';document.getElementById('cont-sub').textContent=`${Qs.length}問中${d.curQ}問に回答済み（残り${Qs.length-d.curQ}問）`;}
     }
   }catch(e){}
 }
@@ -1755,9 +1775,12 @@ function startFresh(entry){
    どちらで答えても同じ ans[] を更新するので、CTAは
    「最初の、5問すべてが埋まっていないページ」へ送れば全ケースが成立する。 */
 function continueOrStart(entry){
-  /* 共有リンクで来た人だけは段差を作らず #lp-quiz へ送る（§A-2 の表）。
-     友達のリンクで来た人こそ、画面遷移なしで答え始めさせるべき相手である。 */
-  if(entry==='shared'&&curQ<LP_Q_COUNT){goToLpQuiz();return;}
+  /* 共有リンクで来た人と、ヒーローCTAを押した人は段差を作らず #lp-quiz へ送る。
+     友達のリンクで来た人こそ、画面遷移なしで答え始めさせるべき相手である（§A-2 の表）。
+     ヒーローCTAは、直下に見えているのと同じ Q1-5 を全画面で出し直していた。
+     入口を質問カード1つに統一し、ボタンは「そこへ連れて行く」案内に降格させる
+     （docs/design/wording-audit.md §2 案B。判断⑫の処方を上書きした）。 */
+  if((entry==='shared'||entry==='hero')&&curQ<LP_Q_COUNT){goToLpQuiz();return;}
   if(curQ<=0){startFresh(entry);return;}
   if(!quizStarted){quizStarted=true;quizStartedAt=Date.now();track('quiz_start',{entry:entry||'hero'});}
   goToQuizPage(firstIncompletePage());
@@ -1810,8 +1833,8 @@ const FACES={
   lp:  {list:'lq-list',seg:'lq-prog-seg',pre:'lq',remain:'lq-remain'}
 };
 /* 6段階（+3/+2/+1/-1/-2/-3・中央値なし）。読み上げ用のラベルを値と一緒に持つ。 */
-const SCALE=[[3,'Aに強く近い'],[2,'Aに近い'],[1,'どちらかといえばA'],
-             [-1,'どちらかといえばB'],[-2,'Bに近い'],[-3,'Bに強く近い']];
+const SCALE=[[3,'Aにとても近い'],[2,'Aに近い'],[1,'どちらかといえばA'],
+             [-1,'どちらかといえばB'],[-2,'Bに近い'],[-3,'Bにとても近い']];
 
 /* その面が受け持つページ */
 function facePage(tg){return tg==='lp'?0:curPage;}
@@ -1844,8 +1867,12 @@ function updateCtas(){
   const set=(id,base,cont)=>{const el=document.getElementById(id);if(el)el.textContent=fresh?base:cont;};
   /* ヒーローCTAだけ「診断をはじめる」ではない。同じ画面に質問カードが
      見えるようになり、「はじめる」が下の質問に答えることも指してしまうため
-     （docs/design/hero-floating-characters.md 判断⑫）。 */
-  set('cta-hero','20問すべてに答える →',`残り${rem}問を続ける →`);
+     （docs/design/hero-floating-characters.md 判断⑫）。
+     判断⑫は「言葉を分ける」ことで解こうとしたが、行き先を1つにすれば言葉を
+     分ける必要は無い（wording-audit.md §2 案B）。矢印は行き先の種類を表す。
+       ↓ … 同じページの #lp-quiz へスクロールする（画面は変わらない）
+       → … 画面が切り替わる（5問そろっている人だけ診断画面へ進む） */
+  set('cta-hero','最初の質問へ ↓',curQ<LP_Q_COUNT?'続きから答える ↓':`残り${rem}問を続ける →`);
   set('cta-grid','診断をはじめる →',`残り${rem}問を続ける →`);
   set('cta-drawer','▶ 診断をはじめる',`▶ 残り${rem}問を続ける`);
   const sb=document.querySelector('.sb-cta');
@@ -1860,6 +1887,10 @@ function updateRemain(tg){
   el.classList.remove('warn');
   el.classList.toggle('done',n===0);
   el.textContent=n===0?`${PAGE_SIZE}問すべて回答済み`:`あと${n}問`;
+  /* LP面だけ、5問そろったら残数を隠す。すぐ上に .lq-done「ここまで5問。」が
+     出るので、直下の「5問すべて回答済み」は同じことの言い直しになる。
+     診断画面（#q-remain）は .lq-done が無いのでそのまま出す（wording-audit.md L-3）。 */
+  el.style.display=(tg==='lp'&&n===0)?'none':'';
 }
 
 /* 1問ぶんのカード。LP と診断画面で同一の HTML を吐く。 */
@@ -1882,7 +1913,7 @@ function buildCard(f,pos){
     + `<div class="opt-line opt-a${has&&a>0?' on':''}" id="${idA}"><span class="opt-key">A.</span><span class="opt-txt">${esc(q.a)}</span></div>`
     + `<div class="opt-line opt-b${has&&a<0?' on':''}" id="${idB}"><span class="opt-key">B.</span><span class="opt-txt">${esc(q.b)}</span></div>`
     + `</div>`
-    + `<div class="spec-track" role="radiogroup" aria-label="Q${pos+1} 6段階で選んでください" aria-describedby="${idA} ${idB}">${dots}</div>`
+    + `<div class="spec-track" role="radiogroup" aria-label="Q${pos+1} の回答を6段階から選んでください" aria-describedby="${idA} ${idB}">${dots}</div>`
     + `<div class="spec-hint"><span class="sh-a">A</span><span class="sh-b">B</span></div>`
     + `</div></div>`;
 }
@@ -1899,7 +1930,10 @@ function renderPage(target){
   if(tg==='quiz'){
     const from=p*PAGE_SIZE+1,to=Math.min((p+1)*PAGE_SIZE,Qs.length);
     const pt=document.getElementById('prog-text');
-    if(pt)pt.textContent=`${p+1} / ${PAGE_COUNT} ページ（Q${from}-${to}）`;
+    /* 目盛はユーザーが数えている単位（問）で出す。「1 / 4 ページ」は運営の刻みで、
+       同じ行の .prog-msg がページの文脈を引き取る（wording-audit.md Q-1 / Q-2）。
+       .prog-seg の aria-valuetext「20問中N問に回答済み」とも単位が揃う。 */
+    if(pt)pt.textContent=`Q${from}-${to} / 全${Qs.length}問`;
     const pm=document.getElementById('prog-msg');
     if(pm)pm.textContent=PAGE_MSGS[Math.min(p,PAGE_MSGS.length-1)];
     const bk=document.getElementById('back-btn');
@@ -2114,7 +2148,7 @@ function toggleAcc(head){head.classList.toggle('aopen');head.nextElementSibling.
 /* 結果画面の相性キャラは非対話にした。従来はここから scores を捏造して
    結果全文を出していた（C-6）。診断済みの人に「20問で確かめる →」を出すのは
    不整合なので、結果画面にはタイプ紹介の展開先を作らない（UI仕様 §11 A-3）。 */
-function cImg(code,sz=54){return `<img src="images/chars/sm/${codeImg(code)}.webp" alt="${code}" style="width:${sz}px;height:${sz}px;object-fit:contain;">`;}
+function cImg(code,sz=54){return `<img src="images/chars/sm/${codeImg(code)}.webp" alt="" style="width:${sz}px;height:${sz}px;object-fit:contain;">`;}
 
 /* =========================================================================
    C-6 タイプ紹介（.type-peek）
@@ -2156,11 +2190,14 @@ function openTypePeek(code,el){
   box.setAttribute('aria-label',t.name+' の紹介');
   box.innerHTML='<button type="button" class="tp-close" aria-label="閉じる" onclick="closeTypePeek()">✕</button>'
     +'<div class="tp-inner">'
-    +`<img class="tp-img" src="images/chars/${codeImg(code)}.webp" alt="${esc(code)} ${esc(t.name)}">`
+    +`<img class="tp-img" src="images/chars/${codeImg(code)}.webp" alt="">`
     +`<div class="tp-txt"><div class="tp-code">${esc(code)}</div><div class="tp-name">${esc(t.icon)} ${esc(t.name)}</div><div class="tp-tag">${esc(t.tag)}</div></div>`
     +'</div>'
     +`<div class="tp-str"><span class="tp-str-lbl">強み</span><div class="tp-str-txt">${esc(firstSentence(t.str))}</div></div>`
-    +'<button type="button" class="btn rpl tp-cta" onclick="addRipple(event,this);continueOrStart(&quot;peek&quot;)">自分のタイプを診断する →</button>';
+    /* 共有バナーの .sb-cta と同じ文字列だったが、指している状況が違う
+       （こちらは16タイプ一覧を眺めている人）。今見ているカードとの関係を戻す
+       （design/diagnosis-experience-revamp.md W-9 / wording-audit.md T-2）。 */
+    +'<button type="button" class="btn rpl tp-cta" onclick="addRipple(event,this);continueOrStart(&quot;peek&quot;)">このタイプかどうか、20問で確かめる →</button>';
   grid.insertBefore(box,rowEnd?rowEnd.nextSibling:null);
   track('type_peek',{type_code:code});
   if(box.scrollIntoView)box.scrollIntoView({block:'nearest',behavior:'smooth'});
@@ -2192,7 +2229,10 @@ function buildCoHTML(inds){
   inds.forEach(ind=>{
     const cos=CD[ind]||[];
     h+=`<div style="margin-bottom:16px;"><div style="font-size:9px;font-weight:900;letter-spacing:3px;color:var(--blue2);text-transform:uppercase;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);">${ind}</div>`;
-    cos.forEach((c,i)=>{h+=`<div class="co-item"><div class="co-rank">${i+1}</div><div class="co-info"><h4>${c.co}</h4><p>${ind}</p></div><span class="co-job">${c.job}</span></div>`;});
+    /* 1〜5の連番（.co-rank）は出さない。すぐ下の .co-note が「掲載順に優劣はなく」と
+       書いているのに、画面は順位を表示していた（wording-audit.md R-4）。
+       業界名の再掲（<p>${ind}</p>）も落とした。同じブロックの見出しに出ている（R-9）。 */
+    cos.forEach(c=>{h+=`<div class="co-item"><div class="co-info"><h4>${c.co}</h4></div><span class="co-job">${c.job}</span></div>`;});
     h+=`</div>`;
   });
   return h;
@@ -2228,22 +2268,29 @@ function showResult(_unusedSkipIntro=false,source='quiz'){
   const inds=selectedIndustries.length>0?selectedIndustries:Object.keys(CD);
   const r=REASON[cat],rl=REASON_L[sub];
   /* 判定理由のタグは getCode() と同じ根拠で向きを出す。scores>=0 のままだと、
-     合計0の軸でタイプコード（多数決）と逆向きの「高/低」が並ぶ。 */
+     合計0の軸でタイプコード（多数決）と逆向きの札が並ぶ。
+     4軸とも「倒れた側の名前 ＋ %」に統一した。「高/低」は存在しない基準との
+     比較を含意し、軸1・2 だけ書式が違っていた（wording-audit.md R-2）。 */
   const _v=axisVotes();
   const h=axisIsPos(1,_v),a=axisIsPos(2,_v),l=axisIsPos(3,_v),s=axisIsPos(4,_v);
   const s1=Math.min(100,Math.round(Math.abs(scores[1]/AX_MAX)*100));
   const s2=Math.min(100,Math.round(Math.abs(scores[2]/AX_MAX)*100));
   const s3=Math.min(100,Math.round(Math.abs(scores[3]/AX_MAX)*100));
   const s4=Math.min(100,Math.round(Math.abs(scores[4]/AX_MAX)*100));
-  const avgStr=Math.round((s1+s2+s3+s4)/4);
-  const varMsg=avgStr>=70?'回答が一貫しており、診断精度が高い結果です。':avgStr>=40?'バランス型の回答で、多面的な魅力を持つタイプです。':'各軸が接近しており、状況適応型の柔軟さを持ちます。';
+  /* varMsg（回答の散らばりから「診断精度が高い」等を出す3分岐）は削除した。
+     精度は測っていない（privacy.html §6「心理検査としての妥当性・信頼性の検証は
+     行っていません」）うえ、3分岐すべてが褒め言葉になっていた。
+     docs/specs/diagnosis-experience-revamp.md §C-2 / docs/design/wording-audit.md R-1。 */
 
+  /* バッジは「相性◎ / 要注意」だった。◎ は根拠のない格付けの記号で、
+     「要注意」は他人の人格への警告として強すぎる（bR の中身はペースの違いの話）。
+     docs/design/wording-audit.md R-7。パネル自体を置くかは未決（オーナー判断3）。 */
   function compatSec(codes,cls,title,icon){
     if(!codes?.length)return'';
-    let h=`<div class="r-panel fade-in"><div class="r-ph" onclick="toggleAcc(this)"><div class="r-pi">${icon}</div><div class="r-pt">${title}</div><span class="r-tog">▼</span></div><div class="r-pb">`;
+    let h=`<div class="r-panel fade-in"><div class="r-ph" onclick="toggleAcc(this)"><div class="r-pi" aria-hidden="true">${icon}</div><div class="r-pt">${title}</div><span class="r-tog">▼</span></div><div class="r-pb">`;
     codes.forEach(c=>{
       const ct=TD[c],gr=cls==='good'?t.gR:t.bR;
-      h+=`<div class="compat-item"><div class="compat-chars"><div class="compat-cbox">${cImg(code,54)}<span class="code" style="color:var(--blue2);">${code}</span></div><span class="compat-vs">⇔</span><div class="compat-cbox">${cImg(c,54)}<span class="code" style="color:var(--blue2);">${c}</span></div><div class="compat-info"><span class="cm-badge cm-${cls}">${cls==='good'?'相性◎':'要注意'}</span><div class="compat-name">${ct.icon} ${ct.name}</div><div class="compat-tag">${ct.tag}</div></div></div><div class="compat-angles"><div class="ca"><div class="ca-icon">👥</div><span class="ca-lbl">チームで</span><div class="ca-txt">${gr.team}</div></div><div class="ca"><div class="ca-icon">👆</div><span class="ca-lbl">先輩なら</span><div class="ca-txt">${gr.senpai}</div></div><div class="ca"><div class="ca-icon">🎓</div><span class="ca-lbl">就活仲間</span><div class="ca-txt">${gr.friend}</div></div></div></div>`;
+      h+=`<div class="compat-item"><div class="compat-chars"><div class="compat-cbox">${cImg(code,54)}<span class="code" style="color:var(--blue2);">${code}</span></div><span class="compat-vs">⇔</span><div class="compat-cbox">${cImg(c,54)}<span class="code" style="color:var(--blue2);">${c}</span></div><div class="compat-info"><span class="cm-badge cm-${cls}">${cls==='good'?'相性が良い':'すれ違いやすい'}</span><div class="compat-name">${ct.icon} ${ct.name}</div><div class="compat-tag">${ct.tag}</div></div></div><div class="compat-angles"><div class="ca"><div class="ca-icon" aria-hidden="true">👥</div><span class="ca-lbl">チームで</span><div class="ca-txt">${gr.team}</div></div><div class="ca"><div class="ca-icon" aria-hidden="true">👆</div><span class="ca-lbl">先輩なら</span><div class="ca-txt">${gr.senpai}</div></div><div class="ca"><div class="ca-icon" aria-hidden="true">🎓</div><span class="ca-lbl">就活仲間なら</span><div class="ca-txt">${gr.friend}</div></div></div></div>`;
     });
     return h+`</div></div>`;
   }
@@ -2251,7 +2298,10 @@ function showResult(_unusedSkipIntro=false,source='quiz'){
   let subH='';
   if(subCode&&TD[subCode]){
     const st=TD[subCode];
-    subH=`<div class="r-panel fade-in"><div class="r-ph" onclick="toggleAcc(this)"><div class="r-pi">🔮</div><div class="r-pt">サブタイプ</div><span class="r-tog">▼</span></div><div class="r-pb"><div class="subtype-card"><div class="sub-head">あなたのサブタイプ</div><div class="sub-note">4つの軸のうち、いちばん僅差だった1つが逆に出ていれば、こちらのタイプでした。それだけ差が小さかったということなので、こちらの傾向も併せて見ておくと、自分の振れ幅がつかみやすくなります。</div><div class="sub-inner"><img class="sub-img" src="images/chars/sm/${codeImg(subCode)}.webp" alt="${subCode}"><div><div class="sub-code">${subCode}</div><div class="sub-name">${st.icon} ${st.name}</div><div class="sub-tag">${st.tag}</div><span class="sub-pct">2番目に近いタイプ</span></div></div></div></div></div>`;
+    /* .sub-head「あなたのサブタイプ」は、3行上のパネル見出し「サブタイプ」の
+       言い直しだったので削除した（wording-audit.md R-14）。
+       .sub-note は主語のねじれを直した（R-15）。 */
+    subH=`<div class="r-panel fade-in"><div class="r-ph" onclick="toggleAcc(this)"><div class="r-pi" aria-hidden="true">🔮</div><div class="r-pt">サブタイプ</div><span class="r-tog">▼</span></div><div class="r-pb"><div class="subtype-card"><div class="sub-note">4つの軸のうち、いちばん差が小さかった1つが逆に出ていれば、こちらのタイプでした。それだけ僅差だったということなので、こちらの傾向も併せて見ると、自分の振れ幅がつかめます。</div><div class="sub-inner"><img class="sub-img" src="images/chars/sm/${codeImg(subCode)}.webp" alt=""><div><div class="sub-code">${subCode}</div><div class="sub-name">${st.icon} ${st.name}</div><div class="sub-tag">${st.tag}</div><span class="sub-pct">2番目に近いタイプ</span></div></div></div></div></div>`;
   }
 
   const indChips=Object.keys(CD).map(ind=>`<div class="ind-sm${selectedIndustries.includes(ind)?' sel':''}" onclick="toggleIndSm(this,'${ind}')">${ind}</div>`).join('');
@@ -2263,35 +2313,34 @@ function showResult(_unusedSkipIntro=false,source='quiz'){
       <img class="result-sil" src="images/chars/${codeImg(code)}.webp" alt="" aria-hidden="true">
       <div class="result-inner">
         <div class="res-announce">Career Type Result</div>
-        <div class="char-frame"><img class="res-char" src="images/chars/${codeImg(code)}.webp" alt="${code}"></div>
+        <div class="char-frame"><img class="res-char" src="images/chars/${codeImg(code)}.webp" alt=""></div>
         <div class="res-code" id="res-code-el">----</div>
         <div class="res-type-name">${t.icon} ${t.name}</div>
         <div class="res-tagline">${t.tag}</div>
-        <div class="rarity-row"><span class="rar-badge">📊 20問・4軸による傾向の分類です</span></div>
+        <div class="rarity-row"><span class="rar-badge"><span aria-hidden="true">📊</span> 20問・4軸による傾向の分類です</span></div>
         <div class="res-kws">${t.kw.map(k=>`<span class="res-kw">${k}</span>`).join('')}</div>
-        <div class="famous-box"><div class="famous-icon">🌟</div><div class="famous-text"><span>${TYPE_ARCHETYPE[code]}</span></div></div>
+        <div class="famous-box"><div class="famous-icon" aria-hidden="true">🌟</div><div class="famous-text"><span>${TYPE_ARCHETYPE[code]}</span></div></div>
         <div class="share-grid" style="margin-bottom:8px;">
           <button class="sh sh-x rpl" onclick="addRipple(event,this);shareX()">𝕏 シェア</button>
-          <button class="sh sh-ln rpl" onclick="addRipple(event,this);shareLINE()">LINE</button>
+          <button class="sh sh-ln rpl" onclick="addRipple(event,this);shareLINE()">LINE 送信</button>
           <button class="sh sh-cp rpl" onclick="addRipple(event,this);copyResult()">コピー</button>
         </div>
-        <div class="friend-card"><div class="friend-text">👥 友達のタイプも診断してみよう！</div><button class="friend-btn" onclick="copyLink()">🔗 診断リンクを友達に送る</button></div>
+        <div class="friend-card"><div class="friend-text">👥 友達のタイプも診断してみよう！</div><button class="friend-btn" onclick="copyLink()">🔗 診断リンクをコピー</button></div>
       </div>
     </div>
     <div class="wrap" style="padding-top:20px;">
       <div class="narration fade-in">${t.desc}</div>
-      <div class="narration fade-in" style="background:linear-gradient(135deg,#eff6ff,#f5f3ff);font-size:.78rem;">📊 ${varMsg}</div>
-      <div class="reason-box fade-in"><div class="rb-title">判定理由</div><div class="rb-text">${r.h} ${r.a} ${rl}</div><div class="rb-tags"><span class="rbt rbt1">${AX[1].l}:${h?'高':'低'} ${s1}%</span><span class="rbt rbt2">${AX[2].l}:${a?'高':'低'} ${s2}%</span><span class="rbt rbt3">${l?AX[3].l:AX[3].r} ${s3}%</span><span class="rbt rbt4">${s?AX[4].l:AX[4].r} ${s4}%</span></div></div>
-      <div class="r-panel fade-in"><div class="r-ph aopen" onclick="toggleAcc(this)"><div class="r-pi">📊</div><div class="r-pt">診断スコア</div><span class="r-tog" style="transform:rotate(180deg);">▼</span></div><div class="r-pb aopen">${buildAxisViz(scores)}</div></div>
+      <div class="reason-box fade-in"><div class="rb-title">判定理由</div><div class="rb-text">${r.h} ${r.a} ${rl}</div><div class="rb-tags"><span class="rbt rbt1">${h?AX[1].l:AX[1].r} ${s1}%</span><span class="rbt rbt2">${a?AX[2].l:AX[2].r} ${s2}%</span><span class="rbt rbt3">${l?AX[3].l:AX[3].r} ${s3}%</span><span class="rbt rbt4">${s?AX[4].l:AX[4].r} ${s4}%</span></div></div>
+      <div class="r-panel fade-in"><div class="r-ph aopen" onclick="toggleAcc(this)"><div class="r-pi" aria-hidden="true">📊</div><div class="r-pt">診断スコア</div><span class="r-tog" style="transform:rotate(180deg);">▼</span></div><div class="r-pb aopen">${buildAxisViz(scores)}</div></div>
       ${subH}
-      <div class="r-panel fade-in"><div class="r-ph aopen" onclick="toggleAcc(this)"><div class="r-pi">🧠</div><div class="r-pt">性格タイプ詳細</div><span class="r-tog" style="transform:rotate(180deg);">▼</span></div><div class="r-pb aopen"><div class="body-txt" style="margin-bottom:16px;">${t.per}</div><div class="d-sec"><div class="d-lbl ls">強み</div><div class="body-txt">${t.str}</div></div><div class="d-sec"><div class="d-lbl lc">コミュニケーション</div><div class="body-txt">${t.com}</div></div><div class="d-sec"><div class="d-lbl lt">ストレス源</div><div class="body-txt">${t.sts}</div></div><div class="d-sec"><div class="d-lbl lg">成長のヒント</div><div class="body-txt">${t.grw}</div></div></div></div>
-      <div class="r-panel fade-in"><div class="r-ph" onclick="toggleAcc(this)"><div class="r-pi">💼</div><div class="r-pt">向いている職種</div><span class="r-tog">▼</span></div><div class="r-pb"><div class="job-tags">${t.jobs.map(j=>`<div class="job-tag">${j}</div>`).join('')}</div><div class="body-txt">${t.why}</div></div></div>
+      <div class="r-panel fade-in"><div class="r-ph aopen" onclick="toggleAcc(this)"><div class="r-pi" aria-hidden="true">🧠</div><div class="r-pt">性格タイプ詳細</div><span class="r-tog" style="transform:rotate(180deg);">▼</span></div><div class="r-pb aopen"><div class="body-txt" style="margin-bottom:16px;">${t.per}</div><div class="d-sec"><div class="d-lbl ls">強み</div><div class="body-txt">${t.str}</div></div><div class="d-sec"><div class="d-lbl lc">コミュニケーション</div><div class="body-txt">${t.com}</div></div><div class="d-sec"><div class="d-lbl lt">ストレスを感じやすい場面</div><div class="body-txt">${t.sts}</div></div><div class="d-sec"><div class="d-lbl lg">成長のヒント</div><div class="body-txt">${t.grw}</div></div></div></div>
+      <div class="r-panel fade-in"><div class="r-ph" onclick="toggleAcc(this)"><div class="r-pi" aria-hidden="true">💼</div><div class="r-pt">向いている職種</div><span class="r-tog">▼</span></div><div class="r-pb"><div class="job-tags">${t.jobs.map(j=>`<div class="job-tag">${j}</div>`).join('')}</div><div class="body-txt">${t.why}</div></div></div>
 
       ${buildAgentBlock('primary',cat,code,source)}
       ${compatSec(t.good,'good','相性の良いタイプ','🤝')}
       ${compatSec(t.bad,'bad','注意が必要なタイプ','⚠️')}
-      <div class="r-panel fade-in"><div class="r-ph" onclick="toggleAcc(this)"><div class="r-pi">🏢</div><div class="r-pt">業界別の職種例</div><span class="r-tog">▼</span></div><div class="r-pb"><div class="ind-grid-sm">${indChips}</div><p class="co-note">※タイプの傾向に近い職種の例です。掲載順に優劣はなく、特定の企業の採用基準や選考とは関係ありません。</p><div id="company-list">${buildCoHTML(inds)}</div></div></div>
-      <div class="r-panel fade-in"><div class="r-ph always" style="cursor:default;"><div class="r-pi">📤</div><div class="r-pt">結果をシェア</div></div><div class="r-pb always"><div class="share-grid"><button class="sh sh-x rpl" onclick="addRipple(event,this);shareX()">𝕏 シェア</button><button class="sh sh-ln rpl" onclick="addRipple(event,this);shareLINE()">LINE</button><button class="sh sh-cp rpl" onclick="addRipple(event,this);copyResult()">コピー</button></div></div></div>
+      <div class="r-panel fade-in"><div class="r-ph" onclick="toggleAcc(this)"><div class="r-pi" aria-hidden="true">🏢</div><div class="r-pt">業界別の職種例</div><span class="r-tog">▼</span></div><div class="r-pb"><p class="ind-lbl">気になる業界を選ぶと絞り込めます</p><div class="ind-grid-sm">${indChips}</div><p class="co-note">※タイプの傾向に近い職種の例です。掲載順に優劣はなく、特定の企業の採用基準や選考とは関係ありません。</p><div id="company-list">${buildCoHTML(inds)}</div></div></div>
+      <div class="r-panel fade-in"><div class="r-ph always" style="cursor:default;"><div class="r-pi" aria-hidden="true">📤</div><div class="r-pt">結果をシェア</div></div><div class="r-pb always"><div class="share-grid"><button class="sh sh-x rpl" onclick="addRipple(event,this);shareX()">𝕏 シェア</button><button class="sh sh-ln rpl" onclick="addRipple(event,this);shareLINE()">LINE 送信</button><button class="sh sh-cp rpl" onclick="addRipple(event,this);copyResult()">コピー</button></div></div></div>
       ${buildAgentBlock('secondary',cat,code,source)}
       <button class="retry-btn rpl" onclick="addRipple(event,this);clearSavedProgress();location.reload()">もう一度診断する →</button>
       <div style="height:50px;"></div>
@@ -2311,7 +2360,7 @@ function showResult(_unusedSkipIntro=false,source='quiz'){
    これまでシェア文にURLが1文字も入っておらず、拡散しても新規流入が0だった。
    shareUrl(code) … 自分の結果を見せるためのURL。ref=share を付けることで、
                     踏んだ人には他人の結果を出さず LP を見せる（§A-6）。
-   topUrl()       … 「診断リンクを友達に送る」用。?type= を含まない診断トップ。
+   topUrl()       … 「診断リンクをコピー」用。?type= を含まない診断トップ。
    TODO: タイプ別OGP r/<CODE>.html（未決事項 U-11）を用意したら、shareUrl() の
          戻り値を SITE_BASE+'r/'+code+'.html' に差し替える。呼び出し側は無変更で済む。
    ========================================================================= */
@@ -2330,8 +2379,8 @@ function copyText(txt,okMsg){
       document.body.appendChild(ta);ta.select();
       const ok=document.execCommand('copy');
       document.body.removeChild(ta);
-      ok?done():alert('コピーできませんでした。次のURLを手動でコピーしてください：\n'+txt);
-    }catch(e){alert('コピーできませんでした。次のURLを手動でコピーしてください：\n'+txt);}
+      ok?done():alert('コピーできませんでした。下の内容を手動でコピーしてください：\n'+txt);
+    }catch(e){alert('コピーできませんでした。下の内容を手動でコピーしてください：\n'+txt);}
   };
   try{
     if(navigator.clipboard&&navigator.clipboard.writeText){
@@ -2355,13 +2404,16 @@ function shareLINE(){
 function copyResult(){
   const c=getCode(),t=TD[c];
   track('share_click',{channel:'copy',type_code:c});
-  copyText(`私のキャリアタイプは【${c}：${t.icon} ${t.name}】でした！\n${t.tag}\n向いている職種：${t.jobs.join('、')}\n${t.desc}\n${shareUrl(c)}`,'コピーしました！');
+  /* 3つの出口（X / LINE / コピー）は同じものを配る。コピーだけ t.desc が
+     1行多かった（wording-audit.md S-6）。完了の知らせは祝わない（S-5）。 */
+  copyText(`私のキャリアタイプは【${c}：${t.icon} ${t.name}】でした！\n${t.tag}\n向いている職種：${t.jobs.join('、')}\n${shareUrl(c)}`,'結果をコピーしました。');
 }
 function copyLink(){
   /* location.href だと、?type= 付きURLで来た人が「他人の結果URL」を配ってしまう。
      このボタンは診断そのものを勧めるものなので、必ず診断トップを配る。 */
   track('share_click',{channel:'link',type_code:getCode()});
-  copyText(topUrl(),'リンクをコピーしました！友達に送ってみよう🎉');
+  /* コピーは祝う出来事ではない。紙吹雪を撤廃した基準と揃える（wording-audit.md S-4）。 */
+  copyText(topUrl(),'診断リンクをコピーしました。');
 }
 
 /* =========================================================================
@@ -2404,7 +2456,7 @@ function buildAgentBlock(pos,cat,code,source){
       +(note?`<span class="ab-note">${esc(note)}</span>`:'')
       +'</a></li>';
   }).join('');
-  const title=pos==='primary'?`${code} の次の一手`:'もう一度診断する前に';
+  const title=pos==='primary'?`${(TD[code]||{}).name||code} の次の一手`:'もう一度診断する前に';
   const lead=pos==='primary'
     ?'この診断でわかるのは働き方の傾向までです。実際の求人や選考の進め方は、就活の話ができる相手に一度あたってみるのが早いです。'
     :'結果を見たあとに話を聞いてみたくなったら、こちらから。';
@@ -2462,7 +2514,7 @@ function renderSharedBanner(code){
   el.className='shared-banner';
   el.innerHTML='<div class="sb-lbl">友達から届いた診断結果</div>'
     +'<div class="sb-body">'
-    +`<img class="sb-img" src="images/chars/${codeImg(code)}.webp" alt="${esc(code)} ${esc(t.name)}">`
+    +`<img class="sb-img" src="images/chars/${codeImg(code)}.webp" alt="">`
     +`<div class="sb-txt"><span class="sb-code">${esc(code)}</span><span class="sb-name">${esc(t.icon)} ${esc(t.name)}</span><span class="sb-tag">${esc(t.tag)}</span></div>`
     +'</div>'
     +'<button class="sb-cta" onclick="continueOrStart(&quot;shared&quot;)">自分のタイプを診断する →</button>';
