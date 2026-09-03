@@ -225,6 +225,35 @@ try{
   chk(decodeURIComponent(opened).indexOf(SU)>=0,'shareLINE の本文にサイトURLが入る');
   p('     shareLINE -> '+decodeURIComponent(opened).slice(0,200));
 
+  /* S-7: share_click に position（hero / panel）が載ること。
+     結果画面のシェア出口は2箇所（.result-inner 内と「結果をシェア」パネル）で、
+     どちらが押されたかが分からないと「シェアが送客可視率を食っているか」を
+     判定できない（design/conversion-structure-and-pc-grid.md §突き合わせ 6）。
+     GA_ID は空のままなので track() は外へ出さない。関数の呼ばれ方だけを見る。 */
+  {
+    w.eval("window.__ev=[];window.track=function(n,q){window.__ev.push([n,q]);};");
+    w.eval("for(let i=0;i<20;i++)ans[i]=2;showResult(true,'quiz')"); await sleep(200);
+    w.shareX('hero'); w.shareX('panel');
+    w.shareLINE('hero'); w.shareLINE('panel');
+    w.alert=()=>{};
+    Object.defineProperty(w.navigator,'clipboard',{configurable:true,value:{writeText:()=>Promise.resolve()}});
+    w.copyResult('hero'); w.copyResult('panel'); w.copyLink('hero');
+    w.shareX();                                  /* 引数なしは 'hero' 扱い */
+    await sleep(80);
+    const ev=w.__ev.filter(e=>e[0]==='share_click').map(e=>e[1].channel+':'+e[1].position);
+    chk(ev.join(',')==='x:hero,x:panel,line:hero,line:panel,copy:hero,copy:panel,link:hero,x:hero',
+        'share_click に position（hero / panel）が載る（S-7）: '+ev.join(','));
+    chk(w.__ev.filter(e=>e[0]==='share_click').every(e=>e[1].channel&&e[1].type_code&&e[1].position),
+        'channel / type_code / position の3つがそろっている');
+    /* 画面上のボタンが実際にどちらの position を渡しているか（DOM 側の配線） */
+    const heroBtns=[...d.querySelectorAll('.result-inner .share-grid .sh')].map(b=>b.getAttribute('onclick'));
+    const panelBtns=[...d.querySelectorAll('.r-pb.always .share-grid .sh')].map(b=>b.getAttribute('onclick'));
+    chk(heroBtns.length===3&&heroBtns.every(s=>/\('hero'\)/.test(s)),
+        '結果ヒーローの3ボタンは position=hero を渡す');
+    chk(panelBtns.length===3&&panelBtns.every(s=>/\('panel'\)/.test(s)),
+        '「結果をシェア」パネルの3ボタンは position=panel を渡す');
+  }
+
   // copyLink: ?type= 付きで来た第三者がコピーしても診断トップになる
   await load('index.html?type=DBWG'); w=f.contentWindow; d=f.contentDocument;
   await sleep(200);
@@ -281,14 +310,36 @@ try{
   chk(ap.querySelectorAll('.ab-note').length===1 && !/許可/.test(ap.querySelector('.ab-note').textContent),'許可番号が空なら出さない: '+ap.querySelector('.ab-note').textContent);
   chk(lk.getAttribute('href').indexOf('utm_content=HALS-primary')>=0,'utm_content=<CODE>-<position>: '+lk.getAttribute('href'));
   chk(!!ap.querySelector('.ab-disc'),'.ab-disc（紹介料の開示）がある');
-  // 「向いている職種」パネルの直後か
+  /* 職種の節（「向いている職種」→「業界別の職種例」）を締めくくる位置か。
+     以前は「向いている職種」の直後を見ていたが、design/conversion-structure-and-pc-grid.md
+     S-5 で「業界別の職種例」をあいだへ移した。仕様 §A-4 が求めているのは
+     「職種を読み終えた直後」なので、職種の2パネルが連続し、その直後に
+     #agent-primary が来ることを見る（娯楽側の相性パネルは後ろへ送った）。
+     あわせて S-4：「向いている職種」が既定で開いていること。閉じていると
+     #agent-primary の直前は44pxの見出し行で、置き場所の根拠が成立しない。 */
   const panels=[...d.querySelectorAll('#screen-result .r-panel')];
   const jobPanel=panels.find(x=>/向いている職種/.test(x.textContent));
-  chk(jobPanel && jobPanel.nextElementSibling===ap,'#agent-primary が「向いている職種」パネルの直後');
+  const indPanel=panels.find(x=>/業界別の職種例/.test(x.textContent));
+  chk(!!jobPanel&&!!jobPanel.querySelector('.r-ph.aopen')&&!!jobPanel.querySelector('.r-pb.aopen'),
+      '「向いている職種」が既定で開いている（S-4）');
+  chk(jobPanel && jobPanel.nextElementSibling===indPanel,'「業界別の職種例」が「向いている職種」の直後（S-5）');
+  chk(indPanel && indPanel.nextElementSibling===ap,'#agent-primary が職種の2パネルの直後');
+  chk(!!indPanel && !indPanel.querySelector('.r-ph.aopen'),'「業界別の職種例」は閉じたまま（移動しただけ）');
+  /* 移動によって .co-note（掲載順に優劣はなく…）と .ab-lead（わかるのは傾向まで…）が
+     隣り合う。この2文が送客ブロックの信頼性を支えている（wording-audit.md §8）。 */
+  chk(!!indPanel && /特定の企業の採用基準や選考とは関係ありません/.test(indPanel.textContent)
+      && /この診断でわかるのは働き方の傾向までです/.test(ap.querySelector('.ab-lead').textContent),
+      '.co-note の直後に .ab-lead が来る（限定の2文が隣り合う）');
   chk(d.querySelector('.retry-btn').previousElementSibling===as,'#agent-secondary が「もう一度診断する」の直前');
+  /* 外部サイトを示す ↗ は .ab-name の中にある（S-8）ので、サービス名は
+     先頭のテキストノードで見る。記号そのものは次の行で別に確かめる。 */
+  chk([...ap.querySelectorAll('.ab-name .ab-ext')].length===ap.querySelectorAll('.ab-name').length
+      && ap.querySelector('.ab-ext').textContent==='↗'
+      && ap.querySelector('.ab-ext').getAttribute('aria-label')==='外部サイトへ移動します',
+      '.ab-link の文言末尾に ↗（読み上げにも外部遷移を伝える）（S-8）');
   // タイプが変わっても掲載集合は同一
   w.eval("scores={1:-5,2:-5,3:-5,4:-5};showResult(true,'quiz')"); await sleep(150);
-  chk([...d.querySelectorAll('#agent-primary .ab-name')].map(x=>x.textContent).join()==='テストCA','DBWG でも同じ掲載集合');
+  chk([...d.querySelectorAll('#agent-primary .ab-name')].map(x=>x.firstChild.textContent).join()==='テストCA','DBWG でも同じ掲載集合');
   chk(d.querySelector('#agent-primary a.ab-link').getAttribute('href').indexOf('utm_content=DBWG-primary')>=0,'DBWG の utm_content');
   // 許可番号があるときは .ab-note に出る
   w.eval("AGENTS[0].license='13-ユ-000000';scores={1:5,2:5,3:5,4:5};showResult(true,'quiz')"); await sleep(150);
@@ -1308,6 +1359,146 @@ try{
   chk(!!d.querySelector('.shared-banner'),'?ref=share で .shared-banner が出る');
   chk(d.querySelectorAll('.hc').length===0||getComputedStyle(d.querySelector('.hero-cast')).display==='none',
       '.shared-banner があるときは浮遊キャラを出さない（見えない絵を読まない）');
+
+  /* ---------- T. PC の版面（docs/design/conversion-structure-and-pc-grid.md）----------
+     S-1 .hero-inner / .result-inner に 448px の柱
+     S-2 16タイプ一覧を PC だけ4列に（スマホは2列8行のまま）
+     S-3 .type-peek の挿入位置を列数非依存に
+     S-6 .hero-trust（信頼の1行）
+     S-9 PC の地を --paper2 に
+     幅の選び方: 320/390 はスマホ（2列のまま）。767/768 は境界。1024/1440 は PC。 */
+  {
+    /* --- S-6: 信頼の1行。幅に依らず1行あり、押せるものは増えていない --- */
+    f.style.width='390px'; f.style.height='844px';
+    await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(700);
+    {
+      const tr=d.querySelector('.hero .hero-trust');
+      const sub=d.querySelector('.hero .hero-sub');
+      chk(!!tr,'.hero-trust がヒーローにある（S-6）');
+      chk(!!tr&&sub.nextElementSibling===tr,'.hero-trust は .hero-sub の直下');
+      chk(!!tr&&/登録不要/.test(tr.textContent)&&/メールアドレス不要/.test(tr.textContent)&&/無料/.test(tr.textContent),
+          '3つとも書かれている: '+(tr?tr.textContent:'なし'));
+      /* 3つとも今日の実装で事実であること（入力欄が1つも無い）を DOM 側でも見る。
+         #screen-profile 等で入力欄が入った日に、この行が嘘になるのを止める。 */
+      chk(d.querySelectorAll('form,input,textarea,select').length===0,
+          '「登録不要／メールアドレス不要」が事実である（入力欄が0件）');
+      chk(!!tr&&tr.querySelectorAll('button,a').length===0,'.hero-trust に押せるものを増やしていない');
+      chk(!!tr&&[...tr.querySelectorAll('span')].every(s=>s.getAttribute('aria-hidden')==='true'),
+          '区切りの ｜ は読み上げから外してある（「たてぼう」と読まれない）');
+      const c=getComputedStyle(tr).color;
+      chk(c==='rgb(195, 203, 221)','.hero-trust の文字色は #c3cbdd（--ink-field 上で 9.81:1）: '+c);
+    }
+
+    /* --- 幅ごとの検査 --- */
+    for(const [vw,vh,cols] of [[320,720,2],[390,844,2],[767,900,2],[768,1024,4],[1024,900,4],[1440,900,4]]){
+      f.style.width=vw+'px'; f.style.height=vh+'px';
+      await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(900);
+      const T='('+vw+') ';
+      const pc=vw>=768;
+
+      /* S-2: 列数。スマホは2列×8行のまま、PC だけ4列×4行 */
+      const grids=[...d.querySelectorAll('#type-overview .type-grid')];
+      chk(grids.length===4,T+'.type-grid はカテゴリごとに4本（HA/HB/DA/DB）: '+grids.length);
+      const colCounts=grids.map(g=>getComputedStyle(g).gridTemplateColumns.trim().split(/\s+/).length);
+      chk(colCounts.every(n=>n===cols),T+'16タイプ一覧は '+cols+' 列: '+colCounts.join(','));
+      const rows=16/cols/4;   /* カテゴリあたりの行数 */
+      chk(d.querySelectorAll('#type-overview .tc').length===16,T+'カードは16枚のまま');
+
+      /* S-2: カード幅と縦の可視率 f。object-position の clamp 定数は
+         最悪条件 f=0.397（枠幅 215px）で決めてある。f がそれを下回ると
+         `make heads` の再計測と定数の書き換えが要る。 */
+      const geo=w.eval(`(()=>{
+        const out=[];
+        document.querySelectorAll('#type-overview .tc').forEach(tc=>{
+          const img=tc.querySelector('img'),cs=getComputedStyle(img),b=img.getBoundingClientRect();
+          const padL=parseFloat(cs.paddingLeft)||0,padR=parseFloat(cs.paddingRight)||0;
+          const cw=b.width-padL-padR, ch=b.height;         /* 描画されるコンテンツボックス */
+          const f=ch/(cw*1.5);                             /* 素材は 2:3。縦の可視率 */
+          const p=parseFloat((cs.objectPosition.split(/\\s+/)[1]||'50%'))/100;
+          const head=parseFloat(getComputedStyle(tc).getPropertyValue('--head'))||6;
+          const top=p*(1-f)*100, bottom=top+f*100;         /* 素材のどこからどこまでが見えているか（%） */
+          out.push({code:tc.dataset.code,src:(img.src.match(/([a-d]\\d)\\.webp/)||[])[1],
+                    w:+b.width.toFixed(1),cw:+cw.toFixed(1),f:+f.toFixed(4),
+                    head:head,top:+top.toFixed(2),bottom:+bottom.toFixed(2)});
+        });
+        return JSON.stringify(out);
+      })()`);
+      const G=JSON.parse(geo);
+      const cardW=G[0].w, worstF=Math.min(...G.map(x=>x.f));
+      p('     '+T+'カード幅 '+cardW+'px / 描画幅 '+G[0].cw+'px / f='+G[0].f
+        +' （最小 f='+worstF.toFixed(4)+'）');
+      chk(cardW<=215.9,T+'カード幅が 215px（clamp 定数の根拠となった最悪条件）を超えない: '+cardW+'px');
+      /* 頭が切れないこと（16体すべて）。可視域の上端が頭頂より上にあること。 */
+      const headCut=G.filter(x=>x.top>x.head+0.01);
+      chk(headCut.length===0,T+'16体すべて頭が切れていない（可視域の上端 ≦ 頭頂）'
+        +(headCut.length?' → '+headCut.map(x=>x.src+' 上端'+x.top+'>頭頂'+x.head).join(', '):''));
+      /* DAWG(c4) の左手（実測 縦 66〜68.5%）が可視域に入っていること */
+      const c4=G.find(x=>x.src==='c4');
+      chk(!!c4&&c4.bottom>=68.5,T+'DAWG(c4) の左手（縦 68.5%）まで見えている: 下端 '+(c4&&c4.bottom)+'%');
+
+      /* S-2: 一覧の縦。PC 4列でカテゴリあたり1行になること */
+      const ov=Math.round(d.getElementById('type-overview').getBoundingClientRect().height);
+      p('     '+T+'#type-overview の高さ '+ov+'px（カテゴリあたり '+rows+' 行）');
+      const wrapW=Math.round(d.querySelector('#type-section .wrap').getBoundingClientRect().width);
+      chk(pc?wrapW===Math.min(896,vw):wrapW===Math.min(480,vw),
+          T+'#type-section .wrap の幅: '+wrapW+'px（PC は 896px 上限 / それ以外は 480px）');
+      chk(wrapW<=920,T+'#type-section .wrap は 920px を超えない（超えると --head の再計測が要る）');
+
+      /* S-1: ヒーローと結果ヒーローの柱 */
+      const hiW=Math.round(d.querySelector('.hero-inner').getBoundingClientRect().width);
+      chk(hiW===Math.min(448,vw-32),T+'.hero-inner の幅: '+hiW+'px（448px 上限）');
+
+      /* S-9: PC の地 */
+      const bg=getComputedStyle(d.body).backgroundColor;
+      chk(bg===(pc?'rgb(231, 223, 205)':'rgb(255, 255, 255)'),
+          T+'body の地: '+bg+'（PC は --paper2 #e7dfcd / スマホは白のまま）');
+
+      /* S-3: .type-peek は「押した行の最後のカードの直後」に入る（列数非依存）。
+         2列のときは偶然この式と一致していたが、4列では固定値 2 だと
+         行の途中に割り込み、押したカードが視界から流れる。 */
+      /* 実装と同じ式で期待値を作ると同義反復になるので、幾何で見る。
+         (a) 押したカードが紹介より上にあること（＝視界から流れていない）
+         (b) 紹介より上にあるカードの枚数が列数の倍数＝行の境目に入っていること */
+      for(const idx of [0,1,2,3,5]){
+        const r=w.eval(`(()=>{
+          const tcs=[...document.querySelectorAll('#type-overview .tc')];
+          const el=tcs[${idx}]; el.click();
+          const pk=document.querySelector('.type-peek');
+          if(!pk)return JSON.stringify({err:'no-peek'});
+          const own=[...el.parentElement.querySelectorAll('.tc')];
+          const cols=getComputedStyle(el.parentElement).gridTemplateColumns.trim().split(/\\s+/).length;
+          const pb=pk.getBoundingClientRect(), eb=el.getBoundingClientRect();
+          const above=own.filter(x=>x.getBoundingClientRect().bottom<=pb.top+1).length;
+          const out={cols:cols,pushed:el.dataset.code,above:above,
+                     pushedAbove:eb.bottom<=pb.top+1,
+                     rowBoundary:above>0&&above%cols===0,
+                     full:pb.width>=eb.width*cols};
+          pk.remove();
+          return JSON.stringify(out);
+        })()`);
+        const o=JSON.parse(r);
+        chk(o.pushedAbove===true,T+idx+'枚目（'+o.pushed+'）: 押したカードは紹介より上に残る（視界から外れない）');
+        chk(o.rowBoundary===true,T+idx+'枚目: 紹介は行の境目に入る（上にあるカード '+o.above+'枚 ＝ '+o.cols+'の倍数）');
+        chk(o.full===true,T+idx+'枚目: 紹介パネルは行の全幅に伸びる（grid-column:1/-1）');
+      }
+
+      /* 結果画面（20問回答した扱い）。PC でヒーローが壊れていないこと。 */
+      w.eval("scores={1:5,2:5,3:5,4:5};for(let i=0;i<20;i++)ans[i]=2;showResult(true,'quiz')");
+      await sleep(500);
+      const ri=Math.round(d.querySelector('.result-inner').getBoundingClientRect().width);
+      const shW=[...d.querySelectorAll('.result-inner .share-grid .sh')].map(e=>Math.round(e.getBoundingClientRect().width));
+      const fcW=Math.round(d.querySelector('.friend-card').getBoundingClientRect().width);
+      p('     '+T+'.result-inner '+ri+'px / シェアボタン '+shW.join(',')+'px / .friend-card '+fcW+'px');
+      chk(ri===Math.min(448,vw-40),T+'.result-inner の幅: '+ri+'px（448px 上限。S-1）');
+      chk(shW.every(x=>x<=152),T+'シェアボタンが1つ152pxを超えない（S-1 の前は 1440px 幅で461px）: '+shW.join(','));
+      chk(fcW===ri,T+'.friend-card が結果ヒーローの柱に収まる: '+fcW+'px');
+      /* 直下の .wrap と幅がずれていないこと（S-1 が直した「3倍のずれ」） */
+      const rw=Math.round(d.querySelector('#screen-result .wrap').getBoundingClientRect().width)-32;
+      chk(Math.abs(rw-ri)<=8,T+'結果ヒーローと本文の内容幅がそろっている: '+ri+'px / '+rw+'px');
+      chk(d.documentElement.scrollWidth<=vw+1,T+'結果画面で横スクロールが出ない: '+d.documentElement.scrollWidth);
+    }
+    f.style.width='390px'; f.style.height='844px';
+  }
 
   p('\n===== '+(fail===0?'ALL PASS':fail+' FAILURES')+' =====');
 }catch(e){p('EXCEPTION: '+(e&&e.stack||e));p('\n===== EXCEPTION =====');}

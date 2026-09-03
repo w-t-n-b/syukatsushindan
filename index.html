@@ -726,6 +726,10 @@ body[data-screen="screen-loading"] .ftr{display:none;}
 .ab-link:hover{transform:translate(-2px,-2px);box-shadow:var(--sh-2);color:var(--ink);}
 .ab-link:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--navy);}
 .ab-name{display:block;font-weight:900;font-size:.95rem;color:var(--navy);margin-bottom:5px;}
+/* 外部サイトへ移動することを、押す前に画面上で伝える（S-8 / §突き合わせ 13）。
+   就活生がいちばん嫌うのは「知らないうちに登録先へ飛ばされること」。
+   色は .ab-name と同じ --navy on --w（14.7:1）。記号だけを別色にしない。 */
+.ab-ext{margin-left:.35em;font-weight:700;}
 .ab-for{display:block;font-size:.78rem;line-height:1.75;color:var(--ink);margin-bottom:7px;}
 .ab-meta{display:block;font-size:11px;line-height:1.75;color:var(--forest);font-weight:700;}
 .ab-note{display:block;font-size:10px;line-height:1.7;color:var(--light);margin-top:6px;}
@@ -1031,8 +1035,17 @@ body[data-screen="screen-loading"] .ftr{display:none;}
 /* 見出しの字送り。下限 2rem のままだと 340px 以下で
    「16Typesから見つける。」が2行に折り返し、見出しが4行になる。
    下限を下げて vw 係数で連続的に詰める（--ls-disp は変えない）。
-   320px:25.9px / 375px:30px / 390px:31.2px / 430px:34.4px、いずれも2行に収まる。 */
-.hero-title{font-size:clamp(1.62rem,8vw,3rem);}
+   320px:25.9px / 375px:30px / 390px:31.2px / 430px:34.4px、いずれも2行に収まる。
+
+   ★上限を 3rem → 2.4rem に下げた（S-1 の帰結）。
+     .hero-inner に max-width:448px が入り、見出しの入れ物は 480px 幅で
+     成長を止める。8vw が 448px の柱に追いつくのはちょうど vw=480（8vw=38.4px
+     ＝2.4rem）で、そこから先も 3rem まで伸ばすと柱に対して字が大きすぎる。
+     実測: 上限 3rem のままだと 600px 以上で見出しが4行になり、
+     ヒーローが 386px → 534px へ 148px 伸びていた（e2e の 300〜460px を超える）。
+     2.4rem なら 480px 以上のどの幅でも 2行・ヒーロー 386px で一定になる。
+     vw<480 は 8vw が上限に届かないので、スマホの見え方は1pxも変わらない。 */
+.hero-title{font-size:clamp(1.62rem,8vw,2.4rem);}
 .hero-badge{margin-bottom:16px;}
 .hero-title{margin-bottom:12px;}
 /* 28px は「本文段落と朱色の大きなCTAを密着させない」ための間隔だった。
@@ -1041,6 +1054,12 @@ body[data-screen="screen-loading"] .ftr{display:none;}
    docs/design/hero-floating-characters.md §2-5 の 28px は、下の .cont-banner
    （再訪者にだけ出る）が本文に密着しないよう、そちらの margin-top へ移した。 */
 .hero-sub{margin-bottom:0;}
+/* 信頼の1行（S-6）。色は .hero-sub と同じ #c3cbdd on --ink-field = 9.81:1（AA）。
+   設計書は margin:-14px 0 22px（.hero-sub の下マージン 24px から 14px 借りる前提）
+   だが、この実装は既に .hero-sub{margin-bottom:0} なので、借りる元が無い。
+   実効の間隔だけ合わせて 24−14＝10px を上に取り、下は .hero の
+   padding-bottom:40px に任せる（上の .hero-sub と同じ考え方。新しい値を作らない）。 */
+.hero-trust{font-size:12px;line-height:1.7;letter-spacing:.06em;color:#c3cbdd;margin:10px 0 0;}
 .cont-banner{margin-top:28px;margin-bottom:0;}
 
 /* --- C-6: 16タイプ一覧のタップ先。結果全文ではなくタイプ紹介を出す --------
@@ -1166,6 +1185,43 @@ body[data-screen="screen-loading"] .ftr{display:none;}
 .hero:has(.shared-banner) .hero-cast{display:none;}
 /* 動きの抑制。全体規則でも止まるが、明示する（§7-3） */
 @media (prefers-reduced-motion:reduce){.hc{animation:none;}}
+
+/* ==========================================================================
+   PC の版面 — docs/design/conversion-structure-and-pc-grid.md S-1 / S-2 / S-9
+   新しいトークンもブレークポイントも作らない（768px は .hc が既に使っている）。
+   448px は .wrap の内容幅（480 − 16×2）と同じ値で、:root には載せない。
+   ========================================================================== */
+
+/* --- S-1: ヒーローと結果ヒーローに柱幅を与える -----------------------------
+   .wrap / .quiz-inner / .ftr-inner は 480px を持つのに、この2つだけ持って
+   いなかった。PC では .share-grid の各ボタンが 1440px 幅で 461px まで伸び、
+   サイトで唯一スクリーンショットされ送客ブロックが載る面が壊れていた。
+   幅 480px 未満の端末では中身が 448px に届かないので、スマホの見え方は不変。 */
+.hero-inner,.result-inner{max-width:448px;margin-left:auto;margin-right:auto;}
+
+@media (min-width:768px){
+  /* --- S-9: 448px の柱が白地に浮いた帯に見える状態をやめる ---------------
+     地の上に直接載る文字は無い（各カードが自前の面と --navy 2px 以上の枠を
+     持つ）ので、新しいコントラストの組み合わせは生まれない（1.4.11 は線が担う）。 */
+  html,body{background:var(--paper2);}
+
+  /* --- S-2: 16タイプ一覧だけを2列ぶんの幅に開き、PC 4列 ×4行にする -------
+     .type-grid はカテゴリ（HA/HB/DA/DB）ごとに独立しているので、列数を
+     2→4 にするだけで「4カテゴリ × 1行」になり、一覧の縦がほぼ半分になる。
+     ★上限は 920px。896px なら .tc img の枠幅は約 207px（f≒0.42）で、
+       定数の根拠になっている最悪条件（f=0.397・枠幅 215px）より緩い側に動く。
+       920px を超えると枠幅が 215px を上回り、`make heads` の再計測と
+       object-position の clamp 定数の書き換えが要る。ここを広げるときは
+       必ず §4-3 の表を読むこと。 */
+  #type-section .wrap{max-width:896px;}          /* 内容幅 864 = 448×2 − 32 */
+  #type-section .type-grid{grid-template-columns:repeat(4,1fr);gap:12px;}
+  #type-section .tc-name{font-size:12px;}
+  #cta-grid{max-width:360px;margin-left:auto;margin-right:auto;display:block;}
+
+  /* .type-peek は grid-column:1/-1 で4列でも全幅に伸びる。中身の行長を止める。 */
+  #type-section .tp-inner,#type-section .tp-str{max-width:640px;}
+  #type-section .tp-cta{max-width:360px;}
+}
 </style>
 </head>
 <body data-screen="screen-title">
@@ -1205,6 +1261,15 @@ body[data-screen="screen-loading"] .ftr{display:none;}
            390px 以上では1行のままなので見え方は変わらない。 -->
       <h1 class="hero-title">あなたの<span style="white-space:nowrap;">キャリアタイプ</span>、<em>16Typesから見つける。</em></h1>
       <p class="hero-sub">20問・約3分でわかるキャリアタイプ診断。<br>あなたに向いている職種の例と、探し方のヒントまで。</p>
+      <!-- 着地3秒で就活生が最も知りたいこと（「登録させられるのか。電話は来るのか」）に
+           答える1行（design/conversion-structure-and-pc-grid.md S-6 / §4-1）。
+           3つとも今日の実装で事実である（入力欄が1つも無いことを tools/lint.mjs が
+           機械的に守っている。「個人情報を取得しない設計」の節）。
+           ｜ は読み上げで「たてぼう」になるので aria-hidden で外す。
+           ★#screen-profile（卒業年度・ニックネーム）が実装されたら必ず再点検すること。
+             「登録不要」「メールアドレス不要」は引き続き真だが、
+             「一切取得しない」と読ませてはならない。 -->
+      <p class="hero-trust">登録不要 <span aria-hidden="true">｜</span> メールアドレス不要 <span aria-hidden="true">｜</span> 無料</p>
       <div class="cont-banner" id="cont-banner" style="display:none;" onclick="continueDiag()">
         <div class="cont-icon" aria-hidden="true">💾</div>
         <div class="cont-body"><span class="cont-title">前回の途中から続ける</span><span class="cont-sub" id="cont-sub">20問中?問に回答済み</span></div>
@@ -2268,9 +2333,14 @@ function openTypePeek(code,el){
   if(same)return;                       /* 同じカードをもう一度押したら閉じるだけ */
   const grid=el.parentElement;if(!grid)return;
   const tcs=[].slice.call(grid.querySelectorAll('.tc'));
-  /* 2列グリッドなので、押したカードが属する行の最後のカードの直後に差し込む */
+  /* 押したカードが属する行の最後のカードの直後に差し込む。
+     列数は固定値ではなくグリッドから読む（S-3）。以前は 2 が式に埋まっていたので、
+     PC の4列では1枚目を押すと2枚目の直後＝行の途中に割り込み、押したカードが
+     視界から流れていた。gridTemplateColumns が読めない環境では2列とみなす。 */
+  const cols=(typeof getComputedStyle==='function'
+    ?((getComputedStyle(grid).gridTemplateColumns||'').match(/\S+/g)||[]).length:0)||2;
   const i=Math.max(tcs.indexOf(el),0);
-  const rowEnd=tcs[Math.min(Math.floor(i/2)*2+1,tcs.length-1)]||el;
+  const rowEnd=tcs[Math.min((Math.floor(i/cols)+1)*cols-1,tcs.length-1)]||el;
   const box=document.createElement('div');
   box.className='type-peek';
   box.dataset.owner=code;
@@ -2395,6 +2465,29 @@ function showResult(_unusedSkipIntro=false,source='quiz'){
 
   const indChips=Object.keys(CD).map(ind=>`<div class="ind-sm${selectedIndustries.includes(ind)?' sel':''}" onclick="toggleIndSm(this,'${ind}')">${ind}</div>`).join('');
 
+  /* -----------------------------------------------------------------------
+     結果ページの縦構造（docs/design/conversion-structure-and-pc-grid.md §3-4）
+     ※ここは説明をテンプレート文字列の外に置く。中に HTML コメントを書くと
+       結果DOMに毎回入り、「未診断者に送客ブロックを出さない」検査が
+       文字列一致で誤検知する。
+
+     narration / reason-box / 診断スコア(開) / サブタイプ / 性格タイプ詳細(開)
+     → 向いている職種（★S-4 で開いた状態にした）
+     → 業界別の職種例（★S-5 でここへ移動。閉じたまま）
+     → 主送客ブロック
+     → 相性の良いタイプ / 注意が必要なタイプ / 結果をシェア
+     → 副送客ブロック / もう一度診断する
+
+     S-4: 仕様 §A-4 は主送客ブロックの置き場所を「向いている職種を読み終えた
+          直後」と定めているのに、そのパネルだけ既定で閉じていた。閉じていると
+          直前にあるのは 44px の見出し行で、置き場所の根拠が成立しない。
+          「診断スコア」「性格タイプ詳細」と同じ扱いに揃えた。
+     S-5: 職種の話を連続させる。.co-note「※…特定の企業の採用基準や選考とは
+          関係ありません。」の直後に .ab-lead「この診断でわかるのは働き方の
+          傾向までです。…」が来る。この2文は同じ受け渡しを2段で言っており、
+          離して置く理由がない。送客ブロックは職種の節を中断するのではなく
+          締めくくる位置になる。娯楽側（相性・注意）は後ろへ送る。
+     ----------------------------------------------------------------------- */
   document.getElementById('screen-result').innerHTML=`
   <div class="result-wrap">
     <div class="result-hero">
@@ -2410,11 +2503,11 @@ function showResult(_unusedSkipIntro=false,source='quiz'){
         <div class="res-kws">${t.kw.map(k=>`<span class="res-kw">${k}</span>`).join('')}</div>
         <div class="famous-box"><div class="famous-icon" aria-hidden="true">🌟</div><div class="famous-text"><span>${TYPE_ARCHETYPE[code]}</span></div></div>
         <div class="share-grid" style="margin-bottom:8px;">
-          <button class="sh sh-x rpl" onclick="addRipple(event,this);shareX()">𝕏 シェア</button>
-          <button class="sh sh-ln rpl" onclick="addRipple(event,this);shareLINE()">LINE 送信</button>
-          <button class="sh sh-cp rpl" onclick="addRipple(event,this);copyResult()">コピー</button>
+          <button class="sh sh-x rpl" onclick="addRipple(event,this);shareX('hero')">𝕏 シェア</button>
+          <button class="sh sh-ln rpl" onclick="addRipple(event,this);shareLINE('hero')">LINE 送信</button>
+          <button class="sh sh-cp rpl" onclick="addRipple(event,this);copyResult('hero')">コピー</button>
         </div>
-        <div class="friend-card"><div class="friend-text">👥 友達のタイプも診断してみよう！</div><button class="friend-btn" onclick="copyLink()">🔗 診断リンクをコピー</button></div>
+        <div class="friend-card"><div class="friend-text">👥 友達のタイプも診断してみよう！</div><button class="friend-btn" onclick="copyLink('hero')">🔗 診断リンクをコピー</button></div>
       </div>
     </div>
     <div class="wrap" style="padding-top:20px;">
@@ -2423,13 +2516,13 @@ function showResult(_unusedSkipIntro=false,source='quiz'){
       <div class="r-panel fade-in"><div class="r-ph aopen" onclick="toggleAcc(this)"><div class="r-pi" aria-hidden="true">📊</div><div class="r-pt">診断スコア</div><span class="r-tog" style="transform:rotate(180deg);">▼</span></div><div class="r-pb aopen">${buildAxisViz(scores)}</div></div>
       ${subH}
       <div class="r-panel fade-in"><div class="r-ph aopen" onclick="toggleAcc(this)"><div class="r-pi" aria-hidden="true">🧠</div><div class="r-pt">性格タイプ詳細</div><span class="r-tog" style="transform:rotate(180deg);">▼</span></div><div class="r-pb aopen"><div class="body-txt" style="margin-bottom:16px;">${t.per}</div><div class="d-sec"><div class="d-lbl ls">強み</div><div class="body-txt">${t.str}</div></div><div class="d-sec"><div class="d-lbl lc">コミュニケーション</div><div class="body-txt">${t.com}</div></div><div class="d-sec"><div class="d-lbl lt">ストレスを感じやすい場面</div><div class="body-txt">${t.sts}</div></div><div class="d-sec"><div class="d-lbl lg">成長のヒント</div><div class="body-txt">${t.grw}</div></div></div></div>
-      <div class="r-panel fade-in"><div class="r-ph" onclick="toggleAcc(this)"><div class="r-pi" aria-hidden="true">💼</div><div class="r-pt">向いている職種</div><span class="r-tog">▼</span></div><div class="r-pb"><div class="job-tags">${t.jobs.map(j=>`<div class="job-tag">${j}</div>`).join('')}</div><div class="body-txt">${t.why}</div></div></div>
+      <div class="r-panel fade-in"><div class="r-ph aopen" onclick="toggleAcc(this)"><div class="r-pi" aria-hidden="true">💼</div><div class="r-pt">向いている職種</div><span class="r-tog" style="transform:rotate(180deg);">▼</span></div><div class="r-pb aopen"><div class="job-tags">${t.jobs.map(j=>`<div class="job-tag">${j}</div>`).join('')}</div><div class="body-txt">${t.why}</div></div></div>
+      <div class="r-panel fade-in"><div class="r-ph" onclick="toggleAcc(this)"><div class="r-pi" aria-hidden="true">🏢</div><div class="r-pt">業界別の職種例</div><span class="r-tog">▼</span></div><div class="r-pb"><p class="ind-lbl">気になる業界を選ぶと絞り込めます</p><div class="ind-grid-sm">${indChips}</div><p class="co-note">※タイプの傾向に近い職種の例です。掲載順に優劣はなく、特定の企業の採用基準や選考とは関係ありません。</p><div id="company-list">${buildCoHTML(inds)}</div></div></div>
 
       ${buildAgentBlock('primary',cat,code,source)}
       ${compatSec(t.good,'good','相性の良いタイプ','🤝')}
       ${compatSec(t.bad,'bad','注意が必要なタイプ','⚠️')}
-      <div class="r-panel fade-in"><div class="r-ph" onclick="toggleAcc(this)"><div class="r-pi" aria-hidden="true">🏢</div><div class="r-pt">業界別の職種例</div><span class="r-tog">▼</span></div><div class="r-pb"><p class="ind-lbl">気になる業界を選ぶと絞り込めます</p><div class="ind-grid-sm">${indChips}</div><p class="co-note">※タイプの傾向に近い職種の例です。掲載順に優劣はなく、特定の企業の採用基準や選考とは関係ありません。</p><div id="company-list">${buildCoHTML(inds)}</div></div></div>
-      <div class="r-panel fade-in"><div class="r-ph always" style="cursor:default;"><div class="r-pi" aria-hidden="true">📤</div><div class="r-pt">結果をシェア</div></div><div class="r-pb always"><div class="share-grid"><button class="sh sh-x rpl" onclick="addRipple(event,this);shareX()">𝕏 シェア</button><button class="sh sh-ln rpl" onclick="addRipple(event,this);shareLINE()">LINE 送信</button><button class="sh sh-cp rpl" onclick="addRipple(event,this);copyResult()">コピー</button></div></div></div>
+      <div class="r-panel fade-in"><div class="r-ph always" style="cursor:default;"><div class="r-pi" aria-hidden="true">📤</div><div class="r-pt">結果をシェア</div></div><div class="r-pb always"><div class="share-grid"><button class="sh sh-x rpl" onclick="addRipple(event,this);shareX('panel')">𝕏 シェア</button><button class="sh sh-ln rpl" onclick="addRipple(event,this);shareLINE('panel')">LINE 送信</button><button class="sh sh-cp rpl" onclick="addRipple(event,this);copyResult('panel')">コピー</button></div></div></div>
       ${buildAgentBlock('secondary',cat,code,source)}
       <button class="retry-btn rpl" onclick="addRipple(event,this);clearSavedProgress();location.reload()">もう一度診断する →</button>
       <div style="height:50px;"></div>
@@ -2478,29 +2571,36 @@ function copyText(txt,okMsg){
   }catch(e){fail();}
 }
 
-function shareX(){
+/* pos … 'hero'（結果ヒーロー内）／'panel'（「結果をシェア」パネル）。
+   結果画面にシェア出口は2箇所あり、どちらが押されたかを share_click に載せないと
+   「シェアが送客可視率を食っているか」を判定する手段が無い（S-7 / §突き合わせ 6）。
+   引数が無い呼び出し（既存のテスト等）は 'hero' として扱う。 */
+function sharePos(pos){return pos==='panel'?'panel':'hero';}
+
+function shareX(pos){
   const c=getCode(),t=TD[c];
   const text=`私のキャリアタイプは【${c}：${t.icon} ${t.name}】でした！\n${t.tag}\n向いている職種：${t.jobs.join('、')}\n\n#就活キャリアタイプ診断 #16Types`;
-  track('share_click',{channel:'x',type_code:c});
+  track('share_click',{channel:'x',type_code:c,position:sharePos(pos)});
   window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl(c))}`,'_blank','noopener');
 }
-function shareLINE(){
+function shareLINE(pos){
   const c=getCode(),t=TD[c];
   const text=`私のキャリアタイプは【${c}：${t.icon} ${t.name}】でした！\n${t.tag}\n向いている職種：${t.jobs.join('、')}\nあなたも診断してみて！\n${shareUrl(c)}`;
-  track('share_click',{channel:'line',type_code:c});
+  track('share_click',{channel:'line',type_code:c,position:sharePos(pos)});
   window.open(`https://line.me/R/msg/text/?${encodeURIComponent(text)}`,'_blank','noopener');
 }
-function copyResult(){
+function copyResult(pos){
   const c=getCode(),t=TD[c];
-  track('share_click',{channel:'copy',type_code:c});
+  track('share_click',{channel:'copy',type_code:c,position:sharePos(pos)});
   /* 3つの出口（X / LINE / コピー）は同じものを配る。コピーだけ t.desc が
      1行多かった（wording-audit.md S-6）。完了の知らせは祝わない（S-5）。 */
   copyText(`私のキャリアタイプは【${c}：${t.icon} ${t.name}】でした！\n${t.tag}\n向いている職種：${t.jobs.join('、')}\n${shareUrl(c)}`,'結果をコピーしました。');
 }
-function copyLink(){
+function copyLink(pos){
   /* location.href だと、?type= 付きURLで来た人が「他人の結果URL」を配ってしまう。
-     このボタンは診断そのものを勧めるものなので、必ず診断トップを配る。 */
-  track('share_click',{channel:'link',type_code:getCode()});
+     このボタンは診断そのものを勧めるものなので、必ず診断トップを配る。
+     .friend-card は .result-inner の中にあるので position は 'hero'。 */
+  track('share_click',{channel:'link',type_code:getCode(),position:sharePos(pos)});
   /* コピーは祝う出来事ではない。紙吹雪を撤廃した基準と揃える（wording-audit.md S-4）。 */
   copyText(topUrl(),'診断リンクをコピーしました。');
 }
@@ -2539,7 +2639,9 @@ function buildAgentBlock(pos,cat,code,source){
     const note=[a.company,a.license].filter(Boolean).join('　/　');   /* 許可番号が空なら出さない */
     return '<li class="ab-item">'
       +`<a class="ab-link" href="${esc(agentUrl(a,code,pos))}" target="_blank" rel="sponsored noopener noreferrer" data-agent="${esc(a.id)}" data-pos="${esc(pos)}" onclick="onAgentClick('${esc(a.id)}','${esc(pos)}','${esc(code)}')">`
-      +`<span class="ab-name">${esc(a.name)}</span>`
+      /* ↗ は装飾ではなく「外部サイトへ移動する」という情報なので、aria-hidden に
+         しない。role="img" + aria-label で、読み上げにも同じことを伝える（S-8）。 */
+      +`<span class="ab-name">${esc(a.name)}<span class="ab-ext" role="img" aria-label="外部サイトへ移動します">↗</span></span>`
       +(a.forWhom?`<span class="ab-for">${esc(a.forWhom)}</span>`:'')
       +(a.meta?`<span class="ab-meta">${esc(a.meta)}</span>`:'')
       +(note?`<span class="ab-note">${esc(note)}</span>`:'')
