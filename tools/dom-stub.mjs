@@ -159,14 +159,16 @@ function build(){
      1問ずつ時代の q-num / q-text / q-a / q-b / spec-track / q-card と
      その lq- 版も同じ理由で置かない。いまはカードごと JS が組み立てる。
      #char-strip-track（キャラのスライドする帯）と #lq-lbl（LPの5問の上の注記）も
-     同じ理由で外した。 */
+     同じ理由で外した。
+     #cta-hero（ヒーローCTA）も削除済み（オーナー判断・案C）。ここに残すと
+     「消したボタンを触っているコード」が黙って動いてしまう。 */
   ['quiz-bg','prog-text','prog-msg','prog-seg','back-btn','q-list','q-next','q-remain',
    'cont-banner','cont-sub',
    'type-overview','screen-result','l-bar','hdr','drawer','ham',
    'screen-title','screen-quiz','screen-loading','company-list','res-code-el',
    /* LP埋め込み質問。診断画面と同じ部品を lq- 接頭辞で持つ */
    'lp-quiz','lq-list','lq-prog-seg','lq-done','lq-continue','lq-remain',
-   'cta-hero','cta-grid','cta-drawer'
+   'cta-grid','cta-drawer'
   ].forEach(mk);
 
   const screens = ['screen-title','screen-quiz','screen-loading','screen-result'].map(i=>byId.get(i));

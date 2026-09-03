@@ -140,7 +140,8 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .btn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--navy);}
 .btn-ghost{background:transparent;border:1.5px solid var(--border2);color:var(--mid);font-family:inherit;font-size:.82rem;font-weight:700;padding:12px 20px;border-radius:7px;cursor:pointer;transition:all .2s;letter-spacing:1px;width:100%;display:block;margin-top:12px;}
 .btn-ghost:hover{border-color:var(--blue2);color:var(--blue2);background:var(--blue-l);}
-.btn-wrap{display:flex;flex-direction:column;gap:0;width:100%;max-width:320px;margin:0 auto;}
+/* .btn-wrap（ヒーローCTAの外枠）は、#cta-hero の削除にあわせて撤去した。
+   ヒーロー以外では使っていない（オーナー判断・案C）。 */
 
 /* 「3ステップで完了」の節（.steps / .step / .step-n / .step-lbl /
    .step-desc）はセクションごと削除した（オーナー決定）。伝えていた3項目
@@ -551,6 +552,45 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
   box-sizing:border-box;padding:0 18.6%;
   object-position:50% 16%;
 }
+/* HAWG(a4) と HALG(a2) も同じ手法で引く（オーナー指摘: HAWG が寄りすぎ）。
+   ------------------------------------------------------------------------
+   「寄って見える」度合いを決めるのは、画像全体の最大横幅ではなく
+   **切り取って実際に見えている範囲の中での最大横幅**である。
+   .tc img は cover で横幅いっぱいに拡大するので、可視域に太い部分が来る図ほど
+   大きく写る。可視域は最も強く切り取る条件（f=0.397・vw>=480）で画像上端から
+   39.7% まで。そこでの最大横幅を全16体で実測すると:
+
+     a2 82.1 / a4 80.8 …… 突出。頭と肩だけで枠が埋まる
+     b3 66.0 / a1 61.8 / c3 60.6 / a3 58.3 / c1 52.0 / d1 42.8 …… 中央値 約59
+
+   引き量は「可視域の最大横幅 × (1-2p) が中央値 59 に並ぶ」ように決めた。
+     a4: 80.8 × (1-0.28) = 58.2
+     a2: 82.1 × (1-0.28) = 59.1
+   → p = 14%。c4 の 18.6% を流用していない。c4 はしゃがみ姿勢で
+     左手（縦 66〜68.5%）まで入れる必要があり、条件が違う（結果 85.4 × 0.628 = 53.6）。
+
+   object-position は指定しない。a2(--head 1.4) / a4(--head 2.4) はどちらも
+   下の clamp 式が負になって Y=0 に張り付く。Y=0 は「画像の最上端から見せる」
+   ＝頭上の余白をこれ以上増やせない上限であり、それが正しい。
+   （c4 は --head 9.1 と頭が低いので、Y=16% を明示しないと上に空白が出る。）
+
+   HAWS(a3) は対象外。可視域の最大横幅 58.3 が既に中央値であり、引くと
+   逆に列の中でいちばん小さくなる。突き出した拳は細い突起であって
+   図の太さではないので、この指標には表れないし、詰まって見える原因でもない。
+
+   ★361px 以上でだけ効かせる。枠幅は vw=320 で 135px、vw>=480 で 215px に張り付く。
+     可視率 f は 0.632〜0.397 と 1.6 倍動くので、同じ padding でも見え方が変わる。
+       vw 320  f 0.632 → 引かなくても上半身がちょうど収まる（実測で確認）
+       vw>=390 f<=0.502 → 引かないと頭と胴で枠が埋まる（今回の指摘）
+     320px で 14% を足すと f' が 0.878 になり、a2/a4 だけ全身・他は上半身という
+     ちぐはぐな並びになる。狭い端末では素の切り取りのほうが揃うので、
+     効かせない。（.hc-1 の @media (max-width:360px) と同じ考え方。） */
+@media (min-width:361px){
+  .tc:has(img[src*="chars/a4"]) img,
+  .tc:has(img[src*="chars/a2"]) img{
+    box-sizing:border-box;padding:0 14%;
+  }
+}
 .tc:hover img{transform:none;}
 .tc::after{top:auto;bottom:0;left:0;width:100%;height:4px;background:var(--cat);}
 .tc-code{color:var(--cat-ink)!important;font-size:13px;}  /* JSのinline styleを上書き */
@@ -561,19 +601,23 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .pa{background:#1a56db;}.pb{background:#1d6b4c;}.pc{background:#c8412e;}.pd{background:#4b4483;}
 .tc-line{background:var(--border);height:2px;}
 
-/* --- キャラ画像の切り取り位置（現在は無効。下記の経緯のため残している）---
+/* --- キャラ画像の切り取り位置 ---
 
-   ★現状: .tc img は枠を素材と同じ 2:3 にしたので縦の切り取りが起きない。
-     したがって以下の object-position は効いていない（f=1 で clamp が 0% を返す）。
-     枠を再び横長にした場合にだけ必要になるので、算出方法ごと残してある。
-     --head 自体は実測データとして有効（`make heads` で取り直せる）。
+   ★現状: 効いている。以前ここには「枠を素材と同じ 2:3 にしたので縦の切り取りが
+     起きない／以下の object-position は効いていない（f=1）」と書いてあったが、
+     事実と違ったので訂正した。.tc img は上の規則で height:128px・width:100% を
+     取っており、枠は 2:3 ではない。実測した可視率 f は
+       vw=320 で 0.632（枠幅 135px）〜 vw>=480 で 0.397（枠幅 215px）
+     で、f<1 すなわち縦は切り取られている。下の clamp 式も実際に働いている
+     （--head が 3.97 未満の体では Y=0 に張り付く、という形で働いている）。
 
    経緯: もともと横長の枠に縦長画像を cover で嵌めていたため縦が切り取られ、
    切り取り位置を全16体で固定していた（50% 6%）。頭頂は 1.2%〜9.1% とばらつくので
    固定値ではどちらかの端が必ず破綻し、DAWG(c4) 等で頭が枠外に出ていた。
    位置を実測から出すようにして頭切れは解消したが、しゃがみ姿勢の DAWG だけ
    写る範囲が頭と肩までになり、下端で腕が切れることが問題として残った。
-   枠を 2:3 にすることで、切り取りそのものを無くしている。
+   これは枠の縦横比ではなく「描画幅を左右 padding で縮める」ことで解いた
+   （上の .tc:has(...c4) / (...a4,...a2) を参照）。枠は 2:3 にしていない。
 
    --head = その画像でキャラの頭頂が始まる縦位置（画像高さに対する%・単位なし）。
    ★実測値。画像を差し替えたら `make heads` で取り直してここを更新すること。
@@ -991,10 +1035,13 @@ body[data-screen="screen-loading"] .ftr{display:none;}
 .hero-title{font-size:clamp(1.62rem,8vw,3rem);}
 .hero-badge{margin-bottom:16px;}
 .hero-title{margin-bottom:12px;}
-/* 16px だと本文段落と朱色の大きなCTAが密着し、CTAが段落の続きに見える。
-   廃止したキャラ帯（.char-strip-outer）が持っていた 28px をそのまま移送している
-   （新しい値を発明していない）。docs/design/hero-floating-characters.md §2-5。 */
-.hero-sub{margin-bottom:28px;}
+/* 28px は「本文段落と朱色の大きなCTAを密着させない」ための間隔だった。
+   その CTA（#cta-hero）を削除したので、下に離すものが無くなった。
+   0 にして .hero の padding-bottom:40px に任せる（新しい値を発明しない）。
+   docs/design/hero-floating-characters.md §2-5 の 28px は、下の .cont-banner
+   （再訪者にだけ出る）が本文に密着しないよう、そちらの margin-top へ移した。 */
+.hero-sub{margin-bottom:0;}
+.cont-banner{margin-top:28px;margin-bottom:0;}
 
 /* --- C-6: 16タイプ一覧のタップ先。結果全文ではなくタイプ紹介を出す --------
    .r-panel / .subtype-card の意匠を流用し、押した .tc の行の直後に展開する。 */
@@ -1163,18 +1210,23 @@ body[data-screen="screen-loading"] .ftr{display:none;}
         <div class="cont-body"><span class="cont-title">前回の途中から続ける</span><span class="cont-sub" id="cont-sub">20問中?問に回答済み</span></div>
         <span class="cont-arrow">→</span>
       </div>
-
-      <div class="btn-wrap">
-        <button class="btn rpl" id="cta-hero" onclick="addRipple(event,this);continueOrStart('hero')">最初の質問へ ↓</button>
-      </div>
+      <!-- ヒーローCTA（#cta-hero / .btn-wrap）は削除した（オーナー判断・案C）。
+           docs/design/wording-audit.md §2-3 は案B（ボタンを「案内」に降格）を
+           推奨していたが、オーナーは案Cを採った。理由の核心は §2-2 と同じで、
+           「ボタンが指す行き先と、直下に見えている質問カードが同じもの」
+           だったこと。案Bは行き先を1つにしても、押す対象は2つ残る。
+           案Cは押す対象そのものを1つにする。入口は質問カードだけになった。
+           320px でQ1の目盛がファーストビューに入らない件（§2-3 案Cのリスク）は
+           オーナーが承知のうえでの判断。 -->
     </div>
   </div>
 
-  <!-- LP埋め込み質問（仕様 §C）。Q1-5 は診断画面の1ページ目と同じ出題位置を共有し、
-       どちらの面で答えても同じ ans[] を更新する（§A-2 / §A-3）。
+  <!-- LP埋め込み質問（仕様 §C）。Q1-5 が置かれる唯一の場所である。
+       かつては診断画面の1ページ目にも同じ5問があり（§A-2「2つの入口」）、
+       同じ ans[] を共有していた。その二重化はオーナー判断で解消し、
+       診断画面は Q6-20 の3ページだけを受け持つ。
        中身の .q-card は #screen-quiz と完全に同一の class で、
-       renderPage('lp') / renderPage('quiz') が同じ関数で両方を描画する。
-       設置場所は「診断の流れ」の直後・16タイプ一覧の直前（§C-2）。 -->
+       renderPage('lp') / renderPage('quiz') が同じ関数で両方を描画する。 -->
   <div id="lp-quiz-sec">
     <div class="wrap">
       <div id="lp-quiz">
@@ -1404,15 +1456,24 @@ const TYPE_ARCHETYPE={
    採点ロジック（getCode / getSubCode / scores への加算）には一切触らずに済む。
    加算の順序は変わるが、設問と値の対応が同じなら合計は不変である。 */
 const Q_ORDER=[0,5,10,15,1, 6,11,16,2,7, 12,17,3,8,13, 18,4,9,14,19];
+/* LP が受け持つ問数。PAGE_SIZE と同じ値だが、意味が違うので別に名前を与える
+   ——PAGE_SIZE は「1画面に何問積むか」、LP_Q_COUNT は「20問のうち何問が
+   LP にあるか」。この2つが食い違うと診断画面の先頭が Q6 でなくなるため、
+   一致していることをテストで固定している。 */
 const LP_Q_COUNT=5;
 /* 出題位置 i の設問。curQ は「出題位置」を指し、Qs の添字ではない。 */
 function qAt(i){return Qs[Q_ORDER[i]];}
 
-/* ページ単位の励まし。1問ずつ時代の20段階（PROG_MSGS）は、4ページになって
-   段数が合わなくなったのでページ数ぶんに置き換えた（仕様 §B-5）。 */
-/* 「いい調子です！」は、上手下手のない性格診断で内容のない賞賛になっていた。
-   Q-1 が手放した「ページ」の文脈をここが引き取る（wording-audit.md Q-2）。 */
-const PAGE_MSGS=["全4ページの1ページ目です","残りは3ページです","残りは2ページです","最後のページです"];
+/* ページ単位の文脈。1問ずつ時代の20段階（PROG_MSGS）は、ページ制になって
+   段数が合わなくなったのでページ数ぶんに置き換えた（仕様 §B-5）。
+   「いい調子です！」は、上手下手のない性格診断で内容のない賞賛になっていた。
+   #prog-text が手放した「ページ」の文脈をここが引き取る（wording-audit.md Q-2）。
+   -------------------------------------------------------------------------
+   添字は「診断画面の何ページ目か」＝ curPage - QUIZ_FIRST_PAGE（0..2）。
+   Q1-5 が LP へ移り、診断画面が3ページになったので4件目（旧「全4ページの
+   1ページ目です」）は落とした。残る3件の数え方は変えていない ——「残り」は
+   表示中のページを含む数である（3ページ目に立てば残り1＝「最後のページです」）。 */
+const PAGE_MSGS=["残りは3ページです","残りは2ページです","最後のページです"];
 
 /* ===== TYPE DATA (from ORIGINAL, field names adapted for new UI) ===== */
 const TD={
@@ -1604,17 +1665,27 @@ const CD={
 let ans=[];                            /* 出題位置 -> 値。未回答は undefined */
 let scores={1:0,2:0,3:0,4:0};          /* ans[] からの派生。pick 以外から直接書かない */
 let curQ=0;                            /* 回答済みの問数。ans[] からの派生 */
-let curPage=0;                         /* 診断画面で表示中のページ（0〜PAGE_COUNT-1） */
+let curPage=1;                         /* 診断画面で表示中のページ（QUIZ_FIRST_PAGE〜PAGE_COUNT-1） */
 let selectedIndustries=[];
 let quizStartedAt=0;   /* quiz_complete の duration_sec 用 */
 /* quiz_start はセッション内で1回だけ発火させる（LPでの回答か、CTA経由か） */
 let quizStarted=false;
 
-/* 1ページあたりの問数。LP埋め込みはページ0（出題位置0-4）を診断画面と共有する（§A-2）。
-   PAGE_SIZE は「1軸あたりの設問数が奇数」というタイブレーカーの前提とは無関係で、
-   出題位置を何個ずつ束ねて見せるかだけを決める。 */
+/* 1ページあたりの問数。PAGE_SIZE は「1軸あたりの設問数が奇数」という
+   タイブレーカーの前提とは無関係で、出題位置を何個ずつ束ねて見せるかだけを決める。
+   -------------------------------------------------------------------------
+   ページ0（出題位置0-4 ＝ Q1-5）は LP（#lp-quiz）だけが持つ。
+   診断画面（#screen-quiz）が受け持つのはページ1-3（Q6-20）の3ページである。
+   かつては Q1-5 を LP と診断画面1ページ目の両方に出していたが（§A-2「2つの入口」）、
+   その二重化はオーナー判断で解消した。
+   進捗の .prog-seg は 4群のまま（群0 = LP の5問、群1-3 = 診断画面）。
+   群を3つに減らさないのは、LP で答えた5問が持ち越されていることを
+   診断画面の目盛で見せるためである。 */
 const PAGE_SIZE=5;
-const PAGE_COUNT=Math.ceil(Qs.length/PAGE_SIZE);
+const PAGE_COUNT=Math.ceil(Qs.length/PAGE_SIZE);   /* 4。進捗の群数でもある */
+const LP_PAGE=0;                                   /* LP が受け持つページ */
+const QUIZ_FIRST_PAGE=1;                           /* 診断画面の先頭ページ（Q6-10） */
+const QUIZ_PAGE_COUNT=PAGE_COUNT-QUIZ_FIRST_PAGE;  /* 3 */
 /* ページ p が持つ出題位置の配列 */
 function pagePositions(p){
   const o=[];
@@ -1648,8 +1719,8 @@ window.addEventListener('DOMContentLoaded',()=>{
   buildTypeOverview();
   dropLegacyProgress();
   checkSavedProgress();
-  renderPage('lp');    /* LP埋め込み（Q1-5）を描画する */
-  renderPage('quiz');  /* 診断画面の1ページ目も先に描いておく（LPと同じ出題位置を共有する） */
+  renderPage('lp');    /* LP埋め込み（Q1-5）。Q1-5 が置かれる唯一の場所 */
+  renderPage('quiz');  /* 診断画面の先頭ページ（Q6-10）も先に描いておく */
   window.addEventListener('scroll',()=>document.getElementById('hdr').classList.toggle('sc',scrollY>10));
   document.addEventListener('click',e=>{
     const d=document.getElementById('drawer'),b=document.getElementById('ham');
@@ -1718,9 +1789,12 @@ function continueDiag(){
     recalcScores();
     quizStartedAt=Date.now();
     if(!quizStarted){quizStarted=true;track('quiz_start',{entry:'continue'});}
-    /* 復帰先を分岐させる。LPで2問だけ答えた人を診断画面に放り込まない（§E-2） */
+    /* 復帰先を分岐させる。LPで2問だけ答えた人を診断画面に放り込まない（§E-2）。
+       判定は回答の総数（curQ）ではなく「ページ0が埋まっているか」で行う。
+       回答は歯抜けになりうるので、Q1-5 に穴を残したまま8問答えた人も居る。
+       その人を診断画面へ戻すと、穴を埋める手段が無くなる。 */
     renderPage('lp');
-    if(curQ<LP_Q_COUNT)goToLpQuiz();
+    if(unansweredIn(LP_PAGE)>0)goToLpQuiz();
     else goToQuizPage(firstIncompletePage());
   }
   catch(e){startFresh();}
@@ -1760,35 +1834,41 @@ function scrollToTypes(cat){
   else go();
 }
 
+/* 回答をすべて捨てて最初からやり直す。Q1 は LP にしか無いので #lp-quiz へ送る。
+   いま呼ぶのは continueDiag() の復旧経路（保存データが壊れていたとき）だけ。 */
 function startFresh(entry){
-  ans=[];selectedIndustries=[];curPage=0;
+  ans=[];selectedIndustries=[];curPage=QUIZ_FIRST_PAGE;
   recalcScores();
   quizStartedAt=Date.now();
-  if(!quizStarted){quizStarted=true;track('quiz_start',{entry:entry||'hero'});}
+  if(!quizStarted){quizStarted=true;track('quiz_start',{entry:entry||'lp_inline'});}
   clearSavedProgress();
-  renderPage('lp');              /* LP側も空に戻しておく（同じ出題位置を共有している） */
-  renderPage('quiz');toScreen('screen-quiz');
+  renderPage('lp');
+  renderPage('quiz');
+  toScreen('screen-title');   /* 先に LP を出す。goToLpQuiz() の遅延分岐を通さない */
+  goToLpQuiz();
 }
 
-/* 既存CTA（ヒーロー・16タイプ節・ドロワー・共有バナー・タイプ紹介）の呼び先。
-   Q1-5 は「LP埋め込み」と「診断画面の1ページ目」の2つの入口を持つ（仕様 §A-2）。
-   どちらで答えても同じ ans[] を更新するので、CTAは
-   「最初の、5問すべてが埋まっていないページ」へ送れば全ケースが成立する。 */
+/* 既存CTA（16タイプ節・ドロワー・共有バナー・タイプ紹介）の呼び先。
+   -------------------------------------------------------------------------
+   Q1-5 は LP にしか存在しない。診断画面は Q6-20 の3ページしか持たないので、
+   ページ0が埋まっていない人を診断画面へ入れると、その人は
+   「埋めようのない穴を5つ抱えたまま20問目に到達する」ことになる。
+   （診断画面の「戻る」は先頭ページで止まり、LP へは戻れない。）
+   よって入口が4つのいずれであっても、判断は1つで足りる:
+     ページ0に未回答がある → #lp-quiz へ送る
+     ページ0が埋まっている → 最初の未完了ページへ（＝必ずページ1以降）
+   これは共有リンク（entry==='shared'）で既に実装していた挙動を、
+   全入口へ一般化したものである。入口ごとの分岐は無くなった。 */
 function continueOrStart(entry){
-  /* 共有リンクで来た人と、ヒーローCTAを押した人は段差を作らず #lp-quiz へ送る。
-     友達のリンクで来た人こそ、画面遷移なしで答え始めさせるべき相手である（§A-2 の表）。
-     ヒーローCTAは、直下に見えているのと同じ Q1-5 を全画面で出し直していた。
-     入口を質問カード1つに統一し、ボタンは「そこへ連れて行く」案内に降格させる
-     （docs/design/wording-audit.md §2 案B。判断⑫の処方を上書きした）。 */
-  if((entry==='shared'||entry==='hero')&&curQ<LP_Q_COUNT){goToLpQuiz();return;}
-  if(curQ<=0){startFresh(entry);return;}
-  if(!quizStarted){quizStarted=true;quizStartedAt=Date.now();track('quiz_start',{entry:entry||'hero'});}
+  if(unansweredIn(LP_PAGE)>0){goToLpQuiz();return;}
+  if(!quizStarted){quizStarted=true;quizStartedAt=Date.now();track('quiz_start',{entry:entry||'grid'});}
   goToQuizPage(firstIncompletePage());
 }
 
-/* 診断画面の指定ページを表示する */
+/* 診断画面の指定ページを表示する。ページ0は LP のものなので、
+   下限は QUIZ_FIRST_PAGE でクランプする（診断画面に Q1-5 を出さない）。 */
 function goToQuizPage(p){
-  curPage=Math.max(0,Math.min(PAGE_COUNT-1,p));
+  curPage=Math.max(QUIZ_FIRST_PAGE,Math.min(PAGE_COUNT-1,p));
   renderPage('quiz');
   toScreen('screen-quiz');
 }
@@ -1824,9 +1904,11 @@ function closeDrawer(){document.getElementById('ham').classList.remove('open');d
    LP埋め込み（#lq-list）と診断画面（#q-list）は、同じ関数・同じ class で
    組み立てる。違うのは「どのページを持つか」と id の接頭辞だけ。
      lp   … 常にページ0（出題位置 0-4 ＝ Q1-5）
-     quiz … curPage（0-3）
-   Q1-5 はこの2つの面に同時に存在する。2つの入口を持つのは意図した仕様で、
-   どちらで答えても同じ ans[] を更新し、もう一方の面にも反映される（§A-2 / §A-3）。
+     quiz … curPage（1-3 ＝ Q6-20）
+   2つの面が持つ出題位置は重ならない。Q1-5 は LP にしか無い。
+   （かつては診断画面の1ページ目にも同じ5問を出していた。§A-2「2つの入口」）
+   面をまたいだ相互反映（syncPos）は、同じ出題位置が2箇所に描かれることが
+   無くなったため、実質的には結果画面など他の描画との整合だけを担う。
    ========================================================================= */
 const FACES={
   quiz:{list:'q-list',seg:'prog-seg',pre:'q', remain:'q-remain'},
@@ -1837,9 +1919,10 @@ const SCALE=[[3,'Aにとても近い'],[2,'Aに近い'],[1,'どちらかとい�
              [-1,'どちらかといえばB'],[-2,'Bに近い'],[-3,'Bにとても近い']];
 
 /* その面が受け持つページ */
-function facePage(tg){return tg==='lp'?0:curPage;}
+function facePage(tg){return tg==='lp'?LP_PAGE:curPage;}
 
 /* 進捗の共通部品。4群 × 5目盛。群＝ページ、セル i ＝出題位置 i。
+   群0 は LP の5問。診断画面では最初から塗られた状態で始まる（持ち越しが見える）。
    塗りは「その位置に回答済みか」で決めるので、歯抜けの回答にも正しく追従する。
    現在地はセル1つではなく群全体で示す（5問同時表示なので「現在の1問」は無い。§B-5）。 */
 function renderProgSeg(id,curGroup){
@@ -1865,14 +1948,10 @@ function renderProgSeg(id,curGroup){
 function updateCtas(){
   const rem=Qs.length-curQ,fresh=curQ<=0;
   const set=(id,base,cont)=>{const el=document.getElementById(id);if(el)el.textContent=fresh?base:cont;};
-  /* ヒーローCTAだけ「診断をはじめる」ではない。同じ画面に質問カードが
-     見えるようになり、「はじめる」が下の質問に答えることも指してしまうため
-     （docs/design/hero-floating-characters.md 判断⑫）。
-     判断⑫は「言葉を分ける」ことで解こうとしたが、行き先を1つにすれば言葉を
-     分ける必要は無い（wording-audit.md §2 案B）。矢印は行き先の種類を表す。
-       ↓ … 同じページの #lp-quiz へスクロールする（画面は変わらない）
-       → … 画面が切り替わる（5問そろっている人だけ診断画面へ進む） */
-  set('cta-hero','最初の質問へ ↓',curQ<LP_Q_COUNT?'続きから答える ↓':`残り${rem}問を続ける →`);
+  /* ヒーローCTA（#cta-hero）はオーナー判断（案C）で削除した。ヒーローに
+     「入口」は無く、LP の質問カードそのものが唯一の入口である。
+     判断⑫（hero-floating-characters.md）とその処方を案Bで上書きした経緯は
+     wording-audit.md §2 に残っている。 */
   set('cta-grid','診断をはじめる →',`残り${rem}問を続ける →`);
   set('cta-drawer','▶ 診断をはじめる',`▶ 残り${rem}問を続ける`);
   const sb=document.querySelector('.sb-cta');
@@ -1935,9 +2014,12 @@ function renderPage(target){
        .prog-seg の aria-valuetext「20問中N問に回答済み」とも単位が揃う。 */
     if(pt)pt.textContent=`Q${from}-${to} / 全${Qs.length}問`;
     const pm=document.getElementById('prog-msg');
-    if(pm)pm.textContent=PAGE_MSGS[Math.min(p,PAGE_MSGS.length-1)];
+    /* PAGE_MSGS は診断画面の何ページ目かで引く（ページ0は LP のもの） */
+    if(pm)pm.textContent=PAGE_MSGS[Math.min(Math.max(p-QUIZ_FIRST_PAGE,0),PAGE_MSGS.length-1)];
     const bk=document.getElementById('back-btn');
-    if(bk)bk.style.display=p>0?'flex':'none';     /* 1ページ目では出さない（§B-4） */
+    /* 診断画面の先頭ページでは出さない（§B-4）。その手前は LP であって
+       「前のページ」ではないので、ここから LP へ戻す導線は張らない。 */
+    if(bk)bk.style.display=p>QUIZ_FIRST_PAGE?'flex':'none';
     const nx=document.getElementById('q-next');
     if(nx)nx.textContent=p>=PAGE_COUNT-1?'結果を見る →':'次へ →';
   }else{
@@ -2020,9 +2102,10 @@ function nextPage(){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-/* 1ページ戻る。回答は消さない（§B-4。1問ずつ時代は戻ると同時に取り消していた） */
+/* 1ページ戻る。回答は消さない（§B-4。1問ずつ時代は戻ると同時に取り消していた）。
+   戻れるのは診断画面の中だけ。先頭ページ（Q6-10）より手前は LP なので止まる。 */
 function goBack(){
-  if(curPage<=0)return;
+  if(curPage<=QUIZ_FIRST_PAGE)return;
   curPage--;
   renderPage('quiz');
   window.scrollTo({top:0,behavior:'smooth'});

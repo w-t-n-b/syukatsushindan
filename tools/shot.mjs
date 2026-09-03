@@ -29,12 +29,15 @@ const MEASURE = `(()=>{
     hscroll:document.documentElement.scrollWidth>innerWidth,
     scrollW:document.documentElement.scrollWidth};
   ['.hero','.hero-title','.hero-title em','.hero-sub','#lp-quiz-sec','#lp-quiz','#lq-list',
-   '.lq-foot','.hero-cast','.btn-wrap','#type-section'].forEach(s=>{
+   '.lq-foot','.hero-cast','.cont-banner','#type-section'].forEach(s=>{
     const el=q(s); if(el)o[s]=r(el);
   });
   /* 浮遊キャラ（.hc）の検証。docs/design/hero-floating-characters.md §7-4
      (a) 横スクロールが出ていないこと（上の hscroll）
-     (b) .btn-wrap の上端と各 .hc の下端の差＝CTA の外形に重なっていないこと（1.4.11）
+     (b) ヒーロー内で押せるものの外形に重なっていないこと（1.4.11）。
+         ヒーローCTA（#cta-hero / .btn-wrap）を削除したので、対象は
+         .cont-banner（再訪者にだけ出る復帰バナー）だけになった。
+         既定では display:none なので、出ているときだけ測る。
      (c) .hc 同士の矩形が交差しないこと（重なると実効αが上がり AA を割る） */
   const hcs=[...document.querySelectorAll('.hc')].map(e=>{
     const b=e.getBoundingClientRect();
@@ -45,10 +48,10 @@ const MEASURE = `(()=>{
             a:getComputedStyle(e).opacity};
   });
   o.hc=hcs;
-  const bw=q('.btn-wrap');
-  if(bw){
+  const bw=q('.cont-banner');
+  if(bw&&getComputedStyle(bw).display!=='none'){
     const t=bw.getBoundingClientRect().top+scrollY;
-    o.hcToCta=hcs.map(h=>({cls:h.cls,gap:Math.round(t-h.bottom)}));
+    o.hcToContBanner=hcs.map(h=>({cls:h.cls,gap:Math.round(t-h.bottom)}));
   }
   o.hcOverlap=[];
   for(let i=0;i<hcs.length;i++)for(let j=i+1;j<hcs.length;j++){
@@ -112,7 +115,7 @@ for(const [w,h] of [[390,844],[320,568]]){
     await evalJS(`(()=>{const e=document.getElementById('lq-done');scrollTo(0,Math.max(0,e.getBoundingClientRect().top+scrollY-120));return 1;})()`);
     await new Promise(r=>setTimeout(r,600));
     await screenshot(`/tmp/shots/lp-${w}-done.png`);
-    // 診断画面（2ページ目から始まる）
+    // 診断画面（Q6-10 から始まる。Q1-5 は LP にしか無い）
     await evalJS(`document.getElementById('lq-continue').click()`);
     await new Promise(r=>setTimeout(r,900));
     console.log(`診断画面: ${await evalJS(PAGE)}`);

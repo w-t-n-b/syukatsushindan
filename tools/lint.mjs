@@ -144,9 +144,39 @@ console.log('[lint] 診断体験の改訂：消したものが戻っていない
   check(/id="lq-list"/.test(html) && /id="q-list"/.test(html),
     'LP（#lq-list）と診断画面（#q-list）に質問リストの器がある');
   check(/const PAGE_SIZE=5/.test(html) && /const PAGE_COUNT=Math\.ceil\(Qs\.length\/PAGE_SIZE\)/.test(html),
-    '1ページ5問・ページ数は問数から算出（20問 → 4ページ）');
+    '1ページ5問・ページ数は問数から算出（20問 → 5問×4群）');
   check(/function pagePositions\(/.test(html) && /function firstIncompletePage\(/.test(html),
     'ページと出題位置の対応（pagePositions / firstIncompletePage）がある');
+  // Q1-5 は LP のみ（オーナー判断）。診断画面はページ1-3（Q6-20）の3ページ。
+  // ここが 0 に戻ると、診断画面に Q1-5 が復活して「2つの入口」に逆戻りする。
+  check(/const LP_PAGE=0;/.test(html) && /const QUIZ_FIRST_PAGE=1;/.test(html),
+    'LP はページ0・診断画面はページ1から（Q1-5 は LP のみ）');
+  check(/const QUIZ_PAGE_COUNT=PAGE_COUNT-QUIZ_FIRST_PAGE;/.test(html),
+    '診断画面のページ数は PAGE_COUNT から算出（べた書きしない）');
+  check(/curPage=Math\.max\(QUIZ_FIRST_PAGE,Math\.min\(PAGE_COUNT-1,p\)\)/.test(html),
+    'goToQuizPage() は下限を QUIZ_FIRST_PAGE でクランプする（診断画面に Q1-5 を出さない）');
+  check(/if\(curPage<=QUIZ_FIRST_PAGE\)return;/.test(html),
+    'goBack() は診断画面の先頭ページで止まる（LP へは戻さない）');
+  check(/bk\.style\.display=p>QUIZ_FIRST_PAGE\?'flex':'none'/.test(html),
+    '「前のページに戻る」は診断画面の先頭ページでは出さない');
+  // 入口4つ（16タイプ節・ドロワー・共有バナー・タイプ紹介）の分岐は1つに統一した。
+  // ページ0が埋まっていない人を診断画面へ入れると、埋めようのない穴が残る。
+  check(/function continueOrStart\(entry\)\{\s*if\(unansweredIn\(LP_PAGE\)>0\)\{goToLpQuiz\(\);return;\}/.test(html),
+    'continueOrStart() は、ページ0に未回答があれば入口を問わず #lp-quiz へ送る');
+  check(/if\(unansweredIn\(LP_PAGE\)>0\)goToLpQuiz\(\);/.test(html),
+    '途中復帰も同じ条件で分岐する（回答総数ではなくページ0の充足で見る）');
+  {
+    // PAGE_MSGS は診断画面のページ数と同数。ずれると最後のページで
+    // 「最後のページです」以外が出る。
+    const pm = html.match(/const PAGE_MSGS=\[([\s\S]*?)\];/);
+    const items = pm ? [...pm[1].matchAll(/"([^"]*)"/g)].map(m => m[1]) : [];
+    check(items.length === 3,
+      `PAGE_MSGS は診断画面の3ページぶん（${items.length}件）: ${items.join(' / ')}`);
+    check(items[items.length - 1] === '最後のページです',
+      `最終ページの文言は「最後のページです」（仕様 §B-5）: ${items[items.length - 1] || 'なし'}`);
+    check(!items.some(s => /ページ目/.test(s)),
+      'PAGE_MSGS に「◯ページ目」が残っていない（LP がページ0を持つので数え方が合わない）');
+  }
 
   // C-7：回答ドットは <button> + role="radio"。組み立てているのは buildCard()。
   const sdwBuild = html.match(/class="sdw\$\{sel\?' sel':''\}"[\s\S]{0,240}?><span class="sd">/);
@@ -211,6 +241,22 @@ console.log('[lint] 診断体験の改訂：消したものが戻っていない
   check(ccHead === 0, `.cc 向けの --head / object-position が0件（帯の廃止に追従）${ccHead ? ` → ${ccHead}件` : ''}`);
   check(/\.res-char\{[^}]*object-position:50% 50%/.test(html),
     '.res-char は 50% 50% のまま（f>=1 で縦の切り取りが起きないため対象外）');
+  /* HAWG(a4) / HALG(a2) の引き（オーナー指摘: HAWG が寄りすぎ）。
+     可視域の最大横幅が 80.8 / 82.1 と突出しており、他の体（中央値 約59）と
+     並ぶと枠を圧迫する。左右 padding で描画幅だけを縮める（c4 と同じ手法）。 */
+  check(/\.tc:has\(img\[src\*="chars\/a4"\]\) img,\s*\.tc:has\(img\[src\*="chars\/a2"\]\) img\{[^}]*padding:0 14%/.test(html),
+    'HAWG(a4) / HALG(a2) は左右 padding 14% で引いている（描画幅だけを縮める）');
+  /* 320〜360px では引かない。素の可視率（f=0.632〜0.551）で既に上半身が収まり、
+     引くと f' が 0.878 まで上がって a2/a4 だけ全身になる。 */
+  check(/@media \(min-width:361px\)\{\s*\.tc:has\(img\[src\*="chars\/a4"\]\) img,/.test(html),
+    'a4 / a2 の引きは 361px 以上でだけ効かせる（狭い端末では素の切り取りのほうが揃う）');
+  /* a2 / a4 は --head が 1.4 / 2.4 と低く、clamp 式が負になって Y=0 に張り付く。
+     Y=0＝画像の最上端から見せる＝頭上の余白の上限。ここに固定値を足すと頭が切れる。 */
+  const a24pos = /\.tc:has\(img\[src\*="chars\/a[24]"\]\) img\{[^}]*object-position/.test(html);
+  check(!a24pos, 'a2 / a4 に object-position を直接書いていない（--head 経由の Y=0 を上書きしない）');
+  /* HAWS(a3) は対象外。可視域の最大横幅 58.3 が既に中央値で、引くと逆に最小になる。 */
+  check(!/chars\/a3"\]\) img\{[^}]*padding/.test(html),
+    'HAWS(a3) には引きを入れていない（可視域の横幅が既に中央値のため）');
   check(fs.existsSync(path.join(ROOT, 'tools/measure-heads.mjs')),
     '頭頂位置の再計測スクリプトがある（make heads。画像を差し替えたら実行する）');
 
@@ -272,8 +318,13 @@ console.log('[lint] ヒーロー：マーキー廃止 / 3ステップ削除 / �
   const heroRule = (html.match(/^\.hero\{[^}]*\}/m) || [])[0] || '';
   check(!/min-height/.test(heroRule),
     `.hero に min-height が無い（高さは中身の積算そのもの）: ${heroRule.slice(0, 60)}…`);
-  check(/\.hero-sub\{margin-bottom:28px;\}/.test(html),
-    '.hero-sub の下マージンが 28px（廃止した帯から移送した値）');
+  // 28px は「本文と朱色のCTAを密着させない」ための間隔だった。CTA を削除した
+  // （案C）ので離す相手が居なくなり、0 にして .hero の padding-bottom に任せる。
+  // 28px は .cont-banner（再訪者にだけ出る）の上マージンへ移した。
+  check(/\.hero-sub\{margin-bottom:0;\}/.test(html),
+    '.hero-sub の下マージンが 0（CTA を削除したので離す相手が無い）');
+  check(/\.cont-banner\{margin-top:28px;margin-bottom:0;\}/.test(html),
+    '28px は .cont-banner の上マージンへ移した（再訪者の本文密着を防ぐ）');
 
   // (4) 浮遊キャラの層（判断③⑤⑦⑬）
   check(/\.hero-cast\{/.test(html) && /\.hc\{/.test(html) && /@keyframes hcFloat\{/.test(html),
@@ -396,18 +447,34 @@ console.log('[lint] ヒーロー：マーキー廃止 / 3ステップ削除 / �
   check(/\.hero-sil,\.result-sil,\.tc-sil\{display:none;\}/.test(html),
     '.hero-sil / .result-sil / .tc-sil は display:none のまま維持');
 
-  // (6) 文言（判断⑫⑭ → docs/design/wording-audit.md §2 案B で上書き）
-  // 「20問すべてに答える →」は、押した先に20問が無い（出るのは同じ Q1-5）ため
-  // 「最初の質問へ ↓」に変えた。検査は消さずに新しい文言へ更新する。
-  check(/id="cta-hero"[^>]*>最初の質問へ ↓</.test(html),
-    'ヒーローCTAの文言が「最初の質問へ ↓」');
-  check(/set\('cta-hero','最初の質問へ ↓'/.test(html),
-    'updateCtas() の未回答時の文言もヒーローCTAだけ差し替えている');
-  // 呼び先。ここが戻ると、文言だけ「↓」のまま画面遷移する（元の不整合の再発）。
-  check(/\(entry==='shared'\|\|entry==='hero'\)&&curQ<LP_Q_COUNT/.test(html),
-    'ヒーローCTAは5問そろうまで #lp-quiz へスクロールする（画面遷移させない）');
+  // (6) 文言（判断⑫⑭ → wording-audit.md §2 案B → オーナー判断で §2-3 案Cへ）
+  // ヒーローCTAは削除した。案Bは「行き先を1つ」にしたが、押す対象は
+  // ボタンと質問カードの2つのままだった。案Cは押す対象そのものを1つにする。
+  // 検査は消さずに「無いこと」の検査へ更新する（消すと黙って復活しても気づけない）。
+  {
+    const liveHero = html
+      .replace(/<!--[\s\S]*?-->/g, '')
+      .replace(/\/\*[\s\S]*?\*\//g, '');
+    const hero = (liveHero.match(/cta-hero/g) || []).length;
+    check(hero === 0,
+      `ヒーローCTA（#cta-hero）が0件 —— 入口は LP の質問カードだけ${hero ? ` → ${hero}件` : ''}`);
+    const bw = (liveHero.match(/btn-wrap/g) || []).length;
+    check(bw === 0, `.btn-wrap（ヒーローCTAの外枠）も残っていない${bw ? ` → ${bw}件` : ''}`);
+    // ヒーローの中に押せるものが1つも無いこと。文字列ではなく構造で見る。
+    // （「20問すべてに答えると」は .lq-next-lbl の条件文として正しく生きているので、
+    //   文字列の全文検索では判定できない。範囲をヒーローに限る。）
+    // 範囲の切り出しは生の html で行う（liveHero はコメントを落としてあるので目印が消える）
+    const heroRaw = (html.match(/<div class="hero">[\s\S]*?<div id="lp-quiz-sec">/) || [])[0] || '';
+    const heroMarkup = heroRaw.replace(/<!--[\s\S]*?-->/g, '');
+    check(heroMarkup.length > 0, 'ヒーローのマークアップを切り出せた（検査範囲の確認）');
+    const heroBtns = (heroMarkup.match(/<button/g) || []).length;
+    check(heroBtns === 0, `ヒーローの中に <button> が0件（入口は LP の質問カードだけ）${heroBtns ? ` → ${heroBtns}件` : ''}`);
+    for (const s of ['最初の質問へ', '20問すべてに答える →', '続きから答える']) {
+      check(!liveHero.includes(s), `ヒーローCTAの旧文言「${s}」が残っていない`);
+    }
+  }
   check(/set\('cta-grid','診断をはじめる →'/.test(html),
-    '16タイプ節のCTAは「診断をはじめる →」のまま（ヒーローだけを変えた）');
+    '16タイプ節のCTAは「診断をはじめる →」のまま（ヒーローの削除に巻き込まない）');
   const sub = (html.match(/<p class="hero-sub">([\s\S]*?)<\/p>/) || [])[1] || '';
   check(!!sub && !/本格/.test(sub),
     `.hero-sub から「本格」（検証できない自称）が落ちている: ${sub.replace(/<br>/g, ' / ')}`);
