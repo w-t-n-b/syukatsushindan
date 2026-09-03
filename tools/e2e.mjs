@@ -46,7 +46,9 @@ const profile = fs.mkdtempSync(path.join(process.env.TMPDIR || '/tmp', 'e2eprof'
 const args = [
   '--headless=new', '--disable-gpu', '--hide-scrollbars', '--no-first-run',
   '--no-default-browser-check', `--user-data-dir=${profile}`,
-  '--window-size=1400,900', '--virtual-time-budget=900000', '--dump-dom',
+  // ドライバは iframe を最大 1440x1024 まで広げて実機幅を再現する（浮遊キャラの
+  // コントラスト実測）。窓のほうが小さいと iframe がはみ出すので余裕を持たせる。
+  '--window-size=1600,1100', '--virtual-time-budget=900000', '--dump-dom',
   ...EXTRA_FLAGS,          // CI で --no-sandbox 等が要る環境向け（CHROME_FLAGS）
   `http://127.0.0.1:${PORT}/${path.basename(DRIVER_TMP)}`,
 ];

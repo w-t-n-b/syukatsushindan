@@ -60,6 +60,26 @@ const FIELD=hex('#132043');
 const LINE=over([255,255,255],0.05,FIELD);
 /* mask-image:linear-gradient(180deg,#000 0 52%,transparent 88%) の不透明度 */
 const maskA=t=>t<=0.52?1:(t>=0.88?0:(0.88-t)/0.36);
+/* 字面（グリフが実際に走る範囲）を返す。
+   .hero-title em は display:block なので、要素の矩形は行ボックスの全幅になり、
+   左右には文字が1画素も無い余白が含まれる。そこを「文字の背景」として測ると、
+   文字が存在しない場所の背景色を文字のコントラストとして数えてしまう。
+   WCAG 1.4.3 が言う背景は文字自身の背後なので、Range からグリフの走る矩形を取る。
+   縁取り（text-shadow の 1.5px）・影（4px）・描画のにじみを含めるため 6px 広げる。
+   ★ 判定の閾値（大きな文字 3:1 / 本文 4.5:1）は一切変えていない。変えたのは
+     「どこを測るか」だけで、測る範囲は字面＋6px と安全側に取ってある。 */
+function inkRects(el,pad){
+  const out=[];
+  for(const n of el.childNodes){
+    if(n.nodeType!==3||!n.textContent.trim())continue;
+    const rg=document.createRange();rg.selectNodeContents(n);
+    for(const b of rg.getClientRects()){
+      if(b.width<0.5||b.height<0.5)continue;
+      out.push({left:b.left-pad,right:b.right+pad,top:b.top-pad,bottom:b.bottom+pad});
+    }
+  }
+  return out;
+}
 /* 1体ぶんの最悪画素を返す。rect は測りたい範囲（文字の行ボックス等）。 */
 function worstPixel(img,hcRect,opacity,clip){
   const W=Math.max(1,Math.round(hcRect.width)),H=Math.max(1,Math.round(hcRect.height));
@@ -809,7 +829,9 @@ try{
     // 不具合そのものの再発も名指しで押さえる（あるセクションの直後に何も無い帯が続く）。
     // 3ステップの節を削除したので、いまヒーローの下に来るのは #lp-quiz。
     const sb=d.querySelector('.hero .btn-wrap').getBoundingClientRect().bottom;
-    const lqTop=d.querySelector('#lp-quiz .lq-head').getBoundingClientRect().top;
+    /* 以前は #lp-quiz .lq-head（注記の行）の上端で測っていた。注記を削除したので、
+       同じ「LP埋め込み質問の始まり」を #lp-quiz 自身の上端で測る。 */
+    const lqTop=d.querySelector('#lp-quiz').getBoundingClientRect().top;
     const lqBot=d.querySelector('#lp-quiz .q-nav').getBoundingClientRect().bottom;
     const nx=d.querySelector('#type-section .sec-lbl').getBoundingClientRect().top;
     chk(Math.round(lqTop-sb)<=120,'ヒーローCTA→LP埋め込み質問 の間隔('+vw+'px): '+Math.round(lqTop-sb)+'px');
@@ -952,7 +974,10 @@ try{
   // docs/design/hero-floating-characters.md 判断①〜⑭。
   // 「消したもの」と「残したもの」を両側から押さえ、コントラストは計算値ではなく
   // 実配信の webp を canvas で合成した実測値で判定する。
-  for(const [vw,vh,want] of [[390,844,2],[320,568,2],[1024,844,4]]){
+  // 幅の選び方: 320/390 は α の下限を決めているスマホ2体。768 は奥の2体が字面に
+  // 最も深く重なる幅（em の字面は幅600px以上で 476px 固定なので、狭いほど食い込む）。
+  // 1024 は据え置き。1440 は両端の2体が字面に1画素も重ならないことを押さえる幅。
+  for(const [vw,vh,want] of [[390,844,2],[320,568,2],[768,1024,4],[1024,844,4],[1440,900,4]]){
     f.style.width=vw+'px'; f.style.height=vh+'px';
     await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(1200);
     const hero=d.querySelector('.hero');
@@ -1007,27 +1032,35 @@ try{
       chk(rects.every(r=>r.top+30<=ttl.top),
           T+'顔（上端から約30px）が見出しの上端より上にある: hc上端 '+rects.map(r=>Math.round(r.top)).join('/')+' / 見出し上端 '+Math.round(ttl.top));
 
-      // --- コントラスト実測（§7-1）---
-      const em=d.querySelector('.hero-title em').getBoundingClientRect();
-      const h1=d.querySelector('.hero-title').getBoundingClientRect();
-      const sub=d.querySelector('.hero-sub').getBoundingClientRect();
-      const TXT={'見出し2行目 --must':hex('#cf9a24'),'見出し1行目 --paper':hex('#f2ece0'),'本文 #c3cbdd':hex('#c3cbdd')};
-      const AREA={'見出し2行目 --must':em,'見出し1行目 --paper':{left:h1.left,right:h1.right,top:h1.top,bottom:em.top},
-                  '本文 #c3cbdd':sub};
-      for(const [name,col] of Object.entries(TXT)){
-        const need=name==='本文 #c3cbdd'?4.5:3;      // 見出しは 25.6px 以上 / 900 → 大きな文字
+      // --- コントラスト実測（§7-1）。矩形ではなく字面の背後を測る ---
+      const titleEl=d.querySelector('.hero-title');
+      const emEl=titleEl.querySelector('em');
+      const subEl=d.querySelector('.hero-sub');
+      const TXT=[
+        // 見出しは 25.6px 以上 / font-weight:900 → WCAG の「大きな文字」で 3:1
+        ['見出し2行目 --must', hex('#cf9a24'), 3,   inkRects(emEl,6)],
+        ['見出し1行目 --paper',hex('#f2ece0'), 3,   inkRects(titleEl,6)],
+        ['本文 #c3cbdd',       hex('#c3cbdd'), 4.5, inkRects(subEl,6)],
+      ];
+      for(const [name,col,need,areas] of TXT){
+        chk(areas.length>0,T+name+' の字面を取得できた: '+areas.length+'行 '
+            +areas.map(a=>'x'+Math.round(a.left)+'〜'+Math.round(a.right)).join(' '));
         const tl=lum(col[0],col[1],col[2]);
         let worst=null,worstI=null;
         hcs.forEach((im,i)=>{
-          const b=worstPixel(im,rects[i],parseFloat(getComputedStyle(im).opacity),AREA[name]);
-          if(b&&(!worst||b.l>worst.l)){worst=b;worstI=i;}
+          const a=parseFloat(getComputedStyle(im).opacity);
+          for(const area of areas){
+            const b=worstPixel(im,rects[i],a,area);
+            if(b&&(!worst||b.l>worst.l)){worst=b;worstI=i;}
+          }
         });
-        if(!worst){p('     '+T+name+'：背後に .hc の画素なし（比は地色のまま）');continue;}
+        if(!worst){p('     '+T+name+'：字面の背後に .hc の画素なし（比は地色のまま）');continue;}
         const onLine=ratio(tl,worst.l), between=ratio(tl,worst.inter);
         chk(onLine>=need,
-          T+name+' の背後に .hc がある最悪画素で '+onLine.toFixed(3)+':1（基準 '+need+':1）'
+          T+name+' の字面の背後に .hc がある最悪画素で '+onLine.toFixed(3)+':1（基準 '+need+':1）'
           +' / 線の間 '+between.toFixed(3)+':1'
           +' ← '+(hcs[worstI].src.match(/([a-d]\d)\.webp/)||[])[1]
+          +' α='+getComputedStyle(hcs[worstI]).opacity
           +' rgb('+worst.rgb.join(',')+') 実効α='+worst.a);
       }
       // CTA の面（--verm）は .hc が重なっていない前提で既存の比を保つ
@@ -1088,6 +1121,29 @@ try{
       const st=hcs[0]&&getComputedStyle(hcs[0]);
       chk(!!st&&st.animationName==='hcFloat'&&parseFloat(st.animationDuration)>=11,
           '通常時はゆらぎが動いている: '+(st&&st.animationName)+' '+(st&&st.animationDuration));
+    }
+  }
+  // 768px 以上で開いた窓を狭めたとき、奥の2体が残って手前の2体と重ならないこと。
+  // JS は読み込み時に1回だけ体数を決める（回転のたびに画像を追加取得しない）ので、
+  // 残った4枚のうち奥の2体は CSS で消す。重なると実効αが 1-(1-a)(1-b) まで上がり、
+  // 見出し2行目が AA を割る。
+  f.style.width='1024px'; f.style.height='844px';
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(1200);
+  {
+    const all=[...d.querySelectorAll('.hc')];
+    chk(all.length===4,'リサイズ検査: 1024px では 4 体が挿入されている: '+all.length+' 体');
+    f.style.width='390px'; f.style.height='844px';
+    await sleep(400);
+    const vis=all.filter(e=>getComputedStyle(e).display!=='none');
+    chk(vis.length===2&&vis.every(e=>/hc-[14]\b/.test(e.className)),
+        '1024px→390px に狭めても出るのは手前の2体だけ（奥の2体は display:none）: '
+        +vis.map(e=>e.className.replace('hc ','')).join(',')||'なし');
+    if(vis.length===2){
+      vis.forEach(e=>{e.style.animation='none';});
+      const a=vis[0].getBoundingClientRect(),b=vis[1].getBoundingClientRect();
+      chk(!(a.left<b.right&&b.left<a.right&&a.top<b.bottom&&b.top<a.bottom),
+          '狭めたあとも .hc 同士の矩形が交差しない');
+      vis.forEach(e=>{e.style.animation='';});
     }
   }
   f.style.width='390px'; f.style.height='844px';

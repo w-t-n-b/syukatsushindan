@@ -282,10 +282,74 @@ console.log('[lint] ヒーロー：マーキー廃止 / 3ステップ削除 / �
     '.hc の寸法は px（svh を使っていない。判断⑬）');
   check(/\.hero:has\(\.shared-banner\) \.hero-cast\{display:none;\}/.test(html),
     '共有リンク着地時（.shared-banner）は浮遊キャラを出さない');
-  // α の上限。.19 で余裕 0.2%、.20 で見出し2行目が 2.91:1 になり AA（3:1）を割る。
-  const alphas = [...html.matchAll(/--hc-a:\s*\.?(\d+)/g)].map(m => Number('.' + m[1]));
-  check(alphas.length >= 3 && Math.max(...alphas) <= 0.18,
-    `.hc の不透明度が上限 .18 以下（AA 3:1 を決めているのは見出し2行目 --must）: ${alphas.join(' / ')}`);
+  // α の上限。体ごと・画面幅ごとに違う。
+  //
+  // もとの「一律 .18 以下」は §7-1 の計算値で、次の2つの安全側の仮定から出ていた。
+  // 実測するとどちらも成立していない。
+  //   (a) 最悪画素は純白 … 実際の素材の最悪は a1 で rgb(209,159,49) 等
+  //   (b) 行ボックス全幅が文字 … .hero-title em は display:block なので矩形は
+  //       全幅だが、字面はその内側にしかない。幅600px以上では em の字面は 476px
+  //       固定で中央に来るため、PC では両端の2体が字面に1画素も重ならない
+  //
+  // 字面の背後を実測した上限（--must 2行目が 3:1 を割る手前。320〜1920px を掃引）:
+  //   <768px   hc-1 .345 / hc-4 .310
+  //   ≧768px   hc-1・hc-4 は字面に重ならない → AA 上の上限は無い
+  //            hc-2 .510 / hc-3 .345
+  //
+  // ここは静的な天井にすぎない。AA の判定そのものは e2e が毎回、実配信の webp を
+  // canvas で合成して字面の背後を測る（tools/e2e-driver.html の inkRects / worstPixel）。
+  // 天井を実測上限の 85% に置くのは、素材の差し替えや集中線の変更で即座に割れない
+  // ようにするため（「上限ぴったりに置かない」という判断⑤の方針は引き継ぐ）。
+  // 字面に重ならない体には AA 上の上限が無いので、就活サイトとしての信頼感の側から
+  // .40 で止める。これは意匠の天井であって AA の天井ではない。
+  const HC_LIMIT = { base: { 1: 0.345, 4: 0.310 },
+                     wide: { 1: null, 4: null, 2: 0.510, 3: 0.345 } };
+  const DESIGN_CEIL = 0.40;
+  const hcStart = html.indexOf('.hc-1{');
+  const wideStart = html.indexOf('@media (min-width:768px){', hcStart);
+  const alphaOf = css => {
+    const o = {};
+    for (const m of css.matchAll(/\.hc-([1-4])\{[^}]*?--hc-a:\s*(\.?\d*\.?\d+)/g)) o[m[1]] = Number(m[2]);
+    return o;
+  };
+  if (hcStart < 0 || wideStart < 0) {
+    check(false, '.hc の α を読み取れない（.hc-1 か @media (min-width:768px) が見つからない）');
+  } else {
+    const scopes = {
+      base: alphaOf(html.slice(hcStart, wideStart)),
+      wide: alphaOf(html.slice(wideStart, html.indexOf('\n}', wideStart))),
+    };
+    const label = { base: '<768px', wide: '≧768px' };
+    for (const scope of ['base', 'wide']) {
+      for (const [n, a] of Object.entries(scopes[scope])) {
+        const lim = HC_LIMIT[scope][n];
+        const ceil = lim === null ? DESIGN_CEIL : +(lim * 0.85).toFixed(3);
+        const why = lim === null
+          ? `字面に重ならないので AA 上の上限なし。意匠の天井 ${DESIGN_CEIL}`
+          : `実測上限 ${lim} の85% = ${ceil}`;
+        check(a <= ceil, `.hc-${n}（${label[scope]}）の α ${a} が天井以下（${why}）`);
+      }
+    }
+    check(scopes.base[1] !== undefined && scopes.base[4] !== undefined,
+      'スマホで出る2体（hc-1 / hc-4）の α が明示されている: '
+      + `${scopes.base[1]} / ${scopes.base[4]}`);
+    check([1, 2, 3, 4].every(n => scopes.wide[n] !== undefined),
+      `≧768px の4体すべてに α が指定されている: ${[1, 2, 3, 4].map(n => scopes.wide[n]).join(' / ')}`);
+    // 奥行き。手前（1/4）が奥（2/3）より濃くなければ「奥に引っ込んで見える」が成立しない。
+    check(Math.min(scopes.wide[1], scopes.wide[4]) > Math.max(scopes.wide[2], scopes.wide[3]),
+      '≧768px で手前の2体が奥の2体より濃い（奥行きの順序が保たれている）');
+  }
+  // 768px 未満では奥の2体を出さない。PC で開いた窓を狭めても手前の2体と重ならない
+  // ようにする（重なると実効αが 1-(1-a)(1-b) まで上がって AA を割る）。
+  check(/\.hc-2,\.hc-3\{display:none;\}/.test(html)
+        && /\.hc-2,\.hc-3\{display:block;/.test(html),
+    '奥の2体は <768px で display:none、≧768px で display:block');
+  // 〜360px で hc-1 を左へ逃がす指定。見出しの字面は幅の約80%を占めるので、
+  // 端末が狭いほど図の内側まで文字が及ぶ。320px では a1 の白シャツ（画像 x38〜46）が
+  // 2行目の字面に入り、α の上限が .345 → .270（300〜310px では .205）に落ちる。
+  // これを消すと α .28 のまま 320px で AA を割る（e2e の 320x568 が落ちる）。
+  check(/@media \(max-width:360px\)\{\.hc-1\{left:-36px;\}\}/.test(html),
+    '〜360px で hc-1 を左へ 36px 逃がす（320px でも α の上限を .345 に保つ）');
   // ゆらぎの振幅。8px 以上にすると top:66px から頭が固定ヘッダー（60px）にもぐる。
   const amps = [...html.matchAll(/--hc-y:\s*-(\d+)px/g)].map(m => Number(m[1]));
   check(amps.length >= 2 && Math.max(...amps) <= 6,

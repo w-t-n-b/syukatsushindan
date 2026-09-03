@@ -835,25 +835,18 @@ body[data-screen="screen-loading"] .ftr{display:none;}
    中身の .q-card は質問画面と完全に同一の class / 同一の CSS を使う。
    LP専用の質問カードデザインは作らない（仕様 §A-4）。 */
 /* ヒーローの外（「診断の流れ」の直後）に置く独立セクション（仕様 §C-2）。
-   面の色は診断画面と同じ暗い面にする。.lq-lbl / .prog-seg / 目盛の既存の配色が
-   そのまま成立し、かつ「LPと診断画面が同じ体験である」ことが面のレベルで伝わる。 */
+   面の色は診断画面と同じ暗い面にする。.prog-seg / 目盛の既存の配色がそのまま
+   成立し、かつ「LPと診断画面が同じ体験である」ことが面のレベルで伝わる。 */
 #lp-quiz-sec{background:var(--ink-field);padding:32px 0 36px;}
 #lp-quiz{
   width:100%;
   margin:0 auto;
   text-align:left;
 }
-.lq-head{margin-bottom:10px;}
-.lq-lbl{
-  display:flex;align-items:flex-start;gap:6px;
-  font-family:var(--jp-body);font-weight:700;
-  font-size:11px;line-height:1.5;letter-spacing:.04em;
-  color:var(--must);                          /* #cf9a24 on #132043 = 6.31:1 */
-}
-.lq-lbl::before{
-  content:'';flex:0 0 auto;width:9px;height:9px;margin-top:3px;
-  background:var(--verm);border:var(--bd-hair) solid var(--navy);
-}
+/* .lq-head / .lq-lbl（「最初の5問です。ここで答えた分はそのまま引き継がれます。」）
+   はオーナーの決定で削除した。引き継ぎは .lq-done（5問そろうと出るパネル）が
+   「ここまで5問。残りは15問、形式はまったく同じです。」で言っており、
+   答える前に読ませる注記は無くても質問カードが何であるかは自明である。 */
 .lq-foot{display:flex;align-items:center;gap:10px;margin-top:10px;}
 .lq-foot .prog-seg{flex:1 1 auto;min-width:0;}
 /* .lq-back（1つ前の質問に戻る）は削除した。5問が同時に見えているので、
@@ -1078,17 +1071,46 @@ body[data-screen="screen-loading"] .ftr{display:none;}
    （animation-duration:.01ms）で止めても設計位置で静止する（§7-3）。 */
 @keyframes hcFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(var(--hc-y,-6px));}}
 
+/* α は「字面（グリフが実際に走る範囲）の背後」を実測して決めた。
+   §7-1 の .18 / .16 / .13 は「最悪画素＝純白」「行ボックス全幅が文字」という
+   2つの安全側の仮定から出た計算値で、実測するとどちらも成立していない。
+     ・素材の最も明るい画素は純白ではない（a1 の最悪は rgb(209,159,49) 等）
+     ・.hero-title em は display:block なので矩形は行ボックス全幅だが、
+       字面はその内側にしかない。PC では両端の2体は字面に1画素も重ならない。
+   実測した上限（--must 2行目 3:1 を割る手前）と、採用値・余裕は下記のとおり。
+   実測の手順は tools/e2e-driver.html の inkRects() / worstPixel()。
+     幅 <768   hc-1 上限 .345 → 採用 .28（19%）/ hc-4 上限 .310 → 採用 .25（19%）
+     幅 ≧768   hc-1・hc-4 は字面に重ならない（制約なし）→ 採用 .34 / .32
+               hc-2 上限 .510 → 採用 .26（49%）/ hc-3 上限 .345 → 採用 .24（30%）
+   上げるときは必ず実測しなおすこと。1行目（白）の上限は同じ条件で .46〜.55 あり、
+   下限を決めているのは常にからし色の2行目である（判断⑤のこの部分は変わらない）。
+   1行目だけ見て「まだ余裕がある」と判断しないこと。 */
 /* 手前の2体（端。スマホでもこの2体だけを出す） */
-.hc-1{left:-6vw;  --hc-a:.18; --hc-y:-6px; --hc-t:11s; --hc-d:0s;}
-.hc-4{right:-8vw; --hc-a:.16; --hc-y:-5px; --hc-t:14s; --hc-d:-2s;}
-/* 奥の2体（768px 以上でのみ挿入する。小さく・薄くして奥行きを作る） */
-.hc-2{left:24vw;  height:190px; --hc-a:.13; --hc-y:-4px; --hc-t:13s; --hc-d:-4s;}
-.hc-3{right:24vw; height:190px; --hc-a:.13; --hc-y:-4px; --hc-t:12s; --hc-d:-7s;}
+.hc-1{left:-6vw;  --hc-a:.28; --hc-y:-6px; --hc-t:11s; --hc-d:0s;}
+.hc-4{right:-8vw; --hc-a:.25; --hc-y:-5px; --hc-t:14s; --hc-d:-2s;}
+/* 奥の2体（768px 以上でのみ挿入する。小さく・薄くして奥行きを作る）。
+   768px 未満では出さない。JS は読み込み時に1回だけ体数を決めるので、
+   PC で開いた窓を狭めると手前の2体と矩形が重なり、実効αが 1-(1-a)(1-b) まで
+   上がって AA を割る。体数は据え置いたまま（＝画像を追加取得しないまま）
+   表示だけを止める。 */
+.hc-2,.hc-3{display:none;}
+.hc-2{left:24vw;  height:190px; --hc-y:-4px; --hc-t:13s; --hc-d:-4s;}
+.hc-3{right:24vw; height:190px; --hc-y:-4px; --hc-t:12s; --hc-d:-7s;}
+
+/* 小さい端末（〜360px）だけ hc-1 を左へ逃がす。見出しの字面は幅の約80%を占め、
+   端末が狭いほど図の内側まで文字が及ぶ。320px では a1 の白シャツ（画像 x38〜46）が
+   2行目の字面の裏に入り、α の上限が .345 → .270 まで落ちる（300〜310px では .205）。
+   -6vw では足りないので px で 36px 逃がし、白シャツを字面の外へ出す。
+   薄くするのではなく位置で外す（α を下げると全幅で薄くなるため）。 */
+@media (max-width:360px){.hc-1{left:-36px;}}
 
 @media (min-width:768px){
   .hc-1,.hc-4{height:270px;}      /* CTA上端 368px に対し下端 336px＝32px の余裕 */
-  .hc-2,.hc-3{height:240px;}
-  .hc-1{left:-3vw;} .hc-4{right:-4vw;}
+  .hc-2,.hc-3{display:block; height:240px;}
+  .hc-1{left:-3vw;  --hc-a:.34;}
+  .hc-4{right:-4vw; --hc-a:.32;}
+  .hc-2{--hc-a:.26;}
+  .hc-3{--hc-a:.24;}
 }
 /* 共有リンクから来た人（.shared-banner が入りヒーローが埋まる）には出さない */
 .hero:has(.shared-banner) .hero-cast{display:none;}
@@ -1150,7 +1172,6 @@ body[data-screen="screen-loading"] .ftr{display:none;}
   <div id="lp-quiz-sec">
     <div class="wrap">
       <div id="lp-quiz">
-        <div class="lq-head"><span class="lq-lbl" id="lq-lbl">最初の5問です。ここで答えた分はそのまま引き継がれます。</span></div>
         <div class="q-list" id="lq-list"></div>
         <div class="lq-foot">
           <div class="prog-seg" id="lq-prog-seg" role="progressbar" aria-label="回答の進捗" aria-valuemin="0" aria-valuemax="20" aria-valuenow="0" aria-valuetext="20問中0問に回答済み"></div>
@@ -1895,13 +1916,8 @@ function renderPage(target){
 /* LPの5問がそろったときだけ、リストの下に .lq-done を出す。
    質問カードとは差し替えない（差し替えると答えた5問が見えず、選び直せない。§C-3） */
 function updateLpDone(){
-  const full=unansweredIn(0)===0;
   const dn=document.getElementById('lq-done');
-  if(dn)dn.classList.toggle('on',full);
-  const lbl=document.getElementById('lq-lbl');
-  if(lbl)lbl.textContent=full
-    ?'ここまでの回答は保存されています。'
-    :'最初の5問です。ここで答えた分はそのまま引き継がれます。';
+  if(dn)dn.classList.toggle('on',unansweredIn(0)===0);
 }
 
 /* 同じ出題位置を持つ「すべての面」の見た目を合わせる。

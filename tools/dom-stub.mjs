@@ -158,13 +158,14 @@ function build(){
      置いたままにすると「消したはずの id を参照している」コードを見逃す。
      1問ずつ時代の q-num / q-text / q-a / q-b / spec-track / q-card と
      その lq- 版も同じ理由で置かない。いまはカードごと JS が組み立てる。
-     #char-strip-track（キャラのスライドする帯）も同じ理由で外した。 */
+     #char-strip-track（キャラのスライドする帯）と #lq-lbl（LPの5問の上の注記）も
+     同じ理由で外した。 */
   ['quiz-bg','prog-text','prog-msg','prog-seg','back-btn','q-list','q-next','q-remain',
    'cont-banner','cont-sub',
    'type-overview','screen-result','l-bar','hdr','drawer','ham',
    'screen-title','screen-quiz','screen-loading','company-list','res-code-el',
    /* LP埋め込み質問。診断画面と同じ部品を lq- 接頭辞で持つ */
-   'lp-quiz','lq-lbl','lq-list','lq-prog-seg','lq-done','lq-continue','lq-remain',
+   'lp-quiz','lq-list','lq-prog-seg','lq-done','lq-continue','lq-remain',
    'cta-hero','cta-grid','cta-drawer'
   ].forEach(mk);
 
