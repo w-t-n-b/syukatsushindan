@@ -1448,10 +1448,39 @@ try{
       const hiW=Math.round(d.querySelector('.hero-inner').getBoundingClientRect().width);
       chk(hiW===Math.min(448,vw-32),T+'.hero-inner の幅: '+hiW+'px（448px 上限）');
 
-      /* S-9: PC の地 */
+      /* T-3: body の地（旧 S-9）。body が見えるのは iOS のゴムバンドスクロールの
+         上端と下端だけで、その両端に接するのは全画面で紺である。よって全幅で紺。
+         S-9 は PC だけ --paper2 にしており、スマホには白が残っていた。 */
       const bg=getComputedStyle(d.body).backgroundColor;
-      chk(bg===(pc?'rgb(231, 223, 205)':'rgb(255, 255, 255)'),
-          T+'body の地: '+bg+'（PC は --paper2 #e7dfcd / スマホは白のまま）');
+      chk(bg==='rgb(19, 32, 67)',
+          T+'body の地は全幅で --ink-field: '+bg+'（旧S-9 は PC=#e7dfcd / スマホ=白）');
+
+      /* T-1: 虹バーは「紺→クリーム」の境目にだけ在ること。
+         ヒーロー下端に在った頃は、同一色の紺をこの1本が割っており、
+         オーナーにはそこが層の境目に見えていた。 */
+      const heroAfter=getComputedStyle(d.querySelector('.hero'),'::after').display;
+      const lpqAfter =getComputedStyle(d.querySelector('#lp-quiz-sec'),'::after').display;
+      chk(heroAfter==='none',T+'虹バーがヒーロー下端に無い（.hero::after: '+heroAfter+'）');
+      chk(lpqAfter !=='none',T+'虹バーが Q1-5 の下端に在る（#lp-quiz-sec::after: '+lpqAfter+'）');
+      chk(getComputedStyle(d.querySelector('#lp-quiz-sec')).position==='relative',
+          T+'#lp-quiz-sec に position:relative がある（無いと虹バーがページ末尾へ飛ぶ）');
+      const heroBg=getComputedStyle(d.querySelector('.hero')).backgroundColor;
+      const lpqBg =getComputedStyle(d.querySelector('#lp-quiz-sec')).backgroundColor;
+      chk(heroBg===lpqBg,T+'ヒーローと Q1-5 は同一の面（割る理由が無い）: '+heroBg);
+
+      /* T-2: 読む面が札を浮かせていること。
+         --paper #f2ece0 の札が --off #efe8da の地に載って 1.04:1 だった。
+         地を --paper2 #e7dfcd にして 1.13:1 にする。WCAG の閾値ではない
+         （1.4.11 は --navy 2px の枠が満たす）。「地を切り替えた以上、
+         札が浮くこと」を守るための下限である。 */
+      const lum=s=>{const m=s.match(/\d+/g).slice(0,3).map(v=>{v/=255;
+        return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);});
+        return 0.2126*m[0]+0.7152*m[1]+0.0722*m[2];};
+      const ratio=(a,b)=>{const x=lum(a),y=lum(b);
+        return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05);};
+      const tcR=ratio(getComputedStyle(d.querySelector('.tc')).backgroundColor,
+                      getComputedStyle(d.querySelector('#type-section')).backgroundColor);
+      chk(tcR>=1.10,T+'16タイプの札が地から浮く: '+tcR.toFixed(2)+':1（--off の頃は 1.04:1）');
 
       /* S-3: .type-peek は「押した行の最後のカードの直後」に入る（列数非依存）。
          2列のときは偶然この式と一致していたが、4列では固定値 2 だと
@@ -1496,6 +1525,19 @@ try{
       const rw=Math.round(d.querySelector('#screen-result .wrap').getBoundingClientRect().width)-32;
       chk(Math.abs(rw-ri)<=8,T+'結果ヒーローと本文の内容幅がそろっている: '+ri+'px / '+rw+'px');
       chk(d.documentElement.scrollWidth<=vw+1,T+'結果画面で横スクロールが出ない: '+d.documentElement.scrollWidth);
+
+      /* T-2（結果本文側）。1.04:1 は16タイプ一覧だけの問題ではなかった。
+         .result-wrap も --off だったため、その上に載る --paper の札
+         （.agent-block ＝ 送客ブロック / .famous-box / .ca）が全部沈んでいた。
+         AGENTS が空のあいだ .agent-block は描かれないので、地の値そのものを守る。
+         ★AGENTS に掲載を入れたら、.agent-block の実測比もここに足すこと。 */
+      const rwBg=getComputedStyle(d.querySelector('.result-wrap')).backgroundColor;
+      chk(rwBg==='rgb(231, 223, 205)',T+'結果本文の地は --paper2 #e7dfcd: '+rwBg+'（--off の頃は #efe8da）');
+      const fb=d.querySelector('.famous-box');
+      if(fb){
+        const r2=ratio(getComputedStyle(fb).backgroundColor,rwBg);
+        chk(r2>=1.10,T+'.famous-box が結果本文の地から浮く: '+r2.toFixed(2)+':1（--off の頃は 1.04:1）');
+      }
     }
     f.style.width='390px'; f.style.height='844px';
   }

@@ -1200,10 +1200,9 @@ body[data-screen="screen-loading"] .ftr{display:none;}
 .hero-inner,.result-inner{max-width:448px;margin-left:auto;margin-right:auto;}
 
 @media (min-width:768px){
-  /* --- S-9: 448px の柱が白地に浮いた帯に見える状態をやめる ---------------
-     地の上に直接載る文字は無い（各カードが自前の面と --navy 2px 以上の枠を
-     持つ）ので、新しいコントラストの組み合わせは生まれない（1.4.11 は線が担う）。 */
-  html,body{background:var(--paper2);}
+  /* S-9（html,body の地）は T-3 へ移した。PC だけ替えても、スマホに白が
+     残っている限り同じ不具合が端末をまたいで残るため。値も --paper2 から
+     --ink-field に変えている。理由は T-3 のコメントを読むこと。 */
 
   /* --- S-2: 16タイプ一覧だけを2列ぶんの幅に開き、PC 4列 ×4行にする -------
      .type-grid はカテゴリ（HA/HB/DA/DB）ごとに独立しているので、列数を
@@ -1222,6 +1221,78 @@ body[data-screen="screen-loading"] .ftr{display:none;}
   #type-section .tp-inner,#type-section .tp-str{max-width:640px;}
   #type-section .tp-cta{max-width:360px;}
 }
+
+/* ==========================================================================
+   面の整理 — T-1 / T-2 / T-3
+   -------------------------------------------------------------------------
+   きっかけはオーナーの「3層＋フッターが煩わしい」。実測すると、3層のうち
+   1層は存在しなかった。
+
+     ヒーロー   368px  bg=rgb(19,32,67)   ┐ 同一の色
+     Q1-5     1450px  bg=rgb(19,32,67)   ┘
+     16タイプ  2054px  bg=rgb(239,232,218)
+     フッター   239px  bg=rgb(19,32,67)
+
+   ヒーローと Q1-5 を割っていたのは .hero::after の7pxの虹バー1本だけである。
+   これはヒーローに CTA があった時代の名残で、当時はそこが本当に境目だった。
+   CTA を外した今（wording-audit.md §2-3 案C）、境目ではない場所に線が残っている。
+
+   一方で「全部を紺の1面にする」は採らない。この配色は既に意味を持っている:
+
+     紺（--ink-field）      … 答える／告げる面   .hero / #lp-quiz-sec /
+                                                .quiz-bg / .loading-wrap /
+                                                .result-hero
+     クリーム（読む面）        … 読ませる面        #type-section / .result-wrap
+
+   結果画面が同じ文法で出来ている（.result-hero 1082px が紺、その下の
+   .result-wrap 2304px がクリーム）。16タイプ一覧は結果本文と同じ「読む面」で
+   あって、余った層ではない。ここを紺にすると、同じ役割の面が LP では紺・
+   結果画面ではクリームになり、文法が壊れる。
+   直すべきは層の数ではなく、線の位置（T-1）と、読む面が仕事をしていないこと
+   （T-2）だった。
+   ========================================================================== */
+
+/* --- T-1: 虹バーを、実際に色が変わる境目へ移す ------------------------------
+   ヒーロー下端 → Q1-5 の下端（＝紺からクリームへ変わる唯一の境目）。
+   ヒーローと Q1-5 がひと続きの紺の面になり、「名乗り→1問目」が切れなくなる。
+   .result-hero::after は動かさない。あちらは今も本当に境目である。 */
+.hero::after{display:none;}
+#lp-quiz-sec{position:relative;}
+#lp-quiz-sec::after{
+  content:'';position:absolute;left:0;right:0;bottom:0;height:7px;
+  background:linear-gradient(90deg,#1a56db 0 25%,#1d6b4c 25% 50%,#c8412e 50% 75%,#4b4483 75% 100%);
+}
+
+/* --- T-2: 読む面と札の面を分ける -------------------------------------------
+   --paper #f2ece0 の札が --off #efe8da の地に載っており、コントラストが
+   1.04:1（＝知覚できない）だった。同じ札が紺の面では 13.57:1 で立っている。
+   地を --paper2 #e7dfcd（既存トークン。PC の body が既にこの値）に替えて
+   1.13:1 にする。WCAG 違反ではない（1.4.11 は --navy 2px の枠が満たす）が、
+   地を切り替えたのに札が浮かないので、層のコストだけ払って何も得ていなかった。
+
+   ★ここは 16タイプ一覧だけの問題ではない。同じ 1.04:1 が結果本文にもあり、
+     .agent-block（送客ブロック／--paper）と .famous-box と .friend-card が
+     すべて地に沈んでいる。.result-wrap を替えるとその3つが同時に立つ。
+
+   --off 自体は替えない。.ca と .compat-cbox img と drawer の .d-icon が
+   --off を「地」ではなく「札」として使っており、token を替えると
+   それらが逆に地と同化する。 */
+.result-wrap{background:var(--paper2);}
+/* 1330行のインラインスタイルを上書きするためだけの !important。
+   インラインのままにしてあるのは、--paper2 が RETRO ブロック内でしか
+   定義されておらず、インラインに直接書くと「このブロックを消せば元に戻る」
+   という前提（355行）が壊れるため。 */
+#type-section{background:var(--paper2)!important;}
+
+/* --- T-3: モバイルだけ body が白だった（実バグ） ----------------------------
+   48行の html,body{background:var(--w)} を打ち消していたのは
+   @media (min-width:768px) の中の1行だけで、スマホには効いていなかった。
+   body が見えるのは iOS のゴムバンドスクロールの上端と下端だけであり、
+   その両端に接しているのは全画面で紺である（上＝.hero / .quiz-bg /
+   .loading-wrap / .result-hero、下＝.ftr）。よって正解は --ink-field。
+   S-9 が PC だけ --paper2 にしていたぶんもここに集約する（S-9 の狙いは
+   「448pxの柱が白地に浮いて見える状態をやめる」で、白でなくなれば足りる）。 */
+html,body{background:var(--ink-field);}
 </style>
 </head>
 <body data-screen="screen-title">
