@@ -1735,7 +1735,12 @@ try{
     for(const vw2 of [1440,1024,768,390]){
       f.style.width=vw2+'px'; await sleep(400);
       const off=w.eval(`(()=>{const o=[];
-        for(const s of ['.hero-title','.hero-sub','.hero-badge','#lp-quiz']){
+        /* ★.hero-sub ではなく .hero-lead を見る（2026-09-09）。
+           英字の添えを説明文の横へ置いたので、中心に載るべきは
+           「説明文」ではなく「説明文＋英字の並び全体」になった。
+           .hero-sub 単体は意図的に中心から外れる（実測 -59px）。
+           ★中心を見る対象は「並びの単位」であって、その中の1つではない。 */
+        for(const s of ['.hero-title','.hero-lead','.hero-badge','#lp-quiz']){
           const e=document.querySelector(s); if(!e) continue;
           const r=e.getBoundingClientRect();
           o.push([s, Math.round(r.left+r.width/2 - innerWidth/2)]);
