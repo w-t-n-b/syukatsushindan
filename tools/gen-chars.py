@@ -57,17 +57,28 @@ def head_width(im):
             runs.append(best)
     return statistics.median(runs) if runs else 1
 
-def main(src_dir):
+def main(*src_dirs):
+    """★フォルダは複数渡せる。後のフォルダが前を上書きする（後勝ち）。
+       一部だけ描き直した素材が届くのは今後も起きるので、
+       「16体そろったフォルダ ＋ 差し替えぶんのフォルダ」で呼べるようにした。
+       ★8体だけで走らせてはいけない。倍率は16体の中央値から決まるので、
+         残り8体と大きさが揃わなくなる（下の len(figs)!=16 で止まる）。"""
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    picked = {}                       # key -> ファイルの絶対パス（後勝ち）
+    for d in src_dirs:
+        for fn in sorted(os.listdir(d)):
+            if not fn.lower().endswith(".png"):
+                continue
+            key = NAME2IMG.get(unicodedata.normalize("NFC", os.path.splitext(fn)[0]))
+            if not key:
+                print(f"  対応するタイプが無い: {fn}")
+                continue
+            if key in picked:
+                print(f"  差し替え {key}: {os.path.basename(os.path.dirname(picked[key]))} → {os.path.basename(d)}")
+            picked[key] = os.path.join(d, fn)
     figs = {}
-    for fn in sorted(os.listdir(src_dir)):
-        if not fn.lower().endswith(".png"):
-            continue
-        key = NAME2IMG.get(unicodedata.normalize("NFC", os.path.splitext(fn)[0]))
-        if not key:
-            print(f"  対応するタイプが無い: {fn}")
-            continue
-        im = load(os.path.join(src_dir, fn))
+    for key, path in picked.items():
+        im = load(path)
         figs[key] = (im, head_width(im))
     if len(figs) != 16:
         raise SystemExit(f"16体そろっていない（{len(figs)}体）")
@@ -83,9 +94,25 @@ def main(src_dir):
     #   計算で求まる量ではない。だから1体ずつ手で当てる。
     #   ★数値を変えたら make chars を回し、ASSET_V を更新すること。
     #     1.0 が基準。大きくすると拡大、小さくすると縮小。
+    #   ★a群・b群（赤・緑）は 2026-09-09 に全部 1.00 へ戻した。
+    #     オーナーが素材そのものの等身を描き直したためである。
+    #     旧版と新版の頭身（背丈 ÷ 頭幅）を実測すると、8体とも頭が大きくなっていた:
+    #         a1 オンオフのエース   3.09 → 2.59
+    #         a2 あったかリーダー   2.43 → 1.96
+    #         b3 黒子のプロデューサー 1.59 → 1.54
+    #     このファイルの冒頭に「頭が小さく描かれた体（a1 / c4）だけ小さい人に見える」
+    #     と書いてあるが、その a1 が名指しで直っている。
+    #   ★MANUAL は「旧版の絵に対して目で合わせた値」である。
+    #     見た目がずれる原因そのものが直ったので、当てると二重に効く。
+    #     実測（新素材で両方作って比べた）:
+    #         据え置き … a群の背丈 451 / 523 / 433 / 541（見てわかるほど不揃い）
+    #         1.00へ  … a群の背丈 451 / 451 / 451 / 451
+    #     b群も 478/478/451/460 → 451×4 に揃った。
+    #   ★c群・d群は素材が変わっていないので触らない。c4 の 1.42 は
+    #     しゃがんだ姿勢を補うための値であり、等身の話とは別である。
     MANUAL = {
-        "a1": 1.00, "a2": 1.16, "a3": 0.96, "a4": 1.20,
-        "b1": 1.06, "b2": 1.06, "b3": 1.00, "b4": 1.02,
+        "a1": 1.00, "a2": 1.00, "a3": 1.00, "a4": 1.00,
+        "b1": 1.00, "b2": 1.00, "b3": 1.00, "b4": 1.00,
         "c1": 1.00, "c2": 1.00, "c3": 1.02, "c4": 1.42,
         "d1": 1.02, "d2": 1.02, "d3": 1.02, "d4": 1.10,
     }
@@ -128,6 +155,13 @@ def main(src_dir):
     json.dump(report, open(os.path.join(root, "images/chars/scale.json"), "w"), indent=1)
     print(f"  指紋 {ver}  ★index.html の ASSET_V をこの値にすること（make check が突き合わせる）")
 
+# 既定の素材。★後ろほど優先される（後勝ち）。
+#   差し替えが届いたらここに1行足す。過去の履歴が残るので、
+#   「いまの絵はどのフォルダの組み合わせか」が読めばわかる。
+DEFAULT_SRC = [
+    "/Users/keiya/Downloads/ChatGPT Image 2026年9月8日 20_10_48 (2)",  # 16体（初回）
+    "/Users/keiya/Downloads/緑赤修正",                                  # a群・b群の等身を直したもの
+]
+
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else
-         "/Users/keiya/Downloads/ChatGPT Image 2026年9月8日 20_10_48 (2)")
+    main(*(sys.argv[1:] if len(sys.argv) > 1 else DEFAULT_SRC))

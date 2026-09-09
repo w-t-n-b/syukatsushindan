@@ -952,6 +952,14 @@ console.log('[lint] キャラクターの大きさ');
     const bare = (html.match(/src="images\/chars\/[^"?]*\.webp"/g) || []);
     check(bare.length === 0,
       `?v= の付いていないキャラ画像が無い（${bare.join(', ') || 'なし'}）`);
+    // ★?v= が「付いている」だけでは足りない。値が ASSET_V と一致していないと、
+    //   その1枚だけキャッシュが破れず古い絵が出続ける。
+    //   実際 .hero-sil が ?v=b01c3987 のまま取り残されていた（ASSET_V は c231e7c6）。
+    //   cv() を通せない静的な src（HTMLに直書きの img）が該当する。
+    const stale = [...html.matchAll(/images\/chars\/[^"']*\.webp\?v=([0-9a-f]+)/g)]
+      .map(m => m[1]).filter(v => v !== av);
+    check(stale.length === 0,
+      `直書きの ?v= が ASSET_V と一致する（ずれ: ${[...new Set(stale)].join(', ') || 'なし'}）`);
     // ★頭の大きさは揃わない。素材そのものの頭身差であり、変換では消せない。
     //   ここで落としても直しようがないので、記録として出すだけにする。
     //   絵柄の個性として許容すると決めた（3案 A/B/C を比較したうえでの判断）。
