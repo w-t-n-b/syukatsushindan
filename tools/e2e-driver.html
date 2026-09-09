@@ -1718,6 +1718,18 @@ try{
       const bad=JSON.parse(off).filter(([,d])=>Math.abs(d)>2);
       chk(bad.length===0,'('+vw2+') LPの中身が画面の中心に載る: '
           +(bad.map(([s,d])=>s+' '+(d>0?'+':'')+d+'px').join(' / ')||'すべて中央'));
+      /* ★組み文字の行が画面の端に届いていないこと。
+         英字の添えを1行にしたら（オーナー指示）、行幅が画面幅すれすれになった。
+         実測: 390px で左右 5px / 320px で 3px。はみ出してはいないが、
+         文言か書体が少し変わるだけで破綻する幅である。
+         768px 未満で英字を詰めて 18px / 12px まで戻した。
+         ★「横スクロールが出ない」だけでは、この手前の危うさを捕まえられない。 */
+      const rows=w.eval(`JSON.stringify([...document.querySelectorAll('.hlk-row')].map(r=>{
+        const b=r.getBoundingClientRect();
+        return [Math.round(b.left), Math.round(innerWidth-b.right)];}))`);
+      const tight=JSON.parse(rows).filter(([l,r])=>l<10||r<10);
+      chk(tight.length===0,'('+vw2+') 組み文字の行に左右の余裕がある（10px以上）: '
+          +(tight.map(([l,r])=>'左'+l+'/右'+r).join(' , ')||'すべて確保'));
     }
     f.style.width='390px'; await sleep(400);
     /* 隣どうしが近すぎる段が無いこと。1px 未満の差は読み手に届かない */
