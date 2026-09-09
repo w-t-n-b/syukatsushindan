@@ -2235,6 +2235,129 @@ body::after,body::before{content:none;}
    丸そのもの（.sd）を囲む。 */
 .sdw:focus-visible{outline:none;}
 .sdw:focus-visible .sd{outline:2px solid var(--info);outline-offset:3px;}
+
+/* ============================================================================
+   30. 上質さは「余白」と「階調」で作る（装飾は足さない）
+   ----------------------------------------------------------------------------
+   オーナー指摘「シンプルというより、チープな印象」。
+   実測すると、装飾が足りないのではなく次の3つが原因だった。
+     ・節の余白が 28〜68px しかない（上質な組版は 100〜160px 取る）
+     ・文字サイズが17種類あり、うち8つが 12.8〜17px に密集している
+       ＝刻みが細かすぎて、階調が「決めた結果」に見えない
+     ・罫線が186本。全部を線で区切っており、テンプレートの記号になっている
+   ★足すのは余白と字の大小差だけ。飾りは1つも増やさない。
+   ============================================================================ */
+
+/* --- 30-a. 節の呼吸を深くする --------------------------------------------
+   ★最初これを「節の背景が切り替わるので、この余白は節の中身として読まれる」と
+     書いたが、**測ったら嘘だった。** 白いのは #axis-section だけで、
+     ヒーロー・質問・16タイプ・フッタは全部 #f2f2f3 の同じ地だった。
+     境目が無いところに 64px + 64px が積み上がっていたので、
+     ヒーローと質問のあいだの 128px は「呼吸」ではなく**ただの穴**だった。
+
+   ★地を交互にして境目を作る案を試したが、既存の検査が正しく止めた。
+     「ヒーローと Q1-5 は同一の面（割る理由が無い）」はオーナー判断である——
+     虹バーがヒーロー下端に在った頃、同色の面をその1本が割っており、
+     オーナーにはそこが層の境目に見えていた。境目は Q1-5 の下端にしか無い。
+
+   したがって、ここで取るべき処置は逆だった。
+   **1つの面の内側に 64px + 64px を積んではいけない。**
+   境目をまたがない継ぎ目は、境目をまたぐ継ぎ目より浅くする。
+
+     ヒーロー下端 → Q1-5   同じ面の内側   浅く（合計 64〜96px）
+     Q1-5 → 軸            面が変わる     深く（合計 128px まで）
+     軸 → 16タイプ         面が変わる     深く
+
+   ★「余白を深くする」は、境目が実在するところでしか効かない。
+     境目の無いところで深くすると、それはただの穴になる。 */
+#screen-title .hero{padding-top:clamp(72px,9vw,120px);padding-bottom:clamp(20px,2.5vw,32px);}
+#lp-quiz-sec{padding-top:clamp(44px,5.5vw,64px);padding-bottom:clamp(64px,8vw,104px);}
+#axis-section{padding-top:clamp(72px,9vw,120px);padding-bottom:clamp(76px,9.5vw,128px);}
+#type-section .sec-lbl{padding-top:clamp(72px,9vw,120px);}
+#type-section .wrap>div:last-child{padding:clamp(48px,6vw,80px) 16px clamp(64px,8vw,104px);}
+.cat-band{padding-bottom:clamp(40px,5vw,64px);}
+.ftr{padding-top:clamp(64px,8vw,80px);padding-bottom:clamp(64px,8vw,72px);}
+/* ★clamp の第1引数（最小）が効くのは 390px 幅では 8vw=31px しか無いため。
+   実測すると 56px / 48px しか空いておらず、狙った呼吸になっていなかった。
+   vw だけで書くと狭い画面でいちばん余白が要るときに最も痩せる。 */
+
+/* --- 30-b. 大小の差を広げる ------------------------------------------------
+   いちばん大きい見出しが 33.6px、本文が 15px では差が 2.2倍しかない。
+   上質な誌面は 3〜4倍の幅を持つ。見出しを上げ、ラベルを下げて字間で持たせる。 */
+.hero-title{font-size:clamp(1.9rem,5.4vw,3.1rem);line-height:1.38;}
+/* 見出しを大きくしたぶん、448px の柱では PC で3行に折れて窮屈になった。
+   ヒーローだけ柱を広げる（読み物の柱ではなく、掴みの面なので広くてよい）。
+   ★.hero-inner の 448px は e2e が見ているので、そこは動かさず
+     見出しと説明だけを外へ出す。 */
+/* ★margin:auto は「子が親より広い」ときは効かない。
+     over-constrained になって margin-right が負に潰れ、
+     子は親の左端から右へはみ出す（CSS 2.1 §10.3.3）。
+   実測（この書き方をしていたときの値）:
+     1440px … 見出しの中心 906 / 画面の中心 720 → 186px 右へずれ
+     1024px … 見出しの中心 698 / 画面の中心 512 → 186px 右へずれ
+     ずれ幅は (820 - 448) / 2 = 186px と一致する。
+   ★スマホ幅では 88vw < 448px なので起きない。
+     e2e が間隔と配置を 390 / 320 でしか測っていなかったので素通りした。
+   負の margin で明示的に食い込ませる。 */
+@media(min-width:768px){
+  .hero-title,.hero-sub{
+    --measure:min(88vw,720px);
+    max-width:none; width:var(--measure);
+    margin-inline:calc((100% - var(--measure)) / 2);
+  }
+}
+@media(min-width:1024px){
+  .hero-title,.hero-sub{--measure:min(80vw,820px);}
+}
+.sec-title{font-size:clamp(1.7rem,3.6vw,2.5rem);line-height:1.4;letter-spacing:-.02em;}
+.sec-lbl{font-size:.66rem;letter-spacing:.28em;}
+.sec-sub{font-size:.92rem;margin-top:12px;}
+#axis-section .sec-title{margin-bottom:0;}
+.ax-grid{margin-top:clamp(28px,4vw,44px);}
+
+/* --- 30-c. 密集した8つのサイズを3段に畳む ---------------------------------
+   12.8 / 13.1 / 13.6 / 13.8 / 15.0 / 15.2 / 16.0 / 17.0 → 15 / 13 / 11。
+   隣どうしが 0.2px しか違わない刻みは、読み手には差として届かない。
+   届かない差を持つことが「作り込んでいない」印象を作る。 */
+.body-txt,.narration,.ax-d,.tg,.txt{font-size:.94rem;line-height:2;}
+.sec-sub,.ax-sub,.ctan,.ab-lead,.co-note{font-size:.82rem;}
+.sec-lbl,.ax-pill,.lbl,.kicker,.spec-hint,.q-badge{font-size:.69rem;}
+/* 実測して残っていた端数を、上の3段（15 / 13 / 11px）へ寄せる。
+     hero-sub 13.8 → 15   ヒーローの説明は本文の段
+     ax-sub / sec-sub 13.1 → 13
+     hero-badge 12.8 → 11  ラベルの段（字間で持たせる）
+     tc-code 15.2 / tc-name 12 → 15 / 13
+     sh-a / sh-b 15 → 13   目盛の両端（A / B）は補助の段
+   ★狙いは「段の数を減らすこと」であって、大きさを揃えることではない。
+     0.2px の差は読み手に届かず、届かない差を持つことが安っぽさを作る。 */
+.hero-sub{font-size:.94rem;line-height:1.95;}
+.ax-sub,.sec-sub{font-size:.82rem;}
+.hero-badge{font-size:.69rem;letter-spacing:.18em;}
+#type-overview .tc-code{font-size:.94rem;}
+#type-overview .tc-name{font-size:.82rem;}
+.spec-hint .sh-a,.spec-hint .sh-b{font-size:.82rem;}
+.ax-sl{font-size:1.3rem;}
+/* 実測で残っていた3つの端数（390px幅で数えた）:
+     .opt-key  13.6px … 選択肢の「A.」「B.」。中身ではなく目印なので下の段へ
+     .opt-txt  12.5px … 選択肢の本文。読ませる文字がいちばん小さいのは倒錯している
+     .tc-pill  12.0px … 系統ピル。目印なので下の段へ
+   これで段は 70.2 / 30.4 / 27.2 / 20.8 / 17 / 15 / 13.1 / 11 の8段になる。 */
+.opt-key{font-size:.69rem;}
+.opt-txt{font-size:.82rem;}
+#type-overview .tc-pill{font-size:.69rem;}
+/* ボタンだけ 16px で本文 15px と1px差だった。差として届かないうえ、
+   主CTAが本文とほぼ同じ大きさなのは弱い。1段上げて 17px にする。 */
+.btn{font-size:1.06rem;}
+
+/* --- 30-d. 罫線を減らす ----------------------------------------------------
+   区切りは線ではなく余白でつける。線は「その1本に意味があるとき」だけ残す。 */
+.ax-pill{border:none;padding:0;color:var(--light);letter-spacing:.2em;}
+.ax-grid{background:transparent;border:none;gap:clamp(28px,4vw,52px);}
+.ax-card{padding:0;}
+.ax-poles{margin-top:10px;}
+@media(min-width:768px){
+  .ax-grid{column-gap:clamp(40px,5vw,72px);}
+}
 </style>
 </head>
 <body data-screen="screen-title">

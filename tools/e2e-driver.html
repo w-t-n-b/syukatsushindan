@@ -1421,12 +1421,18 @@ try{
     f.style.width=vw+'px';
     await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(900);
     const band=JSON.parse(w.eval(BAND));
-    chk(band.gap<=120,'LP('+vw+'px)に120pxを超える空白帯が無い: 最大 '+band.gap+'px（'+band.after+' → '+band.before+'）');
+    /* ★閾値を 120 → 200 に上げた（2026-09-08）。節の上下の余白を意図して
+       深くしたため（28〜68px → 72〜128px）。実測の最大は 149px
+       （.hero-sub → 最初の設問）で、これはヒーローと設問のあいだの呼吸である。
+       この検査が捕まえたいのは、誰も意図していない死に領域
+       （.wrap の padding-bottom:100px が中間セクションに効いて 329px 空いた件）。
+       200px を超えたら、それはもう呼吸ではなく事故である。 */
+    chk(band.gap<=200,'LP('+vw+'px)に200pxを超える空白帯が無い: 最大 '+band.gap+'px（'+band.after+' → '+band.before+'）');
     // 不具合そのものの再発も名指しで押さえる（あるセクションの直後に何も無い帯が続く）。
     // 3ステップの節を削除したので、いまヒーローの下に来るのは #lp-quiz。
     /* 以前は .hero .btn-wrap（ヒーローCTA）の下端を起点にしていた。CTA を削除した
        （オーナー判断・案C）ので、ヒーローの最後に残る文字＝.hero-sub の下端で測る。
-       CTA が抜けたぶんここが広がりやすいので、閾値は緩めずそのまま 120px で見る。 */
+       CTA が抜けたぶんここが広がりやすい。閾値は下の GAP_MAX を見ること。 */
     const sb=d.querySelector('.hero .hero-sub').getBoundingClientRect().bottom;
     /* 以前は #lp-quiz .lq-head（注記の行）の上端で測っていた。注記を削除したので、
        同じ「LP埋め込み質問の始まり」を #lp-quiz 自身の上端で測る。 */
@@ -1443,9 +1449,36 @@ try{
     const axCards=[...d.querySelectorAll('#axis-section .ax-card')];
     const axBot=axCards[axCards.length-1].getBoundingClientRect().bottom;
     const nx=d.querySelector('#type-section .sec-lbl').getBoundingClientRect().top;
-    chk(Math.round(lqTop-sb)<=120,'ヒーロー本文→LP埋め込み質問 の間隔('+vw+'px): '+Math.round(lqTop-sb)+'px');
-    chk(Math.round(ax-lqBot)<=120,'LP埋め込み質問→軸の説明 の間隔('+vw+'px): '+Math.round(ax-lqBot)+'px');
-    chk(Math.round(nx-axBot)<=120,'軸の説明→全16タイプ の間隔('+vw+'px): '+Math.round(nx-axBot)+'px');
+    /* ★3つとも閾値を 120 → 200 に上げた（2026-09-08）。節の上下の余白を
+         28〜68px から 64〜128px へ意図して深くしたため
+         （オーナー指摘「シンプルというより、チープな印象」への処置）。
+
+       この検査が捕まえたい事故は「.wrap の padding-bottom:100px が中間セクションにも
+       効いて 329px 空いた」種類の、誰も意図していない死に領域である。
+       節ごとに背景が切り替わるいまの作りでは、128〜149px の余白は
+       「節と節の隙間」ではなく「節の中身」として読まれる。
+       200px を超えたら、それはもう呼吸ではなく事故。
+
+       ★3つを同じ値に揃えてあること。1つだけ緩めると、そこが抜け道になる。 */
+    /* ★閾値を分けた理由。
+       最初これを一律 200px にし、根拠を「節ごとに背景が切り替わるので
+       この余白は節の中身として読まれる」と書いた。**測ったら嘘だった。**
+       白いのは #axis-section だけで、ヒーローと Q1-5 は同じ #f2f2f3 だった。
+
+       さらに、そこを白と灰に割ろうとしたら別の検査が正しく止めた——
+       「ヒーローと Q1-5 は同一の面（割る理由が無い）」はオーナー判断である
+       （虹バーがヒーロー下端で同色の面を割っており、境目に見えていた）。
+
+       よって規則はこうなる:
+         面をまたぐ継ぎ目   … 深くてよい。余白はそれぞれの節のものとして読まれる
+         面の内側の継ぎ目   … 深くしてはいけない。ただの穴になる
+
+       ★「余白を深くする」は、境目が実在するところでしか効かない。 */
+    const GAP_SAME=96;   // 面の内側（ヒーロー → Q1-5）
+    const GAP_CROSS=200; // 面をまたぐ（Q1-5 → 軸 → 16タイプ）
+    chk(Math.round(lqTop-sb)<=GAP_SAME,'ヒーロー本文→LP埋め込み質問 の間隔（同じ面の内側）('+vw+'px): '+Math.round(lqTop-sb)+'px');
+    chk(Math.round(ax-lqBot)<=GAP_CROSS,'LP埋め込み質問→軸の説明 の間隔('+vw+'px): '+Math.round(ax-lqBot)+'px');
+    chk(Math.round(nx-axBot)<=GAP_CROSS,'軸の説明→全16タイプ の間隔('+vw+'px): '+Math.round(nx-axBot)+'px');
   }
   f.style.width='390px';
 
@@ -1622,6 +1655,76 @@ try{
     w.clearSavedProgress();
   }
   f.style.width='390px';
+
+  // ---------- N. 段の数と余白（チープに見えない条件）----------
+  // オーナー指摘「シンプルというより、チープな印象」。
+  // 実測すると、装飾不足ではなく次の3つが原因だった。
+  //   ・節の余白が 28〜68px しかない  ・文字サイズが17種類（8つが12.8〜17pxに密集）
+  //   ・罫線が186本
+  // ★0.2px の差は読み手に届かない。届かない差を持つことが安っぽさを作る。
+  //   段が再び増えていないことを、実画面で数えて見張る。
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(700);
+  {
+    const sizes = w.eval(`(()=>{const m={};
+      for(const e of document.querySelectorAll('#screen-title *')){
+        const has=[...e.childNodes].some(n=>n.nodeType===3&&n.textContent.trim());
+        if(!has) continue;
+        const r=e.getBoundingClientRect(); if(r.width<2||r.height<2) continue;
+        const cs=getComputedStyle(e);
+        if(cs.visibility==='hidden'||cs.display==='none') continue;
+        const s=Math.round(parseFloat(cs.fontSize)*10)/10;
+        m[s]=(m[s]||0)+1; }
+      return m;})()`);
+    const list=Object.keys(sizes).map(Number).sort((a,b)=>b-a);
+    /* 背景に敷いた系統名（160px）は読ませる文字ではないので段に数えない */
+    const steps=list.filter(v=>v<100);
+    chk(steps.length<=8,'LPの文字サイズが8段以内: '+steps.length+'段 → '+steps.join(' / '));
+
+    /* ★中身が柱の中心に載っていること。
+       これを足したのは、見出しの柱を PC で広げたときに
+       `width:820px` + `margin:auto` と書き、子が親（448px）より広いせいで
+       margin:auto が効かず、186px 右へはみ出していたため（CSS 2.1 §10.3.3）。
+       スマホ幅では 88vw < 448px なので起きず、
+       ★e2e が間隔と配置を 390 / 320 でしか測っていなかったので素通りした。
+       柱の幅そのものは意匠なので見ない。見るのは「中心が合っているか」だけ。 */
+    for(const vw2 of [1440,1024,768,390]){
+      f.style.width=vw2+'px'; await sleep(400);
+      const off=w.eval(`(()=>{const o=[];
+        for(const s of ['.hero-title','.hero-sub','.hero-badge','#lp-quiz']){
+          const e=document.querySelector(s); if(!e) continue;
+          const r=e.getBoundingClientRect();
+          o.push([s, Math.round(r.left+r.width/2 - innerWidth/2)]);
+        } return JSON.stringify(o);})()`);
+      const bad=JSON.parse(off).filter(([,d])=>Math.abs(d)>2);
+      chk(bad.length===0,'('+vw2+') LPの中身が画面の中心に載る: '
+          +(bad.map(([s,d])=>s+' '+(d>0?'+':'')+d+'px').join(' / ')||'すべて中央'));
+    }
+    f.style.width='390px'; await sleep(400);
+    /* 隣どうしが近すぎる段が無いこと。1px 未満の差は読み手に届かない */
+    const tooClose=[];
+    for(let i=0;i<steps.length-1;i++) if(steps[i]-steps[i+1]<1) tooClose.push(steps[i]+'/'+steps[i+1]);
+    chk(tooClose.length===0,'届かない差の段が無い（1px未満の刻み）: '+(tooClose.join(', ')||'なし'));
+    /* 大小の幅。見出しと本文の差が 2倍程度だと誌面が平板に見える */
+    const body=steps.find(v=>v>=14&&v<=16)||15;
+    chk(steps[0]/body>=2.4,'見出しと本文の差が 2.4倍以上: '+(steps[0]/body).toFixed(2)+'倍（'+steps[0]+' / '+body+'）');
+
+    /* 節の呼吸。ただし測るのは「面の外側に接する辺」だけである。
+       ヒーローの下端と Q1-5 の上端は同じ面の内側の継ぎ目なので、
+       ここを 64px 以上にすると1つの面に穴が開く（上の GAP_SAME を見ること）。
+       ★一律に「どの辺も64px以上」と書いたせいで、最初その穴を自分で作った。 */
+    const pads = w.eval(`[
+        {s:'#screen-title .hero', t:1, b:0},   // 下端は面の内側 → 見ない
+        {s:'#lp-quiz-sec',        t:0, b:1},   // 上端は面の内側 → 見ない
+        {s:'#axis-section',       t:1, b:1},
+        {s:'.ftr',                t:1, b:1},
+      ].map(o=>{
+      const e=document.querySelector(o.s); if(!e) return null;
+      const c=getComputedStyle(e);
+      return {s:o.s, t:o.t?parseFloat(c.paddingTop):null, b:o.b?parseFloat(c.paddingBottom):null};}).filter(Boolean)`);
+    const thin=pads.filter(o=>(o.t!==null&&o.t<64)||(o.b!==null&&o.b<64))
+                   .map(o=>o.s+'('+o.t+'/'+o.b+')');
+    chk(thin.length===0,'面の外側に接する辺の余白が 64px 以上: '+(thin.join(', ')||'すべて確保'));
+  }
 
   // ---------- O. いま答える1問だけを濃くする ----------
   // オーナー要望「順番に回答するように、最新の未回答の設問以外はグレーで薄く」。
@@ -1942,9 +2045,14 @@ try{
        CTA本体 約60px ＋ .hero-sub の下マージン 28px ＝ 約97px ぶん背が低くなった。
        実測 337px（390幅）/ 357px（320幅）。守っているのは変わらず
        「min-height を持たず、中身の積算そのもの」「ビューポート未満」の2点で、
-       下限は「ヒーローが不意に潰れていない」ことを見るために残す。 */
-    chk(heroH<vh&&heroH>=300&&heroH<=460,
-        T+'ヒーローの高さが中身の積算そのもの（300〜460px・ビューポート未満）: '+heroH+'px');
+       下限は「ヒーローが不意に潰れていない」ことを見るために残す。
+       ★上限を 460 → 560 に上げた（2026-09-08）。節の上下の余白を
+         28〜68px から 72〜128px へ広げたため（オーナー指摘「チープな印象」への処置）。
+         守っている性質は変わらない——min-height を持たず、中身の積算そのもので、
+         ビューポート未満であること。上限は「不意に伸びていないか」の網であって、
+         意図して増やした余白まで咎めるものではない。 */
+    chk(heroH<vh&&heroH>=300&&heroH<=560,
+        T+'ヒーローの高さが中身の積算そのもの（300〜560px・ビューポート未満）: '+heroH+'px');
     chk(d.documentElement.scrollWidth<=vw,T+'横スクロールが出ない: scrollWidth='+d.documentElement.scrollWidth);
     // 装飾円とシルエット（判断⑧⑪）
     chk([...d.querySelectorAll('.hero .hero-orb')].every(e=>getComputedStyle(e).display==='none'),
