@@ -1741,9 +1741,15 @@ try{
       const e=document.querySelector(o.s); if(!e) return null;
       const c=getComputedStyle(e);
       return {s:o.s, t:o.t?parseFloat(c.paddingTop):null, b:o.b?parseFloat(c.paddingBottom):null};}).filter(Boolean)`);
-    const thin=pads.filter(o=>(o.t!==null&&o.t<64)||(o.b!==null&&o.b<64))
+    /* ★下限を 64 → 48 に下げた（2026-09-09）。オーナー指示「無駄な余白を全て削除」。
+       30-a で 64px を下限にしたのは「節がぺしゃんこに見えないこと」を守るためで、
+       深さそのものを目的にしていたわけではない。組み文字で見出しが大きくなり、
+       上下の余白が無くても節として成立するようになった。
+       ★0にはしない。下限が無くなると、次に誰かが詰めたときに歯止めが消える。 */
+    const MIN_PAD=48;
+    const thin=pads.filter(o=>(o.t!==null&&o.t<MIN_PAD)||(o.b!==null&&o.b<MIN_PAD))
                    .map(o=>o.s+'('+o.t+'/'+o.b+')');
-    chk(thin.length===0,'面の外側に接する辺の余白が 64px 以上: '+(thin.join(', ')||'すべて確保'));
+    chk(thin.length===0,'面の外側に接する辺の余白が '+MIN_PAD+'px 以上: '+(thin.join(', ')||'すべて確保'));
   }
 
   // ---------- O. いま答える1問だけを濃くする ----------
@@ -2155,18 +2161,36 @@ try{
     const heroH=Math.round(hero.getBoundingClientRect().height);
     chk(getComputedStyle(hero).minHeight==='auto'||parseFloat(getComputedStyle(hero).minHeight)===0,
         T+'.hero に min-height が効いていない: '+getComputedStyle(hero).minHeight);
-    /* 範囲はヒーローCTA（#cta-hero）の削除にあわせて引き下げた（オーナー判断・案C）。
-       CTA本体 約60px ＋ .hero-sub の下マージン 28px ＝ 約97px ぶん背が低くなった。
-       実測 337px（390幅）/ 357px（320幅）。守っているのは変わらず
-       「min-height を持たず、中身の積算そのもの」「ビューポート未満」の2点で、
-       下限は「ヒーローが不意に潰れていない」ことを見るために残す。
-       ★上限を 460 → 560 に上げた（2026-09-08）。節の上下の余白を
-         28〜68px から 72〜128px へ広げたため（オーナー指摘「チープな印象」への処置）。
-         守っている性質は変わらない——min-height を持たず、中身の積算そのもので、
-         ビューポート未満であること。上限は「不意に伸びていないか」の網であって、
-         意図して増やした余白まで咎めるものではない。 */
-    chk(heroH<vh&&heroH>=300&&heroH<=560,
-        T+'ヒーローの高さが中身の積算そのもの（300〜560px・ビューポート未満）: '+heroH+'px');
+    /* ★上限のマジックナンバーをやめた（2026-09-09）。
+       460 → 560 → …と、見出しを大きくするたびに数字を上げていた。
+       上げ続ける数字は、いずれ何も守らなくなる。
+       この検査が本当に言いたいのは次の3つで、どれも直接測れる。
+         (1) min-height を持たない（＝画面いっぱいに引き伸ばしていない）
+         (2) ビューポート未満（＝開いた瞬間に次が見えている）
+         (3) 高さが中身の積算そのもの（＝どこにも謎の空きが無い）
+       (3) は「padding ＋ 中身の実寸」と実際の高さを突き合わせれば分かる。
+       絶対配置の子（装飾円・シルエット）は積算に入らないので除く。 */
+    const heroBox=w.eval(`(()=>{
+      const h=document.querySelector('#screen-title .hero');
+      const c=getComputedStyle(h);
+      let inner=0;
+      for(const el of h.children){
+        const s2=getComputedStyle(el);
+        if(s2.position==='absolute'||s2.position==='fixed'||s2.display==='none') continue;
+        inner += el.getBoundingClientRect().height
+               + parseFloat(s2.marginTop) + parseFloat(s2.marginBottom);
+      }
+      return JSON.stringify({minH:c.minHeight, pt:parseFloat(c.paddingTop),
+        pb:parseFloat(c.paddingBottom), inner:Math.round(inner),
+        h:Math.round(h.getBoundingClientRect().height)});})()`);
+    const HB=JSON.parse(heroBox);
+    const noMinH = HB.minH==='0px'||HB.minH==='auto'||HB.minH==='none';
+    chk(noMinH, T+'ヒーローに min-height が無い: '+HB.minH);
+    chk(heroH<vh, T+'ヒーローがビューポート未満: '+heroH+'px < '+vh+'px');
+    const sum=Math.round(HB.pt+HB.pb+HB.inner);
+    chk(Math.abs(sum-HB.h)<=2,
+        T+'ヒーローの高さが中身の積算そのもの（謎の空きが無い）: 実測'+HB.h
+        +'px ＝ 上'+HB.pt+' ＋ 中身'+HB.inner+' ＋ 下'+HB.pb+' ＝ '+sum+'px');
     chk(d.documentElement.scrollWidth<=vw,T+'横スクロールが出ない: scrollWidth='+d.documentElement.scrollWidth);
     // 装飾円とシルエット（判断⑧⑪）
     chk([...d.querySelectorAll('.hero .hero-orb')].every(e=>getComputedStyle(e).display==='none'),

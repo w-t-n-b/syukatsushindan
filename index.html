@@ -2510,6 +2510,49 @@ body::after,body::before{content:none;}
 @media(min-width:768px){
   .hlk{margin-bottom:22px;}
 }
+
+/* ==========================================================================
+   32. 余白を削り、PCで横を使う（2026-09-09）
+   --------------------------------------------------------------------------
+   オーナー指摘:
+     ・「無駄な余白を全て削除」（復帰バナーの上下が大きく空いている画面）
+     ・「左右の余白が多いのでもっと横に贅沢に使ってほしい」（PCのヒーロー）
+   ========================================================================== */
+
+/* --- 32-a. 復帰バナーの上の 64px ------------------------------------------
+   ★この 64px は「浮遊キャラ（.hc）と重なるので空けた」値で、
+     実測の記録もある。ただし**その実測は組み文字にする前のもの**である。
+     見出しが高くなったぶんバナーは下へ移り、いまは干渉しない。
+       .hc の下端 276px ／ バナー上端 581px（1440幅・実測）
+     根拠が消えた余白は残さない。e2e が重なりを見ているので、詰めすぎれば落ちる。 */
+.cont-banner{margin-top:clamp(18px,2.2vw,26px);}
+
+/* --- 32-b. 節の継ぎ目 ------------------------------------------------------
+   ヒーローと Q1-5 は同一の面（オーナー判断）。面の内側の継ぎ目は浅くする、
+   という 30-a の規則をさらに詰める。実測 96px → 56px。 */
+#screen-title .hero{
+  padding-top:clamp(56px,6.5vw,92px);
+  padding-bottom:clamp(14px,1.8vw,22px);
+}
+#lp-quiz-sec{padding-top:clamp(26px,3.2vw,38px);}
+
+/* --- 32-c. PCで横を使う ----------------------------------------------------
+   ★1440幅で見出しは 820px しかなく、両脇に 306px ずつ空いていた。
+     キャラは画面の端まで使っているのに、文字だけ真ん中の島になっていた。
+   ★スマホの寸法は動かさない。390px で 74.1px という値は
+     「質問文がファーストビューに見える」条件から逆算したものなので、
+     ここを触ると要件が壊れる。1024px 以上だけを上書きする。 */
+@media(min-width:1024px){
+  .hero-title,.hero-sub{--measure:min(94vw,1520px);}
+  .hlk-mass>span{font-size:min(11.6vw,168px);}
+  .hlk-side     {font-size:min(4.8vw,70px);}
+  .hlk-par      {font-size:min(3.4vw,50px);padding-bottom:min(1.1vw,16px);}
+  .hlk-dot      {font-size:min(4.4vw,64px);}
+  .hlk-pre      {font-size:min(2.3vw,33px);margin-bottom:min(1.4vw,20px);}
+  .hlk-note     {font-size:min(1.35vw,19px);padding-left:min(1.1vw,16px);margin-left:min(1.3vw,19px);}
+  .hlk-note>i   {width:3px;}
+  .hero-sub     {font-size:clamp(.94rem,1.15vw,1.15rem);}
+}
 </style>
 </head>
 <body data-screen="screen-title">
