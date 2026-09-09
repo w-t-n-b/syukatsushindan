@@ -2381,6 +2381,135 @@ body::after,body::before{content:none;}
 @media(min-width:768px){
   .ax-grid{column-gap:clamp(40px,5vw,72px);}
 }
+
+/* ==========================================================================
+   31. 組み文字のヒーロー（2026-09-09）  ※ class は hlk-（hero lockup）
+   --------------------------------------------------------------------------
+   ★最初 .tc- を使って白い箱と青いタブが出た。.tc は16タイプの札
+     （<button class="tc">）が既に使っている名前で、白地・枠・::after の
+     青タブがそのまま当たっていた。.tc-code / .tc-name / .tc-pill / .tc-sil も
+     同じ一族なので、接頭辞ごと hlk- に変えてある。近い名前を選ばないこと。
+   --------------------------------------------------------------------------
+   オーナー要望: 「こんな感じのLPをヒーロートップに配置したいが、今のサイズは
+   なるべく阻害しないで、最初に開いた画面で質問文が見えているようにしてほしい」
+
+   ★この2つは互いに引っ張り合う。見出しを大きくするほど質問は下へ落ちる。
+     参考サイトはヒーローだけで約700px使い、質問はファーストビューに入らない。
+     こちらは「質問文が見えていること」を制約として先に置き、その中で最大の
+     大きさを取る。実測での予算は下記（いちばん小さい 390x667 で判定）。
+
+   ★装飾は1つも足していない。大きさの差と2色だけで作る。
+     「自分」＝この診断で分かること → --info（青）。2色の規則どおり。
+   ========================================================================== */
+.hlk{
+  font-size:inherit;                 /* 子が自分の大きさを持つ */
+  font-weight:900;line-height:1.05;letter-spacing:-.03em;
+  display:flex;flex-direction:column;align-items:center;
+  margin-bottom:18px;
+}
+.hlk-pre{
+  display:block;align-self:center;
+  /* ★大きさは既存の段に載せる。390px で 17px（ボタンと同じ段）になる vw を選んだ。
+     組み文字だけ独自の段を持つと、画面全体の段数が増えて安っぽくなる
+     （30番で 17段→8段 に畳んだのと同じ理由）。 */
+  font-size:clamp(14px,4.36vw,22px);font-weight:700;letter-spacing:.04em;
+  line-height:1.4;margin-bottom:clamp(8px,1.6vw,16px);
+}
+.hlk-row{display:flex;align-items:flex-end;justify-content:center;gap:clamp(2px,.8vw,8px);}
+.hlk-row2{margin-top:clamp(2px,.8vw,10px);}
+
+/* 塊。ここだけ大きい。1文字ずつ span なのは、1文字ずつ立ち上げるため。 */
+.hlk-mass{display:flex;}
+.hlk-mass>span{
+  display:inline-block;
+  font-size:clamp(56px,19vw,108px);line-height:.96;   /* 390px で 74.1px。ここだけ新しい段 */
+  letter-spacing:-.045em;
+}
+.hlk-m1>span{color:var(--info);}      /* 「自分」＝分かること。青 */
+
+/* 「本当」＋その下の「の」。塊より小さく、下端を揃える。 */
+.hlk-side{
+  display:flex;flex-direction:column;align-items:center;
+  font-size:clamp(24px,7.79vw,46px);line-height:1.1;  /* 390px で 30.4px */
+  padding-bottom:clamp(3px,1vw,10px);
+}
+/* ★助詞（の・を）だけ明朝にする。書体規則（指す言葉は明朝）の例外である。
+     理由: ここでの明朝は「何を指すか」ではなく、重い塊に対する細い接続として
+     字面の差を作るために使っている。役割が違うので規則とは別に扱う。
+     ★この2文字は明朝サブセットに入れる必要がある（tools/gen-font.mjs）。 */
+.hlk-side>span{
+  font-family:var(--mincho);font-weight:400;
+  font-size:.56em;line-height:1;margin-top:.14em;letter-spacing:0;  /* 390px で 17px */
+}
+.hlk-par{
+  font-family:var(--mincho);font-weight:400;
+  font-size:clamp(18px,5.33vw,34px);line-height:1;    /* 390px で 20.8px */
+  padding-bottom:clamp(5px,1.4vw,14px);letter-spacing:0;
+}
+.hlk-dot{
+  font-size:clamp(22px,6.97vw,42px);line-height:1;    /* 390px で 27.2px */
+  padding-bottom:clamp(2px,.6vw,6px);margin-left:-.06em;
+}
+/* 英字の添え。縦罫は :before ではなく <i> で持たせ、線だけ先に引く。 */
+.hlk-note{
+  position:relative;display:inline-block;
+  font-family:var(--disp);font-size:clamp(9px,2.82vw,14px);   /* 390px で 11px */
+  font-weight:700;letter-spacing:.06em;line-height:1.25;
+  color:var(--info);padding-left:clamp(7px,1.6vw,12px);
+  margin-left:clamp(6px,1.6vw,14px);
+  padding-bottom:clamp(4px,1vw,10px);rotate:-4deg;
+  white-space:nowrap;
+}
+.hlk-note>i{
+  position:absolute;left:0;top:0;bottom:clamp(4px,1vw,10px);
+  width:2px;background:var(--info);transform-origin:50% 100%;
+}
+
+/* --- 動き ------------------------------------------------------------------
+   ★役割ごとに違う動きを与える。全部同じ動きに遅延だけ変えると、
+     「順に出てくる」以上の意味を持たない。
+       塊       … 下から墨が上がるように clip で拭う（1文字ずつ）
+       助詞     … 遅れて静かに落ちてくる（塊が据わってから）
+       縦罫     … 先に線を引き、そのあとに英字が出る
+   ★終わりの状態を transform:none にしておくこと。
+     animation-fill-mode:forwards の最終フレームは宣言に勝つ。 */
+@keyframes hlkRise{
+  from{opacity:0;transform:translateY(.26em);clip-path:inset(112% 0 -12% 0);}
+  to  {opacity:1;transform:none;          clip-path:inset(-12% 0 -12% 0);}
+}
+@keyframes hlkDrop{
+  from{opacity:0;transform:translateY(-.5em);}
+  to  {opacity:1;transform:none;}
+}
+@keyframes hlkRule{from{transform:scaleY(0);}to{transform:scaleY(1);}}
+@keyframes hlkFade{from{opacity:0;}to{opacity:1;}}
+
+.hlk-pre,.hlk-side,.hlk-mass>span,.hlk-par,.hlk-dot,.hlk-note{opacity:0;}
+.hlk-pre        {animation:hlkRise .62s cubic-bezier(.16,1,.3,1) .05s both;}
+.hlk-side       {animation:hlkRise .70s cubic-bezier(.16,1,.3,1) .34s both;}
+.hlk-m1>span:nth-child(1){animation:hlkRise .74s cubic-bezier(.16,1,.3,1) .18s both;}
+.hlk-m1>span:nth-child(2){animation:hlkRise .74s cubic-bezier(.16,1,.3,1) .26s both;}
+.hlk-par        {animation:hlkDrop .52s cubic-bezier(.16,1,.3,1) .50s both;}
+.hlk-m2>span:nth-child(1){animation:hlkRise .74s cubic-bezier(.16,1,.3,1) .46s both;}
+.hlk-m2>span:nth-child(2){animation:hlkRise .74s cubic-bezier(.16,1,.3,1) .54s both;}
+.hlk-m2>span:nth-child(3){animation:hlkRise .74s cubic-bezier(.16,1,.3,1) .62s both;}
+.hlk-dot        {animation:hlkDrop .46s cubic-bezier(.16,1,.3,1) .78s both;}
+.hlk-note       {animation:hlkFade .5s linear .96s both;}
+.hlk-note>i     {animation:hlkRule .42s cubic-bezier(.16,1,.3,1) .86s both;}
+
+/* 動きを減らす設定の人には、最初から出来上がった状態を見せる。
+   ★opacity:0 を打ち消すこと。打ち消さないと何も見えない。 */
+@media (prefers-reduced-motion:reduce){
+  .hlk-pre,.hlk-side,.hlk-mass>span,.hlk-par,.hlk-dot,.hlk-note,.hlk-note>i{
+    animation:none!important;opacity:1!important;transform:none!important;
+    clip-path:none!important;
+  }
+}
+
+/* 版面。組み文字は中央に寄せる（左揃えだと英字の添えが飛び出して見える）。 */
+@media(min-width:768px){
+  .hlk{margin-bottom:22px;}
+}
 </style>
 </head>
 <body data-screen="screen-title">
@@ -2425,7 +2554,16 @@ body::after,body::before{content:none;}
       <!-- 320px では1行に収まらない（実測で9文字ぶんの幅しかない）。何もしないと
            「キャリアタ／イプ、」と語の途中で割れるので、語だけ折り返させない。
            390px 以上では1行のままなので見え方は変わらない。 -->
-      <h1 class="hero-title">あなたの<span style="white-space:nowrap;">キャリアタイプ</span>、<em>16Typesから見つける。</em></h1>
+      <!-- 組み文字のヒーロー（2026-09-09）。
+           ★h1 に aria-label で文章を持たせ、断片は全部 aria-hidden にする。
+             読み上げは「会社に合わせる前に、本当の自分を知ろう。」と1文で通り、
+             「自」「分」がバラバラに読まれることはない。
+           ★大きさの差だけで組む。装飾は1つも足していない。 -->
+      <h1 class="hero-title hlk" aria-label="会社に合わせる前に、本当の自分を知ろう。">
+        <span class="hlk-pre" aria-hidden="true">会社に合わせる前に、</span>
+        <span class="hlk-row" aria-hidden="true"><span class="hlk-side">本当<span>の</span></span><span class="hlk-mass hlk-m1"><span>自</span><span>分</span></span><span class="hlk-par">を</span></span>
+        <span class="hlk-row hlk-row2" aria-hidden="true"><span class="hlk-mass hlk-m2"><span>知</span><span>ろ</span><span>う</span></span><span class="hlk-dot">。</span><span class="hlk-note"><i></i>FIND<br>YOUR<br>OWN WAY.</span></span>
+      </h1>
       <!-- 入口の約束と結果画面の主役を揃える（workplace-fit.md U-2）。
            旧「あなたに向いている職種の例と、探し方のヒントまで。」は
            (a) 職種を約束していたが思想の主題は職場であり（同 §1 / §3）、

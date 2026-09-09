@@ -49,6 +49,12 @@ export function neededChars(html = readFileSync(join(ROOT, 'index.html'), 'utf8'
     for (const c of code) chars.add(c);
     for (const c of name) chars.add(c);
   }
+  // ★ヒーローの組み文字（.tc）で明朝を使う助詞。
+  //   書体規則（指す言葉は明朝）の例外である。ここでの明朝は「何を指すか」
+  //   ではなく、重い塊に対する細い接続として字面の差を作るために使っている。
+  //   ★入れ忘れるとこの2文字だけ端末標準の明朝へ落ち、書体が混ざる。
+  //     しかも1文字ずつなので、混ざっていることに気づきにくい。
+  for (const c of 'のを') chars.add(c);
   return { chars: [...chars].sort(), types: codes.map(([, c, n]) => ({ code: c, name: n })) };
 }
 

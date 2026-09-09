@@ -77,10 +77,18 @@ const lum=(r,g,b)=>0.2126*srgb(r)+0.7152*srgb(g)+0.0722*srgb(b);
 const ratio=(a,b)=>{const h=Math.max(a,b),l=Math.min(a,b);return (h+0.05)/(l+0.05);};
 const hex=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
 const over=(fg,a,bg)=>fg.map((v,i)=>v*a+bg[i]*(1-a));
-/* .hero の地色 #132043 と、その上の集中線（rgba(255,255,255,.05)）。
-   集中線は .hc より下の層なので、最悪値は必ず線上で出る。 */
-const FIELD=hex('#132043');
-const LINE=over([255,255,255],0.05,FIELD);
+/* .hero の地色。★以前は #132043（旧レトロの紺）を直接書いていた。
+   QUIET RESTYLE で地を明るく作り替えたのに、この検査は暗い地のままで
+   計算していた。**実体のない地でコントラストを測っていた。**
+   集中線も廃止済みなので LINE は地と同じ。実物から読む。 */
+let FIELD=hex('#f2f2f3');
+let LINE=FIELD;
+function syncField(doc,win){
+  const h=doc.querySelector('#screen-title .hero');
+  if(!h) return;
+  const m=win.getComputedStyle(h).backgroundColor.match(/(\d+), (\d+), (\d+)/);
+  if(m){ FIELD=[+m[1],+m[2],+m[3]]; LINE=FIELD.slice(); }
+}
 /* mask-image:linear-gradient(180deg,#000 0 52%,transparent 88%) の不透明度 */
 const maskA=t=>t<=0.52?1:(t>=0.88?0:(0.88-t)/0.36);
 /* 字面（グリフが実際に走る範囲）を返す。
@@ -103,8 +111,14 @@ function inkRects(el,pad){
   }
   return out;
 }
-/* 1体ぶんの最悪画素を返す。rect は測りたい範囲（文字の行ボックス等）。 */
-function worstPixel(img,hcRect,opacity,clip){
+/* 1体ぶんの最悪画素を返す。rect は測りたい範囲（文字の行ボックス等）。
+   ★「最悪」の定義を変えた（2026-09-09）。
+     以前は「いちばん明るい画素」を最悪としていた。地が暗く文字が明るかった
+     頃はそれで正しかったが、いまは地が明るく文字が暗いので**向きが逆**になる。
+     正しくは「合成後の輝度が文字の輝度にいちばん近い画素」＝比が最小の画素。
+     この定義なら地の明暗にかかわらず成立する。
+   tl（文字の輝度）を渡さない呼び出しは、画素の有無だけを見たい場合。 */
+function worstPixel(img,hcRect,opacity,clip,tl){
   const W=Math.max(1,Math.round(hcRect.width)),H=Math.max(1,Math.round(hcRect.height));
   const cv=document.createElement('canvas');cv.width=W;cv.height=H;
   const cx=cv.getContext('2d',{willReadFrequently:true});
@@ -123,7 +137,8 @@ function worstPixel(img,hcRect,opacity,clip){
     if(a<=0)continue;
     const onLine=over([px[i],px[i+1],px[i+2]],a,LINE);
     const l=lum(onLine[0],onLine[1],onLine[2]);
-    if(!best||l>best.l)best={l,x,y,rgb:[px[i],px[i+1],px[i+2]],a:+a.toFixed(4),
+    const score = tl===undefined ? l : -ratio(tl,l);   /* 比が小さいほど悪い */
+    if(!best||score>best.score)best={score,l,x,y,rgb:[px[i],px[i+1],px[i+2]],a:+a.toFixed(4),
       inter:lum(...over([px[i],px[i+1],px[i+2]],a,FIELD))};
   }
   return best;
@@ -1667,6 +1682,7 @@ try{
   {
     const sizes = w.eval(`(()=>{const m={};
       for(const e of document.querySelectorAll('#screen-title *')){
+        if(e.closest('.cat-ghost')) continue;              /* 背景に敷いた系統名 */
         const has=[...e.childNodes].some(n=>n.nodeType===3&&n.textContent.trim());
         if(!has) continue;
         const r=e.getBoundingClientRect(); if(r.width<2||r.height<2) continue;
@@ -1676,7 +1692,11 @@ try{
         m[s]=(m[s]||0)+1; }
       return m;})()`);
     const list=Object.keys(sizes).map(Number).sort((a,b)=>b-a);
-    /* 背景に敷いた系統名（160px）は読ませる文字ではないので段に数えない */
+    /* 背景に敷いた系統名（.cat-ghost）は読ませる文字ではないので段に数えない。
+       ★以前は「100px未満だけ数える」と値で除いていたが、この文字は幅によって
+         70〜160px と変わる。390px では 70.2px になり、値では除けていなかった。
+         除く理由は大きさではなく「読ませる文字ではない」ことなので、
+         クラスで除く。 */
     const steps=list.filter(v=>v<100);
     chk(steps.length<=8,'LPの文字サイズが8段以内: '+steps.length+'段 → '+steps.join(' / '));
 
@@ -2156,6 +2176,7 @@ try{
 
     // --- 幾何：重なりと CTA（§3-2 / §7-2）---
     if(hcs.length){
+      syncField(d,w);                 /* 地の色を実物から取り直す */
       hcs.forEach(e=>{e.style.animation='none';});
       await sleep(60);
       const rects=hcs.map(e=>e.getBoundingClientRect());
@@ -2188,15 +2209,34 @@ try{
           T+'顔（上端から約30px）が見出しの上端より上にある: hc上端 '+rects.map(r=>Math.round(r.top)).join('/')+' / 見出し上端 '+Math.round(ttl.top));
 
       // --- コントラスト実測（§7-1）。矩形ではなく字面の背後を測る ---
-      const titleEl=d.querySelector('.hero-title');
-      const emEl=titleEl.querySelector('em');
-      const subEl=d.querySelector('.hero-sub');
-      const TXT=[
-        // 見出しは 25.6px 以上 / font-weight:900 → WCAG の「大きな文字」で 3:1
-        ['見出し2行目 --must', hex('#cf9a24'), 3,   inkRects(emEl,6)],
-        ['見出し1行目 --paper',hex('#f2ece0'), 3,   inkRects(titleEl,6)],
-        ['本文 #c3cbdd',       hex('#c3cbdd'), 4.5, inkRects(subEl,6)],
-      ];
+      /* ★色をハードコードするのをやめた（2026-09-09）。
+         元は #cf9a24（からし）と #f2ece0 を直接書いていたが、これは
+         QUIET RESTYLE 以前の色で、いまの画面には存在しない。
+         **実体のない色でコントラストを測っていた。**
+         ★さらに .hero-title em を前提にしていたため、見出しを組み文字
+           （.hlk）に変えた時点で null 参照で落ちた。
+         いまは見出しと説明文の中の「文字を持つ葉ノード」を全部拾い、
+         色も大きさも実物から読む。構造を変えても落ちない。 */
+      const leaves=[];
+      for(const root of ['.hero-title','.hero-sub']){
+        const el=d.querySelector(root); if(!el) continue;
+        const walk=n=>{
+          const own=[...n.childNodes].some(c=>c.nodeType===3&&c.textContent.trim());
+          if(own) leaves.push(n);
+          for(const c of n.children) walk(c);
+        };
+        walk(el);
+      }
+      const TXT=leaves.map(el=>{
+        const cs=w.getComputedStyle(el);
+        const m=cs.color.match(/(\d+), (\d+), (\d+)/);
+        const size=parseFloat(cs.fontSize), wt=parseInt(cs.fontWeight)||400;
+        /* WCAG 1.4.3 の「大きな文字」= 24px以上、または18.66px以上の太字 */
+        const big = size>=24 || (size>=18.66 && wt>=700);
+        return [el.className||el.tagName.toLowerCase(), [+m[1],+m[2],+m[3]],
+                big?3:4.5, inkRects(el,6)];
+      }).filter(t=>t[3].length);
+      chk(TXT.length>0,T+'見出しと説明文の文字を拾えている: '+TXT.length+'箇所');
       for(const [name,col,need,areas] of TXT){
         chk(areas.length>0,T+name+' の字面を取得できた: '+areas.length+'行 '
             +areas.map(a=>'x'+Math.round(a.left)+'〜'+Math.round(a.right)).join(' '));
@@ -2205,8 +2245,8 @@ try{
         hcs.forEach((im,i)=>{
           const a=parseFloat(getComputedStyle(im).opacity);
           for(const area of areas){
-            const b=worstPixel(im,rects[i],a,area);
-            if(b&&(!worst||b.l>worst.l)){worst=b;worstI=i;}
+            const b=worstPixel(im,rects[i],a,area,tl);
+            if(b&&(!worst||b.score>worst.score)){worst=b;worstI=i;}
           }
         });
         if(!worst){p('     '+T+name+'：字面の背後に .hc の画素なし（比は地色のまま）');continue;}
@@ -2222,7 +2262,9 @@ try{
          見ていた。CTA を削除したので、同じ検査を復帰バナーの面（--paper）で行う。
          バナーは押せる要素であり、その地色と縁が .hc に汚されないことが要件。 */
       {
-        const paper=hex('#f2ece0'),pl=lum(...paper);
+        /* ★地色のハードコード（#f2ece0）をやめた。バナーの実際の面を読む。 */
+        const cbm=w.getComputedStyle(cb).backgroundColor.match(/(\d+), (\d+), (\d+)/);
+        const paper=cbm?[+cbm[1],+cbm[2],+cbm[3]]:hex('#ffffff'),pl=lum(...paper);
         cb.style.display='flex';
         await sleep(60);
         const cbr=cb.getBoundingClientRect();
