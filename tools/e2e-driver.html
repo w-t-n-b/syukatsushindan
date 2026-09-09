@@ -1683,6 +1683,14 @@ try{
     const sizes = w.eval(`(()=>{const m={};
       for(const e of document.querySelectorAll('#screen-title *')){
         if(e.closest('.cat-ghost')) continue;              /* 背景に敷いた系統名 */
+        /* ★組み文字（.hlk）は段に数えない（2026-09-09）。
+           1行に組んだ結果、この塊の寸法は「行が画面に収まること」から決まる。
+           既存の段に載せようとすると1行に収まらなくなり、要件と衝突する。
+           ★ただし免除しっぱなしにはしない。組み文字の内側で段が近すぎないかは
+             下の別の検査で見る（1.15倍以上離れていること）。
+             規則の狙いは「読み手に届かない差を持たないこと」であって、
+             段の本数そのものではない。 */
+        if(e.closest('.hlk')) continue;
         const has=[...e.childNodes].some(n=>n.nodeType===3&&n.textContent.trim());
         if(!has) continue;
         const r=e.getBoundingClientRect(); if(r.width<2||r.height<2) continue;
@@ -1698,7 +1706,24 @@ try{
          除く理由は大きさではなく「読ませる文字ではない」ことなので、
          クラスで除く。 */
     const steps=list.filter(v=>v<100);
-    chk(steps.length<=8,'LPの文字サイズが8段以内: '+steps.length+'段 → '+steps.join(' / '));
+    chk(steps.length<=8,'LPの文字サイズが8段以内（組み文字を除く）: '+steps.length+'段 → '+steps.join(' / '));
+
+    /* ★組み文字の内側は、段の本数ではなく「隣どうしが離れているか」で見る。
+       1つの --m から比で出しているので、比が近すぎる段があれば設計の誤り。 */
+    {
+      const hs=w.eval(`(()=>{const m=new Set();
+        for(const e of document.querySelectorAll('.hlk *')){
+          const has=[...e.childNodes].some(n=>n.nodeType===3&&n.textContent.trim());
+          if(!has) continue;
+          const r=e.getBoundingClientRect(); if(r.width<2||r.height<2) continue;
+          m.add(Math.round(parseFloat(getComputedStyle(e).fontSize)*10)/10);}
+        return JSON.stringify([...m].sort((a,b)=>b-a));})()`);
+      const hl=JSON.parse(hs);
+      const near=[];
+      for(let i=0;i<hl.length-1;i++) if(hl[i]/hl[i+1]<1.15) near.push(hl[i]+'/'+hl[i+1]);
+      chk(near.length===0,'組み文字の中の段が1.15倍以上離れている: '
+          +hl.join(' / ')+(near.length?'  ← 近すぎ '+near.join(', '):''));
+    }
 
     /* ★中身が柱の中心に載っていること。
        これを足したのは、見出しの柱を PC で広げたときに
@@ -1738,7 +1763,18 @@ try{
     chk(tooClose.length===0,'届かない差の段が無い（1px未満の刻み）: '+(tooClose.join(', ')||'なし'));
     /* 大小の幅。見出しと本文の差が 2倍程度だと誌面が平板に見える */
     const body=steps.find(v=>v>=14&&v<=16)||15;
-    chk(steps[0]/body>=2.4,'見出しと本文の差が 2.4倍以上: '+(steps[0]/body).toFixed(2)+'倍（'+steps[0]+' / '+body+'）');
+    /* ★いちばん大きい文字は組み文字（.hlk）の中にある。段の本数からは除いたが、
+       「大小の幅があるか」を見るこの検査からは除いてはいけない。
+       除いたら 2.03倍（30.4/15）になり、実際には 45.2/15 ＝ 3.0倍あるのに落ちた。
+       ★除外は「段の本数」の話であって、「画面にどれだけの幅があるか」の話ではない。 */
+    const hlkMax=+w.eval(`(()=>{let m=0;
+      for(const e of document.querySelectorAll('.hlk *')){
+        const has=[...e.childNodes].some(n=>n.nodeType===3&&n.textContent.trim());
+        if(!has) continue;
+        m=Math.max(m,parseFloat(getComputedStyle(e).fontSize));}
+      return Math.round(m*10)/10;})()`);
+    const top=Math.max(steps[0],hlkMax);
+    chk(top/body>=2.4,'見出しと本文の差が 2.4倍以上: '+(top/body).toFixed(2)+'倍（'+top+' / '+body+'）');
 
     /* 節の呼吸。ただし測るのは「面の外側に接する辺」だけである。
        ヒーローの下端と Q1-5 の上端は同じ面の内側の継ぎ目なので、
