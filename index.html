@@ -2330,7 +2330,8 @@ body::after,body::before{content:none;}
   }
 }
 @media(min-width:1024px){
-  .hero-title,.hero-sub{--measure:min(80vw,820px);}
+  /* ★--measure は .hero-lead へ移した（32-c）。ここは .hero-title だけ。 */
+  .hero-title{--measure:min(80vw,820px);}
 }
 .sec-title{font-size:clamp(1.7rem,3.6vw,2.5rem);line-height:1.4;letter-spacing:-.02em;}
 .sec-lbl{font-size:.66rem;letter-spacing:.28em;}
@@ -2464,10 +2465,20 @@ body::after,body::before{content:none;}
 /* 説明文と英字の添えを横に並べる（オーナー指示「これの横に置きたい」）。
    ★英字は見出しの一部ではなくなったので、大きさも見出しの --m ではなく
      説明文に対して決める。隣に置くものは隣の寸法に合わせる。 */
+/* オーナー指示の配置（2026-09-10）:
+     見出しは全幅。その下を左右2列にして、左に説明文＋復帰バナー、右に英字。
+   ★英字は「説明文の隣」から「左の列全体の隣」になった。
+     縦罫が列の高さぶん伸びるので、区切りとして働く。 */
 .hero-lead{
   display:flex;align-items:center;justify-content:center;
-  gap:clamp(10px,2vw,26px);
+  gap:clamp(20px,5vw,90px);
 }
+.hero-lead-l{
+  display:flex;flex-direction:column;align-items:flex-start;
+  gap:clamp(12px,1.8vw,22px);
+}
+.hero-lead-l .hero-sub{text-align:left;}
+.hero-lead-l .cont-banner{margin:0;max-width:none;}
 /* ★柱を広げる指定（--measure）は .hero-sub ではなく、この並びの箱に付ける。
    .hero-sub のままだと flex 項目として縮められ、説明文が2行→3行に折れた。
    広げるのは「並び全体」であって、その中の1つではない。 */
@@ -2477,21 +2488,29 @@ body::after,body::before{content:none;}
    「横に置く」は幅がある画面での話であって、読みやすさを削ってまで
    守る形ではない。768px 未満は英字を下へ回す（中身の順序は変えない）。 */
 @media(max-width:767px){
-  .hero-lead{flex-direction:column;gap:10px;}
-  .hlk-note{rotate:0deg;}
+  .hero-lead{flex-direction:column;gap:14px;}
+  .hero-lead-l{align-items:center;}
+  .hero-lead-l .hero-sub{text-align:center;}
+  .hlk-note{align-self:auto;}
 }
 
 /* 英字の添え。縦罫は :before ではなく <i> で持たせ、線だけ先に引く。 */
 .hlk-note{
   position:relative;display:inline-block;
-  font-family:var(--disp);font-size:clamp(9px,2.4vw,15px);
-  font-weight:700;letter-spacing:.06em;line-height:1.3;
-  color:var(--info);padding-left:clamp(7px,1.2vw,13px);
-  rotate:-4deg;white-space:nowrap;flex:none;
+  /* ★左の列と釣り合う大きさにする。説明文の隣ではなく列の隣なので、
+     以前（15px）では小さすぎた。傾きはやめる——縦罫を列の区切りとして
+     立てるので、傾いていると罫が斜めになって区切りに見えない。 */
+  /* ★下限を13pxにしたら本文の段13.1pxと並び、「届かない差の段」の検査が落ちた。
+     11px は既存の段（ラベル）なので、そこに載せる。 */
+  font-family:var(--disp);font-size:clamp(11px,2.1vw,30px);
+  font-weight:700;letter-spacing:.06em;line-height:1.32;
+  color:var(--info);padding-left:clamp(10px,1.6vw,22px);
+  white-space:nowrap;flex:none;align-self:stretch;
+  display:flex;flex-direction:column;justify-content:center;
 }
 .hlk-note>i{
   position:absolute;left:0;top:0;bottom:0;
-  width:2px;background:var(--info);transform-origin:50% 100%;
+  width:max(2px,.13em);background:var(--info);transform-origin:50% 100%;
 }
 
 /* --- 動き ------------------------------------------------------------------
@@ -2563,7 +2582,9 @@ body::after,body::before{content:none;}
   padding-top:clamp(56px,6.5vw,92px);
   padding-bottom:clamp(14px,1.8vw,22px);
 }
-#lp-quiz-sec{padding-top:clamp(26px,3.2vw,38px);}
+/* ★英字が縦に伸びたぶんヒーローが高くなり、面の内側の継ぎ目が 105px になった
+   （上限96px）。継ぎ目を詰めて戻す。深くしたいのは面をまたぐ継ぎ目だけ。 */
+#lp-quiz-sec{padding-top:clamp(18px,2.2vw,28px);}
 
 /* --- 32-e. 浮遊キャラの背を見出しに連動させる ----------------------------
    ★見出しを1行にしたらヒーローが低くなり（390px で 461 → 350px）、
@@ -2661,9 +2682,8 @@ body::after,body::before{content:none;}
       <!-- 英字の添えは見出しの行から外し、説明文の横へ置いた（オーナー指示）。
            見出しの行から抜けたぶん、見出しはその幅を使える。 -->
       <div class="hero-lead">
-        <p class="hero-sub">20問・約3分でわかるキャリアタイプ診断。<br>あなたが働きやすい職場と、その見分け方まで。</p>
-        <span class="hlk-note" aria-hidden="true"><i></i>FIND<br>YOUR<br>OWN WAY.</span>
-      </div>
+        <div class="hero-lead-l">
+          <p class="hero-sub">20問・約3分でわかるキャリアタイプ診断。<br>あなたが働きやすい職場と、その見分け方まで。</p>
       <!-- .hero-trust（「登録不要 ｜ メールアドレス不要 ｜ 無料」）は削除した
            （2026-09-08・オーナー判断）。
            元は design/conversion-structure-and-pc-grid.md S-6 が「着地3秒で
@@ -2676,8 +2696,11 @@ body::after,body::before{content:none;}
            ★戻さないこと。e2e が「この行が復活していない」ことを見ている。
              同じ主張は t/*.html の .cta-note からも外した。 -->
       <div class="cont-banner" id="cont-banner" style="display:none;" onclick="continueDiag()">
-        <div class="cont-body"><span class="cont-title">前回の途中から続ける</span><span class="cont-sub" id="cont-sub">20問中?問に回答済み</span></div>
-        <span class="cont-arrow">→</span>
+            <div class="cont-body"><span class="cont-title">前回の途中から続ける</span><span class="cont-sub" id="cont-sub">20問中?問に回答済み</span></div>
+            <span class="cont-arrow">→</span>
+          </div>
+        </div>
+        <span class="hlk-note" aria-hidden="true"><i></i>FIND<br>YOUR<br>OWN WAY.</span>
       </div>
       <!-- ヒーローCTA（#cta-hero / .btn-wrap）は削除した（オーナー判断・案C）。
            docs/design/wording-audit.md §2-3 は案B（ボタンを「案内」に降格）を
