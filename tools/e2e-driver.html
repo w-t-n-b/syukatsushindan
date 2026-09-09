@@ -1976,6 +1976,100 @@ try{
     }
   }
 
+  // ---------- Q2. オーナーが目視で見つけた3件（2026-09-09）----------
+  /* すべて make check 917件が全通過している状態で、オーナーが画面を見て見つけた。
+     3件とも「検査が見ていない場所」に共通の理由がある。 */
+  await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(600);
+  {
+    const lum=c=>{const m=c.map(v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);});
+      return 0.2126*m[0]+0.7152*m[1]+0.0722*m[2];};
+    const rgb=v=>{const m=String(v).match(/(\d+), (\d+), (\d+)(?:, ([\d.]+))?/);
+      return m?[+m[1],+m[2],+m[3],m[4]===undefined?1:+m[4]]:null;};
+    const over=(fg,bg)=>fg[3]>=1?fg:fg.map((v,i)=>i<3?Math.round(fg[3]*v+(1-fg[3])*bg[i]):1);
+    const ratio=(a2,b2)=>{const L1=lum(a2),L2=lum(b2);return (Math.max(L1,L2)+.05)/(Math.min(L1,L2)+.05);};
+
+    /* ★1つめ。「あと◯問」の警告が読めなかった（実測 1.04:1）。
+       .q-remain / .q-remain.done は明るい面へ直したのに .warn だけ暗い面のまま
+       （文字 #ffc0b3 / 地 rgba(200,65,46,.22)）だった。
+       ★P の全画面走査があるのに素通りしたのは、.warn が
+         「未回答のまま次へを押した」ときだけ出る状態だからである。
+         **走査は訪れた状態しか見ない。** だからここで状態を訪れさせる。 */
+    const wc=w.eval(`(()=>{
+      toScreen('screen-quiz'); renderPage('quiz');
+      const e=document.getElementById('q-remain');
+      e.className='q-remain warn'; e.textContent='あと3問';
+      const c=getComputedStyle(e);
+      let n=e.parentElement,bg='rgba(0, 0, 0, 0)';
+      while(n&&bg==='rgba(0, 0, 0, 0)'){bg=getComputedStyle(n).backgroundColor;n=n.parentElement;}
+      return JSON.stringify({fg:c.color,own:c.backgroundColor,behind:bg,size:parseFloat(c.fontSize),weight:c.fontWeight});})()`);
+    const W=JSON.parse(wc);
+    const behind=rgb(W.behind)||[255,255,255,1];
+    const wBg=over(rgb(W.own)||[0,0,0,0],behind);
+    const wR=ratio(over(rgb(W.fg),wBg),wBg);
+    chk(wR>=4.5,'「あと◯問」の警告が読める（1.4.3 AA）: '+wR.toFixed(2)+':1');
+    /* この配色では赤は「押す場所」だけを指す。注記・警告に赤は使わない。 */
+    const wFg=rgb(W.fg);
+    chk(Math.abs(wFg[0]-wFg[1])<24&&Math.abs(wFg[1]-wFg[2])<24,
+        '警告の文字が無彩色（赤は押す場所だけを指す）: '+W.fg);
+
+    /* ★2つめ。結果のキャラ枠が白い箱に見えていた。
+       キャラのPNGは背丈を揃えるために周囲へ透明の余白を持つので、
+       枠を白で塗るとその余白から白が出て、地（#f2f2f3）の上に箱が浮く。 */
+    w.eval("scores={1:2,2:-5,3:-5,4:-7};ans=Array(20).fill(2);showResult(true,'quiz')");
+    await sleep(600);
+    const cf=w.eval(`(()=>{const f2=document.querySelector('.char-frame');
+      const c=getComputedStyle(f2);
+      let n=f2.parentElement,bg='rgba(0, 0, 0, 0)';
+      while(n&&bg==='rgba(0, 0, 0, 0)'){bg=getComputedStyle(n).backgroundColor;n=n.parentElement;}
+      return JSON.stringify({bg:c.backgroundColor,behind:bg});})()`);
+    const CF=JSON.parse(cf);
+    const cfBg=rgb(CF.bg);
+    const cfBehind=rgb(CF.behind)||[255,255,255,1];
+    const framePops=cfBg&&cfBg[3]>0.5&&ratio(cfBg,cfBehind)>1.02;
+    chk(!framePops,'キャラの枠が地の上に箱として浮かない（透明な余白から面が出ない）: 枠'
+        +CF.bg+' / 地'+CF.behind);
+
+    /* ★3つめ。棒・点・数字が三者三様だった。
+       .av-fill-l の幅 (AX_MAX+s)/2AX_MAX とマーカー (AX_MAX-s)/2AX_MAX は
+       100-x の関係で、**互いに逆向きに動いていた**（対人13% でマーカー43% / 塗り57%）。
+       いまは「中央からマーカーまで」を1本塗る。3つが同じことを言うかを測る。 */
+    const rows=JSON.parse(w.eval(`JSON.stringify([...document.querySelectorAll('.av-row')].map(r=>({
+      lbl:r.querySelector('.av-result').textContent.trim(),
+      marker:parseFloat(r.querySelector('.av-marker').style.left),
+      fLeft:parseFloat(r.querySelector('.av-fill').style.left),
+      fW:parseFloat(r.querySelector('.av-fill').style.width)})))`));
+    chk(rows.length===4,'診断スコアが4軸ぶん出る: '+rows.length);
+    const bad=[];
+    for(const r of rows){
+      const pctTxt=(r.lbl.match(/(\d+)%/)||[])[1];
+      const end=r.fLeft+r.fW;                       /* 塗りの端 */
+      const touches=Math.abs(end-r.marker)<1.5||Math.abs(r.fLeft-r.marker)<1.5;
+      const fromCenter=Math.abs(r.fLeft-50)<1.5||Math.abs(end-50)<1.5;
+      const matches=pctTxt===undefined||Math.abs(r.fW-(+pctTxt)/2)<1.5;
+      if(!touches||!fromCenter||!matches)
+        bad.push(r.lbl+'（点'+r.marker+'% / 塗り'+r.fLeft+'〜'+end+'%）');
+    }
+    chk(bad.length===0,'棒と点と数字が同じことを言う（塗りは中央からマーカーまで・幅は%の半分）: '
+        +(bad.join(' / ')||'4軸とも一致'));
+
+    /* ★塗りが読めること。opacity .34 では地に対して 1.81:1 しかなく、
+       棒があっても見えていなかった。これは飾りではなく強度を伝える図形なので
+       WCAG 1.4.11 の 3:1 が要る（.34 → .62 にして 3.33:1）。
+       ★「棒と点と数字が一致している」だけでは足りない。
+         見えない棒は、一致していても何も言っていない。 */
+    const fillR=+w.eval(`(()=>{
+      const lum=c=>{const m=c.map(v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4)});
+        return 0.2126*m[0]+0.7152*m[1]+0.0722*m[2];};
+      const rgb=v=>{const m=String(v).match(/(\\d+), (\\d+), (\\d+)/);return m?[+m[1],+m[2],+m[3]]:null;};
+      const fl=document.querySelector('.av-fill'), tr=document.querySelector('.av-track');
+      const cs=getComputedStyle(fl), op=parseFloat(cs.opacity);
+      const fg=rgb(cs.backgroundColor), bg=rgb(getComputedStyle(tr).backgroundColor);
+      const mixed=fg.map((v,i)=>op*v+(1-op)*bg[i]);
+      const L1=lum(mixed),L2=lum(bg);
+      return ((Math.max(L1,L2)+.05)/(Math.min(L1,L2)+.05)).toFixed(2);})()`);
+    chk(fillR>=3,'スコアの塗りが目盛から見分けられる（1.4.11 は3:1）: '+fillR.toFixed(2)+':1');
+  }
+
   // ---------- R. 落とした結果パネル（2026-09-08・オーナー判断）----------
   // 「判定理由」「サブタイプ」「業界別の職種例」の3つを結果画面から外した。
   // どれも一度は説明文や注記を足して直そうとした経緯がある（サブタイプには

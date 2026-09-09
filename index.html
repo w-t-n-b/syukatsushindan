@@ -275,8 +275,7 @@ a{color:var(--blue2);text-decoration:none;}a:hover{color:var(--verm);}
 .av-labels{display:flex;justify-content:space-between;margin-bottom:6px;}
 .av-l{font-size:.72rem;font-weight:900;letter-spacing:1px;}
 .av-track{height:12px;background:var(--w);border:1.5px solid var(--navy);border-radius:0;position:relative;overflow:visible;display:flex;}
-.av-fill-l{height:100%;border-radius:0;transition:width .6s;}
-.av-fill-r{height:100%;border-radius:0;transition:width .6s;}
+.av-fill{position:absolute;top:0;height:100%;border-radius:0;transition:left .6s,width .6s;}
 .av-center{position:absolute;top:-3px;bottom:-3px;left:50%;width:2px;background:var(--navy);border-radius:0;z-index:1;}
 .av-marker{position:absolute;top:50%;width:18px;height:18px;border-radius:50%;border:2px solid var(--navy)!important;transform:translate(-50%,-50%);transition:left .6s;z-index:2;box-shadow:2px 2px 0 rgba(15,23,42,.2)!important;}
 .av-result{font-family:var(--disp);font-size:.74rem;text-align:right;font-weight:700;letter-spacing:1px;margin-top:6px;}
@@ -1710,6 +1709,11 @@ body::after,body::before{content:none;}
 }
 .r-ph,.q-top,.prog-area,.hdr,.ftr,.narration{border-width:1px;border-color:var(--border);}
 .char-frame{border-radius:var(--r-1);}
+/* ★白い箱をやめる。キャラのPNGは背丈を揃えるために周囲へ透明の余白を持つので、
+     枠を白で塗ると、その余白から白が見えて地（#f2f2f3）の上に箱が浮く。
+     オーナー指摘「リザルト画面白余白きになる」。
+     絵は地の上に直接置く。枠の線も外す（囲う中身が絵しかない）。 */
+.char-frame{background:transparent;border:none;box-shadow:none;}
 /* 立体の押し込み演出も外す。面が動くのはポップさの一因だった */
 .btn:hover,.btn:active,.tc:hover,.d-cta:hover,.retry-btn:hover,.friend-btn:hover,
 .pf-chip:hover,.ab-link:hover,.sb-cta:hover{transform:none;box-shadow:none;}
@@ -1737,6 +1741,21 @@ body::after,body::before{content:none;}
 .btn-ghost:hover{border-color:var(--navy);color:var(--navy);background:transparent;}
 .q-remain{color:var(--light);}
 .q-remain.done{color:var(--info);}
+/* ★.q-remain.warn は暗い面のころの色（文字 #ffc0b3 / 地 rgba(200,65,46,.22)）が
+     そのまま残っていた。明るい面の上では実測 **1.04:1** でほぼ読めない。
+     .q-remain と .q-remain.done は直したのに、.warn だけ漏れた。
+   ★全画面のコントラスト走査があるのに素通りしたのは、
+     .warn が「未回答のまま次へを押した」ときだけ出る状態だからである。
+     走査は訪れた状態しか見ない。
+   ★色は無彩色にする。この配色では赤は「押す場所」だけを指す約束で、
+     注記・警告に赤を使わない（docs/decisions/2026-09-08-quiet-restyle.md）。 */
+.q-remain.warn{
+  color:var(--navy);                 /* on #f2f2f3 = 15.1:1 */
+  background:var(--paper);
+  border:1px solid var(--border2);
+  border-radius:var(--r-0);
+  padding:9px 12px;
+}
 .res-kw{background:var(--w);border-color:var(--border);color:var(--mid);}
 .ftr{color:var(--mid);border-top:1px solid var(--border);}
 .ftr-logo{color:var(--navy);}
@@ -1813,7 +1832,11 @@ body::after,body::before{content:none;}
 /* 軸の棒。倒れた側だけ塗り、反対側は地のまま。マーカーだけ群青 */
 .av-track{background:var(--paper2);border-color:var(--border);}
 .av-marker{background:var(--info)!important;border-color:var(--info)!important;box-shadow:none!important;}
-.av-fill-l,.av-fill-r{opacity:1!important;}
+/* 塗りは中央からマーカーまでの1本。色はマーカーと同じ（同じことを指すので）。
+   ★opacity は .34 だと地に対して 1.81:1 しかなく、棒が読めなかった。
+     これは飾りではなく強度を伝える図形なので WCAG 1.4.11 の 3:1 が要る。
+     実測して .34 → .62 にした（約3.3:1）。e2e が測る。 */
+.av-fill{opacity:.62;}
 .av-center{background:var(--border2);}
 .av-l{font-weight:600;}
 /* 見出しの▲▼。硬い印象の三角を弱める */
@@ -3922,13 +3945,21 @@ function buildAxisViz(sc){
     /* 合計0でも判定は多数決で片側に決まっている。「バランス型」と出すと
        タイプコードと食い違うので、向きは出したうえで僅差だったことを添える。 */
     const lbl=(isL?ax.l:ax.r)+(ax.s===0?'（僅差）':'');
-    const leftW=Math.round(((AX_MAX+clamped)/(AX_MAX*2))*100);
-    const rightW=100-leftW;
+    /* ★塗りは「中央からマーカーまで」。
+       以前は .av-fill-l の幅を (AX_MAX+s)/2AX_MAX、マーカーを (AX_MAX-s)/2AX_MAX に
+       していた。この2つは 100-x の関係にあり、**互いに逆向きに動いていた**。
+       実測（scores={1:2,...}）:
+         対人 13%  なのに  マーカー 43% / 左の塗り 57%
+       点が塗りの端に来ないので、棒・点・数字が三者三様に見えていた。
+       ★マーカーの中央からの距離は |pct-50| = |clamped|/(2*AX_MAX)*100 = str/2 で、
+         str（表示している%）と既に一致している。ずれていたのは塗りだけ。
+         中央からマーカーまで塗れば、棒と点と数字が同じことを言う。 */
+    const fillLeft=Math.min(pct,50);
+    const fillW=Math.abs(pct-50);
     h+=`<div class="av-row">
       <div class="av-labels"><span class="av-l" style="color:${ax.ca}">${ax.l}</span><span class="av-l" style="color:${ax.cb}">${ax.r}</span></div>
       <div class="av-track">
-        <div class="av-fill-l" style="width:${leftW}%;background:${ax.ca};opacity:${leftW>50?.35:.15}"></div>
-        <div class="av-fill-r" style="width:${rightW}%;background:${ax.cb};opacity:${rightW>50?.35:.15}"></div>
+        <div class="av-fill" style="left:${fillLeft}%;width:${fillW}%;background:${col}"></div>
         <div class="av-center"></div>
         <div class="av-marker" style="left:${pct}%;background:${col};border-color:${col};box-shadow:0 2px 10px ${col}55"></div>
       </div>
