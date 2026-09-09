@@ -39,6 +39,39 @@ def load(path):
                 for r, g, b, a in im.getdata()])
     return im.crop(im.getbbox())
 
+def body_ratio(im):
+    """顎から足までの高さ ÷ 全高 を返す（尺度に依らない値）。
+    ★これが「その人がどれだけ大きく見えるか」を決める。
+      全高で揃えても、髪が大きい体は胴体が小さくなり「小さい人」に見える。
+      実測（全高を451で揃えた状態）: 胴体は 122〜208px = 1.70倍ばらついていた。
+      緑の群（髪が大きい）が赤・黄より小さく見えるという指摘の正体がこれ。
+    首の見つけ方: 肌色がいちばん広い行を顔とし、そこから下へ辿って
+      幅が35%を切った最初の行を顎とする。顔は広く首は細いので切れる。
+      ★「上から最初の肌の帯の終わり」では駄目だった。顔の下にある手や腕の肌が
+        繋がって、腰や足まで下がる（16体中7体で外した）。"""
+    m = im.resize((240, max(1, round(240 * im.size[1] / im.size[0]))), Image.LANCZOS)
+    W, H = m.size
+    px = m.load()
+    any_ = [0] * H
+    sk = [0] * H
+    for y in range(H):
+        for x in range(W):
+            r, g, b, a = px[x, y]
+            if a > 16:
+                any_[y] += 1
+            if a > 128 and r > 200 and g > 170 and b > 130 and r > g > b and 30 < (r - b) < 115:
+                sk[y] += 1
+    top = next((y for y in range(H) if any_[y] > 0), 0)
+    bot = next((y for y in range(H - 1, -1, -1) if any_[y] > 0), H - 1)
+    fig = bot - top + 1
+    lim = top + int(fig * 0.60)
+    faceY = max(range(top, lim + 1), key=lambda y: sk[y])
+    if sk[faceY] < 4:
+        return None                       # 顔を見つけられない。手当てをやめる（1.0 扱い）
+    chin = next((y for y in range(faceY, bot + 1) if sk[y] < sk[faceY] * 0.35), faceY)
+    return (bot - chin) / fig
+
+
 def head_width(im):
     """各行の「最も長い連続した不透明の区間」を取り、上部30%の中央値を頭幅とする。
        髪は頭と地続きなので入る。離れて上がった腕は別の区間になるので入らない。"""
@@ -94,6 +127,22 @@ def main(*src_dirs):
     #   計算で求まる量ではない。だから1体ずつ手で当てる。
     #   ★数値を変えたら make chars を回し、ASSET_V を更新すること。
     #     1.0 が基準。大きくすると拡大、小さくすると縮小。
+    #   ★2026-09-09。手で当てるのをやめ、測って決めるようにした。
+    #     胴体（顎から足）の比率から倍率を出す。根拠は下記。
+    #     16体ぶん計算した値と、それまで目で合わせてあった値を突き合わせると
+    #     **14体が誤差9%以内で一致した**:
+    #         a4 熱血プレイヤー     目 1.20 / 計算 1.228
+    #         c4 のめり込みビルダー 目 1.42 / 計算 1.336
+    #         d4 コツコツマイスター 目 1.10 / 計算 1.063
+    #     つまりオーナーが目で合わせていたのは「胴体の大きさ」だった。
+    #     ずれた2体は、どちらも素材が変わったところである:
+    #         a2 あったかリーダー   目 1.16 / 計算 0.982（描き直しで胴が伸びた）
+    #         b3 黒子のプロデューサー 目 1.00 / 計算 1.126（髪が大きく胴が小さい）
+    #     b3 が「緑の群だけ小さく見える」と指摘された当人である。
+    #   ★半分だけ当てる（指数 0.5）。全部当てると跳んだ体（a4）や
+    #     しゃがんだ体（c4）が枠からはみ出すほど大きくなる。
+    #   ★手当てが要るときは MANUAL_EXTRA に書く。空でよい。
+    #   （以下は 2026-09-09 以前の記録。目で当てていた頃の値と経緯）
     #   ★a群・b群（赤・緑）は 2026-09-09 に全部 1.00 へ戻した。
     #     オーナーが素材そのものの等身を描き直したためである。
     #     旧版と新版の頭身（背丈 ÷ 頭幅）を実測すると、8体とも頭が大きくなっていた:
@@ -110,12 +159,18 @@ def main(*src_dirs):
     #     b群も 478/478/451/460 → 451×4 に揃った。
     #   ★c群・d群は素材が変わっていないので触らない。c4 の 1.42 は
     #     しゃがんだ姿勢を補うための値であり、等身の話とは別である。
-    MANUAL = {
-        "a1": 1.00, "a2": 1.00, "a3": 1.00, "a4": 1.00,
-        "b1": 1.00, "b2": 1.00, "b3": 1.00, "b4": 1.00,
-        "c1": 1.00, "c2": 1.00, "c3": 1.02, "c4": 1.42,
-        "d1": 1.02, "d2": 1.02, "d3": 1.02, "d4": 1.10,
-    }
+    BODY_BLEND = 0.5          # 0 = 当てない（全高で揃える）/ 1 = 胴体で完全に揃える
+    MANUAL_EXTRA = {}         # 測っても合わないときだけ、ここに1体ずつ書く
+
+    br = {k: body_ratio(im) for k, (im, _) in figs.items()}
+    miss = [k for k, v in br.items() if v is None]
+    if miss:
+        print(f"  顔を見つけられなかった（倍率1.0で通す）: {' '.join(sorted(miss))}")
+    ok = [v for v in br.values() if v is not None]
+    tgt = statistics.median(ok)
+    MANUAL = {k: (1.0 if br[k] is None else (tgt / br[k]) ** BODY_BLEND) * MANUAL_EXTRA.get(k, 1.0)
+              for k in figs}
+    print("  胴体から出した倍率: " + " ".join(f"{k}{MANUAL[k]:.2f}" for k in sorted(MANUAL)))
     metric = {k: v / MANUAL.get(k, 1.0) for k, v in metric.items()}
     target = statistics.median(metric.values())
     # 揃えたあとの最大寸法を求め、そこから全体の倍率を決める（枠にちょうど収まるように）
@@ -136,12 +191,16 @@ def main(*src_dirs):
             c.save(os.path.join(root, out, key + ".webp"), "WEBP", quality=86, method=6)
             if out.endswith("sm"):
                 report[key] = {"scale": round(s, 3), "head": round(hd * s, 1),
-                               "h": round(im.size[1] * s, 1)}
+                               "h": round(im.size[1] * s, 1),
+                               # 胴体（顎から足）。見た目の大きさはこれで決まる。
+                               "body": round(im.size[1] * s * (br[key] or 0), 1)}
     hs = [v["head"] for v in report.values()]
     ht = [v["h"] for v in report.values()]
     print(f"16体を変換した（{FRAMES[0][0]}x{FRAMES[0][1]} と {FRAMES[1][0]}x{FRAMES[1][1]}）")
     print(f"  正規化 NORMALIZE={NORMALIZE}（0=背丈 / 1=頭）")
-    print(f"  背丈のばらつき : {max(ht)/min(ht):.2f}倍  ← 揃える対象")
+    bd = [v["body"] for v in report.values()]
+    print(f"  背丈のばらつき : {max(ht)/min(ht):.2f}倍  ← 枠に収めるための値")
+    print(f"  胴体のばらつき : {max(bd)/min(bd):.2f}倍  ← ★見た目の大きさ。これを縮める")
     print(f"  頭幅のばらつき : {max(hs)/min(hs):.2f}倍  ← 素材の頭身差。記録のみ")
     # ★焼いた中身の指紋。index.html の ASSET_V と突き合わせる。
     #   ファイル名（a1.webp …）は変わらないので、中身だけ差し替えると
