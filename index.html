@@ -2478,6 +2478,21 @@ body::after,body::before{content:none;}
   gap:clamp(12px,1.8vw,22px);
 }
 .hero-lead-l .hero-sub{text-align:left;}
+/* ★復帰バナーが出ない人（初回訪問）は、その高さぶんが穴になる。
+   穴を空けたままにせず、説明文を大きく組んでその場を埋める（オーナー指示）。
+   ★戻ってきた人（.has-cont が付く）は本文の段のまま。バナーが主役なので、
+     説明文が大きいと2つの塊が競る。 */
+.hero-lead-l:not(.has-cont) .hero-sub{
+  font-size:clamp(1.05rem,1.55vw,1.5rem);
+  line-height:1.85;
+}
+/* ★スマホでは大きくしない。実測 390px で 16.8px にすると
+   2行 → 3行 に折れる（幅358pxに収まらない）。
+   穴を埋めるために大きくしているのに、行が増えては本末転倒である。
+   バナーが無いぶんの高さは、スマホでは詰めるだけでよい。 */
+@media(max-width:767px){
+  .hero-lead-l:not(.has-cont) .hero-sub{font-size:.94rem;line-height:1.95;}
+}
 .hero-lead-l .cont-banner{margin:0;max-width:none;}
 /* ★柱を広げる指定（--measure）は .hero-sub ではなく、この並びの箱に付ける。
    .hero-sub のままだと flex 項目として縮められ、説明文が2行→3行に折れた。
@@ -3413,7 +3428,14 @@ function checkSavedProgress(){
       /* curQ は「回答済みの問数」であって到達位置ではない。歯抜けに答えると
          「Q3まで回答済み」が事実と食い違う（wording-audit.md H-5）。
          .prog-seg の aria-valuetext と同じ文型に揃える。 */
-      if(b){b.style.display='flex';document.getElementById('cont-sub').textContent=`${Qs.length}問中${d.curQ}問に回答済み（残り${Qs.length-d.curQ}問）`;}
+      if(b){
+        b.style.display='flex';
+        /* ★列に印を付ける。バナーが出ない人には説明文を大きく組むため
+           （オーナー指示）。CSS から「バナーが出ているか」を知る手段が
+           inline style しかないと脆いので、クラスで持たせる。 */
+        const col=b.closest('.hero-lead-l'); if(col) col.classList.add('has-cont');
+        document.getElementById('cont-sub').textContent=`${Qs.length}問中${d.curQ}問に回答済み（残り${Qs.length-d.curQ}問）`;
+      }
     }
   }catch(e){}
 }
