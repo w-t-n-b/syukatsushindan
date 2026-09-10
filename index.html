@@ -2635,6 +2635,67 @@ body::after,body::before{content:none;}
   :root{--m:min(9.7vw,190px);}
   .hero-sub{font-size:clamp(.94rem,1.15vw,1.15rem);}
 }
+
+/* ==========================================================================
+   33. 系統の帯の境目を波形にする（2026-09-10・オーナー指示）
+   --------------------------------------------------------------------------
+   参照: 16Personalities の性格タイプ一覧。帯どうしの境目が直線ではなく
+   ゆるやかに波打っている。
+
+   作り方
+     帯の上端を波形にマスクで切り、そのぶん上へずらす（負の margin）。
+     切った隙間からは、ひとつ上の帯（先頭は節の地）が覗く。
+     ★これで「境目の線」を1本も足さずに波形の境目ができる。
+       線を引くのではなく、面の縁を削る。
+
+   ★なぜ疑似要素ではなくマスクなのか
+     .cat-band は overflow:hidden を持つ（背後の系統名 .cat-ghost を
+     帯の中に収めるため）。帯の外へ出す疑似要素は、その時点で消える。
+     マスクは overflow の影響を受けない。
+
+   ★中身は動かさない
+     負の margin と同じ量を padding-top へ足し、.cat-ghost の位置も
+     同じ量だけ下げる。波の高さを変えても、絵と文字の位置は変わらない。
+   ========================================================================== */
+#type-overview .cat-band{
+  --waveH:clamp(18px,3.4vw,52px);
+  margin-top:calc(var(--waveH) * -1);
+  padding-top:calc(clamp(52px,13vw,116px) + var(--waveH));
+  /* 上端 waveH ぶんだけ波形に切り、それより下は全面を残す。
+     preserveAspectRatio='none' で帯の幅にそのまま引き伸ばす。 */
+  -webkit-mask-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 20' preserveAspectRatio='none'><path d='M0 20 L0 9 C 14 1 27 1 40 7 C 54 14 68 15 82 9 C 89 6 95 5 100 7 L100 20 Z' fill='%23000'/></svg>"),
+    linear-gradient(#000,#000);
+          mask-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 20' preserveAspectRatio='none'><path d='M0 20 L0 9 C 14 1 27 1 40 7 C 54 14 68 15 82 9 C 89 6 95 5 100 7 L100 20 Z' fill='%23000'/></svg>"),
+    linear-gradient(#000,#000);
+  -webkit-mask-size:100% var(--waveH),100% calc(100% - var(--waveH) + 1px);
+          mask-size:100% var(--waveH),100% calc(100% - var(--waveH) + 1px);
+  -webkit-mask-position:top,bottom;
+          mask-position:top,bottom;
+  -webkit-mask-repeat:no-repeat,no-repeat;
+          mask-repeat:no-repeat,no-repeat;
+}
+/* 系統ごとに波の位相をずらす。同じ形が4回続くと模様に見える。 */
+#type-overview .band-HB{--waveH:clamp(20px,3.8vw,58px);}
+#type-overview .band-DA{--waveH:clamp(16px,3.0vw,46px);}
+#type-overview .band-DB{--waveH:clamp(19px,3.6vw,54px);}
+#type-overview .band-HB,#type-overview .band-DB{transform:scaleX(-1);}
+#type-overview .band-HB>*,#type-overview .band-DB>*{transform:scaleX(-1);}
+
+/* ★先頭の帯だけは、上へずらすと節の見出し（「あなたに近いのはどれ？」）に
+   食い込む。上の要素との間に、削るぶんの余白を先に作っておく。
+   ★負の margin で上へずらす作りは、必ず「上に何があるか」を確認すること。
+     ずらした先が空いているとは限らない。 */
+#type-overview .cat-band:first-of-type{margin-top:0;}
+#type-overview .cat-band:first-of-type{
+  /* 先頭は節の地（#f2f2f3）を波形に切り取る形にする。上の余白は削らない。 */
+  margin-top:calc(var(--waveH) * -1);
+}
+#type-section .sec-sub{margin-bottom:calc(clamp(18px,3.4vw,52px) + 12px);}
+
+/* 背後の系統名も同じ量だけ下げる（中身の位置を変えないため）。 */
+#type-overview .cat-band .cat-ghost{top:calc(13% + var(--waveH) * .5);}
 </style>
 </head>
 <body data-screen="screen-title">
