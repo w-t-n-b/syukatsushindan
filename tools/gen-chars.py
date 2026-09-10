@@ -39,6 +39,36 @@ def load(path):
                 for r, g, b, a in im.getdata()])
     return im.crop(im.getbbox())
 
+def ink_span(im):
+    """インクの2%〜98%が入る縦の範囲を返す。＝「量として見える高さ」。
+    ★これまで試して外した基準（すべて姿勢と髪に引きずられた）:
+        外形の高さ … 髪の先が細く上へ伸びる体（c4）が「いちばん高い」と出る
+        顎から足   … しゃがんだ体（c4）が「いちばん短い」と出る
+        面積       … 髪の量が多い体が「大きい」と出る
+      いずれも c4 のめり込みビルダーで破綻した。
+    ★上下2%を切ると、細い突起はインク量が少ないので効かなくなる。
+      残るのは「絵の塊がどこからどこまであるか」で、これが目に入る高さである。
+    ★画面を撮って測る方法も試したが、背後に敷いた大きな系統名（.cat-ghost）を
+      拾ってしまい、文字と重なる体だけ大きく測れた。**画面の測定は背景に汚される。**
+      素材だけを見るこの方法なら、周りに何が置かれても影響を受けない。
+    """
+    W, H = im.size
+    a = im.split()[3].load()
+    rows = [sum(1 for x in range(0, W, 2) if a[x, y] > 128) for y in range(H)]
+    tot = sum(rows)
+    if not tot:
+        return 1
+    acc = 0
+    top = bot = 0
+    for y in range(H):
+        acc += rows[y]
+        if not top and acc >= tot * 0.02:
+            top = y
+        if acc <= tot * 0.98:
+            bot = y
+    return max(1, bot - top + 1)
+
+
 def body_ratio(im):
     """顎から足までの高さ ÷ 全高 を返す（尺度に依らない値）。
     ★これが「その人がどれだけ大きく見えるか」を決める。
@@ -116,9 +146,7 @@ def main(*src_dirs):
     if len(figs) != 16:
         raise SystemExit(f"16体そろっていない（{len(figs)}体）")
 
-    NORMALIZE = 0.0     # 0 = 背丈で揃える / 0.5 = 中間 / 1 = 頭で揃える
-    metric = {k: (h ** NORMALIZE) * (im.size[1] ** (1 - NORMALIZE))
-              for k, (im, h) in figs.items()}
+    NORMALIZE = 0.0     # （旧）0 = 背丈で揃える / 1 = 頭で揃える。いまは使わない
 
     # ★ここから先は目で合わせる。
     #   外形（bbox）を揃えても見た目は揃わない。同じ外形でも、しゃがんだ体
@@ -159,18 +187,44 @@ def main(*src_dirs):
     #     b群も 478/478/451/460 → 451×4 に揃った。
     #   ★c群・d群は素材が変わっていないので触らない。c4 の 1.42 は
     #     しゃがんだ姿勢を補うための値であり、等身の話とは別である。
-    BODY_BLEND = 0.5          # 0 = 当てない（全高で揃える）/ 1 = 胴体で完全に揃える
-    MANUAL_EXTRA = {}         # 測っても合わないときだけ、ここに1体ずつ書く
+    BODY_BLEND = 1.0          # 0 = 当てない（全高で揃える）/ 1 = 面積で完全に揃える
+    # ★画面に描かれた「見た目の高さ」を測って当てた値（2026-09-10）。
+    #   素材から計算する量（全高・顎から足・面積）は、どれも姿勢と髪に
+    #   引きずられて c4 / a2 / a4 を正しく扱えなかった。
+    #     c4 のめり込みビルダー … 全高では16体中いちばん高いのに、画面では最小。
+    #                            髪の先が細く上へ伸びており、量として見えない。
+    #     a2 / a4               … 同様に髪と姿勢で外形が膨らむ。
+    #   ★測る対象を「素材の中の量」から「画面に出た高さ」に変えた。
+    #     揃えたいのは画面の見え方なので、画面を測るのが最短である。
+    #   測り方: 16体を実際に描画して撮影し、帯の地色と違う画素が
+    #           一定数ある行の範囲を1体ずつ数える（tools の外・手作業）。
+    #           細い突起を拾わないよう「その行に6画素以上」を条件にしている。
+    # ★ページに描かれた高さを測って当てた値（2026-09-10）。
+    #   素材側の指標（外形・胴体・面積・インク範囲）は、縮小してもすべて
+    #   「16体は揃っている」と出る。PIL で表示寸法まで縮めても同じ。
+    #   ところが Chrome が実際に縮小すると、**細い突起が消える**。
+    #   その3体だけ画面で小さく見える（実測 a2 324 / a4 339 / c4 291 対 他451）。
+    #   ★Chrome の縮小フィルタは PIL で再現できない。だから素材側では捕まえられない。
+    #     揃えたいのは画面の見え方なので、ページを撮って測った値をここに書く。
+    #   測り方: 背後の系統名を消して16体を撮影し、各札の枠の中で
+    #           地色と60以上違う画素が4列以上ある行の範囲を数える。
+    #           4列（＝幅の2%）未満は、目には量として入らない。
+    MANUAL_EXTRA = {
+        "a1":0.99, "a2":1.39, "a3":1.00, "a4":1.33,
+        "b1":0.99, "b2":1.00, "b3":1.00, "b4":1.00,
+        "c1":1.00, "c2":1.00, "c3":0.98, "c4":1.55,
+        "d1":1.01, "d2":1.00, "d3":1.02, "d4":1.01,
+    }
 
-    br = {k: body_ratio(im) for k, (im, _) in figs.items()}
-    miss = [k for k, v in br.items() if v is None]
-    if miss:
-        print(f"  顔を見つけられなかった（倍率1.0で通す）: {' '.join(sorted(miss))}")
-    ok = [v for v in br.values() if v is not None]
-    tgt = statistics.median(ok)
-    MANUAL = {k: (1.0 if br[k] is None else (tgt / br[k]) ** BODY_BLEND) * MANUAL_EXTRA.get(k, 1.0)
-              for k in figs}
-    print("  胴体から出した倍率: " + " ".join(f"{k}{MANUAL[k]:.2f}" for k in sorted(MANUAL)))
+    # ★倍率は metric（＝揃えたい量）で決まる。s = target / metric。
+    #   最初 metric に外形の高さを置いたまま MANUAL でインク範囲を掛けたが、
+    #   それでは rendered span ∝ 1/高さ になって逆に効いた（実測 1.27倍のまま）。
+    #   揃えたいのはインク範囲そのものなので、metric をインク範囲に差し替える。
+    sp = {k: ink_span(im) for k, (im, _) in figs.items()}
+    metric = {k: sp[k] for k in figs}
+    MANUAL = {k: MANUAL_EXTRA.get(k, 1.0) for k in figs}
+    print("  インクの range: " + " ".join(f"{k}{sp[k]}" for k in sorted(sp)))
+    br = {k: body_ratio(im) for k, (im, _) in figs.items()}   # 記録用（scale.json）
     metric = {k: v / MANUAL.get(k, 1.0) for k, v in metric.items()}
     target = statistics.median(metric.values())
     # 揃えたあとの最大寸法を求め、そこから全体の倍率を決める（枠にちょうど収まるように）
