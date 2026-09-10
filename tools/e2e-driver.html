@@ -816,7 +816,9 @@ try{
     chk([...d.querySelectorAll('#lq-list .q-badge')].every(x=>{
           const r=x.getBoundingClientRect(); return r.width<=2&&r.height<=2;}),
         '番号は画面に出ていない（.sr-only）');
-    chk(!d.getElementById('lq-done').classList.contains('on'),'開いた直後は .lq-done 非表示');
+    /* ★.lq-done はオーナーの指示で削除した（2026-09-10）。
+       いま見るべきは「消えたままであること」。 */
+    chk(!d.getElementById('lq-done'),'.lq-done は消したまま（戻っていない）');
     /* LP は平常時に残数を出さない（オーナー判断）。要素は残すが display:none。
        未回答のまま「次へ」を押したときの警告文の器としてだけ使う（下の 457 行）。 */
     chk(d.getElementById('lq-remain').style.display==='none',
@@ -852,8 +854,7 @@ try{
       /* 最後の設問に答えても、#lq-done が隠れているうちは送り先にしない。
          Q5 だけ先に答えた人を、まだ空の場所へ送らないため。 */
       sTo=null; cards()[4].querySelector('.sdw').click(); await sleep(600);
-      chk(w.getComputedStyle(d.getElementById('lq-done')).display==='none','5問そろうまで #lq-done は隠れている');
-      chk(sTo===null,'#lq-done が隠れているうちは送らない: '+id(sTo));
+      chk(sTo===null,'5問そろうまでは送らない: '+id(sTo));
 
       w.Element.prototype.scrollIntoView=realSIV;
 
@@ -928,8 +929,9 @@ try{
       for(let i=0;i<4;i++){c2()[i].querySelector('.sdw').click();await sleep(120);}
       await sleep(500);
       sTo2=null; c2()[4].querySelector('.sdw').click(); await sleep(600);
-      chk(w.getComputedStyle(d.getElementById('lq-done')).display!=='none','5問そろうと #lq-done が出る');
-      chk(sTo2===d.getElementById('lq-done'),'最後の1問に答えると #lq-done へ送る: '+(sTo2?(sTo2.id||sTo2.className):'なし'));
+      /* 送り先は .lq-done を消したぶん .q-nav（次へボタンの行）へ移した。
+         送り先が無いと、最後の1問に答えたあと画面が動かない。 */
+      chk(sTo2===d.getElementById('lq-nav'),'最後の1問に答えると次へボタンの行へ送る: '+(sTo2?(sTo2.id||sTo2.className):'なし'));
       chk(d.body.dataset.screen==='screen-title','最後まで答えても画面は切り替わらない（§B-1）');
       w.Element.prototype.scrollIntoView=rs;
       w.localStorage.clear();
@@ -963,8 +965,7 @@ try{
       chk(d.querySelectorAll('#lq-list .q-card').length===5,'回答してもカードは5枚のまま（差し替えない）');
     }
     chk(!d.getElementById('screen-quiz').classList.contains('active'),'5問目のあとも自動遷移しない（§B-1）');
-    chk(d.getElementById('lq-done').classList.contains('on'),'5問そろうと .lq-done が出る');
-    chk(d.querySelectorAll('#lq-list .q-card').length===5,'.lq-done を出しても5問は消えない（選び直せる。§C-3）');
+    chk(d.querySelectorAll('#lq-list .q-card').length===5,'5問そろっても5問は消えない（選び直せる。§C-3）');
     // LP面は平常時いっさい残数を出さない（オーナー判断）。5問そろっても同じ。
     chk(d.getElementById('lq-remain').style.display==='none','LPは5問そろっても残数を出さない: display='+d.getElementById('lq-remain').style.display);
     chk(getComputedStyle(d.getElementById('q-remain')).display!=='none','診断画面側（#q-remain）はそのまま出る');
@@ -982,7 +983,9 @@ try{
     d.getElementById('lq-continue').click(); await sleep(400);
     chk(d.getElementById('screen-quiz').classList.contains('active'),'#lq-continue で診断画面へ');
     chk(d.getElementById('prog-text').textContent==='Q6-10 / 全20問','診断画面は Q6 から: '+d.getElementById('prog-text').textContent);
-    chk(d.getElementById('prog-msg').textContent==='残りは3ページです','先頭ページの文脈表示: '+d.getElementById('prog-msg').textContent);
+    /* ★.prog-msg（「残りは◯ページです」）はオーナーの指示で削除した。
+       左の「Q6-10 / 全20問」が同じ進行を数で示しており、二重だった。 */
+    chk(!d.getElementById('prog-msg'),'.prog-msg は消したまま（戻っていない）');
     chk(posOf(d,'q').join(',')==='5,6,7,8,9','先頭ページの出題位置: '+posOf(d,'q').join(','));
     chk(w.eval('curPage')===1,'curPage は1（診断画面の先頭）: '+w.eval('curPage'));
     chk(d.querySelectorAll('#prog-seg .ps-cell.done').length===5,'診断画面の .prog-seg が5つ塗られた状態で始まる（LPの持ち越し）');

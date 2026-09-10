@@ -174,7 +174,7 @@ function build(){
    'type-overview','screen-result','l-bar','hdr','drawer','ham',
    'screen-title','screen-quiz','screen-loading','company-list','res-code-el',
    /* LP埋め込み質問。診断画面と同じ部品を lq- 接頭辞で持つ */
-   'lp-quiz','lq-list','lq-prog-seg','lq-done','lq-continue','lq-remain',
+   'lp-quiz','lq-list','lq-prog-seg','lq-nav','lq-continue','lq-remain',
    'cta-grid','cta-drawer',
    /* 属性入力（#screen-profile）。20問完走後に必ず通る画面なので、
       ここに置かないと通しのテストが結果画面へ到達しない。 */

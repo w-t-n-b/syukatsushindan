@@ -586,9 +586,11 @@ console.log('[test] LPで5問答えたあとの接続');
   check(T.__eval('curQ') === 5, `5問回答して回答数=5（${T.__eval('curQ')}）`);
   check(!T.__byId.get('screen-quiz').classList.contains('active'),
     '5問目の回答で #screen-quiz へ自動遷移しない（§B-1）');
-  check(T.__byId.get('lq-done').classList.contains('on'), '.lq-done が出る');
+  /* ★.lq-done はオーナーの指示で削除した（2026-09-10）。
+     見るべきは「消えたままであること」。 */
+  check(!T.__byId.get('lq-done'), '.lq-done は消したまま（戻っていない）');
   check(T.document.querySelectorAll('#lq-list .q-card').length === 5,
-    '.lq-done を出しても5問のカードは消えない（選び直せる。§C-3）');
+    '5問そろっても5問のカードは消えない（選び直せる。§C-3）');
   const sc = T.__eval('JSON.stringify(scores)');
   check(sc === JSON.stringify({ 1: 3, 2: 1, 3: 2, 4: -1 }),
     `5問ぶんが4軸に正しく加算されている: ${sc}`);

@@ -2680,8 +2680,20 @@ body::after,body::before{content:none;}
 #type-overview .band-HB{--waveH:clamp(20px,3.8vw,58px);}
 #type-overview .band-DA{--waveH:clamp(16px,3.0vw,46px);}
 #type-overview .band-DB{--waveH:clamp(19px,3.6vw,54px);}
-#type-overview .band-HB,#type-overview .band-DB{transform:scaleX(-1);}
-#type-overview .band-HB>*,#type-overview .band-DB>*{transform:scaleX(-1);}
+/* ★向きを変えるのに帯へ scaleX(-1) を掛け、子で打ち消していた。
+   これが .cat-ghost の transform（translate(-50%) で中央に寄せている）を
+   上書きし、サポートと分析の系統名だけ左へずれていた（オーナー指摘）。
+   **transform は1つしか持てない。打ち消しに使うと、その要素が元々
+     transform で位置を決めていた場合に壊れる。**
+   反転をやめ、波の形そのものを左右逆にしたものへ差し替える。 */
+#type-overview .band-HB,#type-overview .band-DB{
+  -webkit-mask-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 20' preserveAspectRatio='none'><path d='M0 20 L0 7 C 5 5 11 6 18 9 C 32 15 46 14 60 7 C 73 1 86 1 100 9 L100 20 Z' fill='%23000'/></svg>"),
+    linear-gradient(#000,#000);
+          mask-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 20' preserveAspectRatio='none'><path d='M0 20 L0 7 C 5 5 11 6 18 9 C 32 15 46 14 60 7 C 73 1 86 1 100 9 L100 20 Z' fill='%23000'/></svg>"),
+    linear-gradient(#000,#000);
+}
 
 /* ★先頭の帯だけは、上へずらすと節の見出し（「あなたに近いのはどれ？」）に
    食い込む。上の要素との間に、削るぶんの余白を先に作っておく。
@@ -2696,6 +2708,28 @@ body::after,body::before{content:none;}
 
 /* 背後の系統名も同じ量だけ下げる（中身の位置を変えないため）。 */
 #type-overview .cat-band .cat-ghost{top:calc(13% + var(--waveH) * .5);}
+
+/* ==========================================================================
+   34. 診断画面の柱を LP と同じにする（2026-09-10・オーナー指摘）
+   --------------------------------------------------------------------------
+   「1ページ目がこれで、2ページ目以降の質問が狭く小さくなってる」
+
+   LP の設問は #lp-quiz-sec .wrap（PCで最大860px）いっぱいを使うのに、
+   診断画面は .quiz-inner が max-width:480px で内側からさらに絞っていた。
+   ★同じ設問が、面が変わっただけで別の幅になるのはおかしい。
+     .quiz-inner の絞りを外し、外側の .wrap に幅を任せる。 */
+/* ★max-width:none にしたら画面いっぱい（1440px）に広がった。
+   .quiz-inner は .wrap の外にあり、幅を絞っていたのはこの480pxだけだった。
+   LP と同じ柱（#lp-quiz-sec .wrap の 860px）を、こちらにも与える。 */
+@media(min-width:768px){
+  #screen-quiz .quiz-inner{max-width:760px;}
+}
+@media(min-width:1024px){
+  #screen-quiz .quiz-inner{max-width:860px;}
+}
+
+/* .prog-msg を消したぶん、進捗の行は左の「Q6-10 / 全20問」だけになる。 */
+#screen-quiz .prog-meta{justify-content:flex-start;}
 </style>
 </head>
 <body data-screen="screen-title">
@@ -2802,33 +2836,17 @@ body::after,body::before{content:none;}
         <div class="lq-foot">
           <div class="prog-seg" id="lq-prog-seg" role="progressbar" aria-label="回答の進捗" aria-valuemin="0" aria-valuemax="20" aria-valuenow="0" aria-valuetext="20問中0問に回答済み"></div>
         </div>
-        <!-- 5問そろったときだけ出る。質問カードとは差し替えない（§C-3）。
-             差し替えると答えた5問が見えなくなり、選び直せなくなる。 -->
-        <div class="lq-done" id="lq-done">
-          <div class="lq-done-txt">ここまで5問。残りは15問、形式はまったく同じです。</div>
-          <div class="lq-next">
-            <span class="lq-next-lbl">20問すべてに答えると</span>
-            <!-- 3つめは「向いている職種の例」だった（workplace-fit.md U-2 / §5-3）。
-                 (a) 結果画面の主役が「あなたが働きやすい職場」に移り、
-                     .hero-sub の約束もそう変えたので、ここだけ職種のままだと
-                     同じものを2つの言葉で呼ぶことになる（wording-audit P-5）。
-                 (b) 「向いている」で断定しながら名詞に「例」を足すヘッジの二重。
-                 職種は結果画面に引き続き出る。ここで約束しないだけ。 -->
-            <ul class="lq-next-list">
-              <li>16タイプのうち、あなたに近い1つ</li>
-              <li>4つの軸それぞれの傾き</li>
-              <li>あなたが働きやすい職場</li>
-            </ul>
-          </div>
-          <!-- 「残り15問」は同じパネル内に .lq-done-txt と #lq-continue で2回出ている。
-               ここが持つ固有の情報は所要時間だけ（wording-audit.md L-2）。 -->
-          <div class="lq-done-meta">約2分</div>
-        </div>
+        <!-- .lq-done（「ここまで5問。残りは15問…」＋できることの一覧＋約2分）は
+             オーナーの指示で削除した（2026-09-10）。
+             ★「次へ」ボタン（#lq-continue）はこのパネルの外にあるので、
+               消しても先へ進めなくなることはない。
+             ★5問そろったときの送り先だけ .q-nav（次へボタンの行）へ移した。
+               送り先が無くなると、最後の1問に答えたあと画面が動かない。 -->
         <!-- LP では平常時に残数（「あと◯問」）を出さない（オーナー判断）。
              ただし要素は残す。未回答のまま「次へ」を押したときの警告文が
              ここに出るため、消すと警告そのものが出なくなる（requireComplete）。
              診断画面の #q-remain は平常時も出す（あちらは残数が唯一の進行の手がかり）。 -->
-        <div class="q-nav">
+        <div class="q-nav" id="lq-nav">
           <div class="q-remain" id="lq-remain" role="status" aria-live="polite" style="display:none;"></div>
           <button class="btn rpl" id="lq-continue" onclick="addRipple(event,this);lqContinue()">次へ →</button>
         </div>
@@ -2898,7 +2916,8 @@ body::after,body::before{content:none;}
       <div class="prog-seg" id="prog-seg" role="progressbar" aria-label="回答の進捗" aria-valuemin="0" aria-valuemax="20" aria-valuenow="0" aria-valuetext="20問中0問に回答済み"></div>
       <div class="prog-meta">
         <div class="prog-num" id="prog-text" aria-hidden="true">Q1-5 / 全20問</div>
-        <div class="prog-msg" id="prog-msg">全4ページの1ページ目です</div>
+        <!-- .prog-msg（「残りは◯ページです」）はオーナーの指示で削除した（2026-09-10）。
+             左の「Q6-10 / 全20問」が同じ進行を数で示しており、二重だった。 -->
       </div>
     </div>
     <div class="quiz-inner">
@@ -3643,7 +3662,7 @@ function closeDrawer(){document.getElementById('ham').classList.remove('open');d
    quiz は「次へ →」、LP は5問そろったときだけ出る #lq-done。 */
 const FACES={
   quiz:{list:'q-list',seg:'prog-seg',pre:'q', remain:'q-remain',foot:'q-next'},
-  lp:  {list:'lq-list',seg:'lq-prog-seg',pre:'lq',remain:'lq-remain',foot:'lq-done'}
+  lp:  {list:'lq-list',seg:'lq-prog-seg',pre:'lq',remain:'lq-remain',foot:'lq-nav'}
 };
 /* 6段階（+3/+2/+1/-1/-2/-3・中央値なし）。読み上げ用のラベルを値と一緒に持つ。 */
 const SCALE=[[3,'Aにとても近い'],[2,'Aに近い'],[1,'どちらかといえばA'],
@@ -3806,12 +3825,11 @@ function renderPage(target){
   updateCtas();
 }
 
-/* LPの5問がそろったときだけ、リストの下に .lq-done を出す。
-   質問カードとは差し替えない（差し替えると答えた5問が見えず、選び直せない。§C-3） */
-function updateLpDone(){
-  const dn=document.getElementById('lq-done');
-  if(dn)dn.classList.toggle('on',unansweredIn(0)===0);
-}
+/* .lq-done は削除した（2026-09-10・オーナー指示）。
+   この関数は呼び出し元が3箇所あるので、空のまま残す。
+   ★消すと「5問そろったか」を見ている箇所を全部たどる必要がある。
+     いま消す理由が無いので、何もしない関数として置いておく。 */
+function updateLpDone(){}
 
 /* 同じ出題位置を持つ「すべての面」の見た目を合わせる。
    Q1-5 は LP と診断画面1ページ目の両方に存在するため、これが相互反映の実体（§A-3）。 */
@@ -3883,15 +3901,23 @@ function markCurrentQ(){
      上に戻って答えを変えた人を下へ引きずり下ろすと、いま何を直したのかが
      見えなくなる。
    ★最後の設問では次の設問が無いので、そのページの送り先（FACES[].foot）へ。
-     LP では #lq-done が5問そろうまで display:none なので、見えていない
-     ときは動かさない（Q5 だけ先に答えた人を空欄へ送らないため）。 */
+     ただし**そのページに未回答が残っているうちは送らない**。
+     Q5 だけ先に答えた人を、まだ答えていない設問を飛ばして下へ送らないため。
+     ★以前はこれを「送り先が display:none かどうか」で代用していた。
+       送り先が .lq-done（5問そろうまで隠れている）だったので、たまたま
+       同じ意味になっていた。.lq-done を消して送り先を .q-nav（常に見える）へ
+       移した時点で、この代用は効かなくなる。
+       **条件は、意図そのものを書く。見え方で代用しない。** */
 let _scrollQT=null;
 function scrollToNextQ(el,tg){
   const card=el.closest?el.closest('.q-card'):null;
   if(!card)return;
   const nx=card.nextElementSibling;
-  const target=(nx&&nx.classList&&nx.classList.contains('q-card'))
-    ? nx : document.getElementById((FACES[tg]||{}).foot);
+  const isNext=nx&&nx.classList&&nx.classList.contains('q-card');
+  /* 最後の設問なのに、そのページにまだ未回答が残っているなら動かさない */
+  /* LP（tg==='lp'）が持つのはページ0の5問だけ。診断画面は現在のページ。 */
+  if(!isNext&&unansweredIn(tg==='lp'?0:curPage)>0)return;
+  const target=isNext ? nx : document.getElementById((FACES[tg]||{}).foot);
   if(!target||typeof target.scrollIntoView!=='function')return;
   if(target.offsetParent===null)return;      /* display:none は送り先にしない */
   /* 目盛が塗られるのを見せてから動かす。即座に動かすと、自分が何を選んだかを
