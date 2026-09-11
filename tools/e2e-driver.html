@@ -149,6 +149,40 @@ try{
   // ---------- A. LP が正常に読み込まれ、スクリプトが最後まで走ったか ----------
   await load('index.html');
   let w=f.contentWindow,d=f.contentDocument;
+
+  /* ---------- A-0. 一度出た文字が、また消えないか（2026-09-11）----------
+     オーナーから2回同じ指摘を受けた。「一度出た文字が消えて再表示される」。
+     1回目は原因を取り違えた（クラスを付けた瞬間を疑ったが、真因は
+     外した瞬間に animation が登場アニメへ戻って頭から再生されること）。
+     取り違えたのは、**目で見て直して、目で見て確かめた**からで、
+     どの要素がいつ落ちたかを誰も測っていなかった。ここで測る。
+
+     読み込み直後から 40ms ごとに全要素の opacity を取り、
+     一度上がったものが下がったら（山を下ったら）止める。
+     原因が何であれ、症状そのものを見るので取り違えようがない。 */
+  {
+    const sel='.hlk-pre,.hlk-side,.hlk-side>span,.hlk-mass>span,.hlk-par,.hlk-dot,'
+             +'.hlk-note,.hcx,.hero-badge,.hero-sub,.hero-lead';
+    const els=[...d.querySelectorAll(sel)];
+    const name=e=>(String(e.className).match(/hcx-\w|hlk-[\w-]+|hero-[\w-]+/)||['?'])[0]
+                 +((e.textContent||'').trim().slice(0,2)?'「'+(e.textContent||'').trim().slice(0,2)+'」':'');
+    const peak=els.map(()=>0), dips=[];
+    const t0=w.performance.now();
+    for(;;){
+      const t=Math.round(w.performance.now()-t0);
+      els.forEach((e,i)=>{
+        const o=parseFloat(getComputedStyle(e).opacity);
+        if(o>peak[i]) peak[i]=o;
+        else if(peak[i]-o>0.05 && peak[i]>0.3) dips.push(name(e)+' '+t+'ms '+peak[i].toFixed(2)+'→'+o.toFixed(2));
+      });
+      if(t>=2600) break;
+      await sleep(40);
+    }
+    chk(dips.length===0,
+        '一度出た文字やキャラが、その後に消えない（'+els.length+'要素を2.6秒ぶん実測）: '
+        +(dips.length?dips.length+'回 '+dips.slice(0,3).join(' / '):'0回'));
+  }
+
   await sleep(1200);
   chk(typeof w.showResult==='function' && typeof w.buildAgentBlock==='function','スクリプトが最後まで評価された（HTMLパース破壊なし）');
   chk(d.querySelectorAll('#type-overview .tc').length===16,'16タイプグリッドが生成された: '+d.querySelectorAll('#type-overview .tc').length);
@@ -2445,17 +2479,26 @@ try{
             +(a0?a0.style.transform:'なし'));
       }
       chk(rm,'@media (prefers-reduced-motion:reduce) の animation:none が実際にパースされている');
-      /* ★通常時は「登場のあと待機へ渡っている」ことを見る。
-         登場アニメのまま止まっていると、静止画に戻る。 */
-      await sleep(4200);
+      /* ★向きが反転した（2026-09-11・節36）。
+         元は「登場のあと待機の微動に渡っている」ことを見ていた。
+         「止まった瞬間に絵に戻る」という前提の検査だったが、
+         オーナー判断「アニメーションがうるさい」でその前提が消えた。
+         いま見るのは逆で、**登場が終わったら何も動いていないこと**。 */
+      await sleep(2600);
       const idle=[...d.querySelectorAll('.hcx')].filter(e=>e.classList.contains('idle'));
-      chk(idle.length===4,'登場のあと4体とも待機の微動に渡っている: '+idle.length+' 体');
-      const st=idle[0]&&getComputedStyle(idle[0]);
-      chk(!!st&&/hcxIdle/.test(st.animationName)&&parseFloat(st.animationDuration)>=4,
-          '待機の微動が動いている: '+(st&&st.animationName)+' '+(st&&st.animationDuration));
-      chk(!!st&&parseFloat(st.opacity)===1,'待機に渡ってもキャラが消えない（opacity 1）: '+(st&&st.opacity));
+      chk(idle.length===4,'登場のあと4体とも待機へ渡っている: '+idle.length+' 体');
       const lockLive=d.querySelector('.hlk').classList.contains('live');
-      chk(lockLive,'文字も待機の微動に渡っている（.hlk.live）');
+      chk(lockLive,'文字も待機へ渡っている（.hlk.live）');
+      /* 永久ループが1本でも残っていたら止める。節36の前は17本あった */
+      const loops=[...d.querySelectorAll('.hlk *,.hcx,.hero-bg i')].map(e=>{
+        const c=getComputedStyle(e);
+        return c.animationIterationCount.split(',').some(v=>v.trim()==='infinite')
+          ? (e.className||e.tagName)+':'+c.animationName : null;
+      }).filter(Boolean);
+      chk(loops.length===0,
+          '登場が終わったあと永久に動き続けるものが無い: '+(loops.length?loops.length+'本 '+loops.slice(0,4).join(' / '):'0本'));
+      const st=idle[0]&&getComputedStyle(idle[0]);
+      chk(!!st&&parseFloat(st.opacity)===1,'待機に渡ってもキャラが消えない（opacity 1）: '+(st&&st.opacity));
       const m1=getComputedStyle(d.querySelector('.hlk-m1>span'));
       chk(parseFloat(m1.opacity)===1,'待機に渡っても文字が消えない（opacity 1）: '+m1.opacity);
     }

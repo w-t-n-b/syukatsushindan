@@ -2978,6 +2978,93 @@ body::after,body::before{content:none;}
   .hero-bg,.hero-inner,.hlk-row{transform:none!important;}
   .hcx{transition:none;}
 }
+/* ===========================================================================
+   36. 動きを減らす（2026-09-11・オーナー判断）
+   ---------------------------------------------------------------------------
+   「アニメーションがうるさい」「文字が出たり消えたりするのも煩わしい」。
+
+   節35 は第三者のモーション案に沿って
+   「止まった瞬間に絵に戻るから、止めない」という設計だった。
+   その前提をオーナーが否定した。**止めてよい。**
+
+   数えたら、登場が終わったあとも永久に動き続けるものが17本あった。
+     文字9つ  … driftY1 / driftY2 / driftR1 / driftR2 / driftS / driftX / dotHop
+     キャラ4体 … hcxIdleG / hcxIdleR / hcxIdleB / hcxIdleY
+     背景の図形 … bgFloat×3 / bgSpin×2 / bgBreath
+   全部止める。残すのは登場だけ。登場も 3.7秒 → 1.6秒に詰める。
+
+   ★「文字が出たり消えたりする」の真因。前回の直しは的を外していた。
+     反応クラスを**外した**瞬間、animation が hitSquash から hlkRise に戻り、
+     登場アニメが遅延つきで頭から再生される。fill-mode:both なので
+     遅延のあいだ from の opacity:0 を保持する ＝ 文字が消える。
+     実測（.hlk-m1 の「自」）:
+       t=0ms   opacity 1    animation hitSquash   class hit-squash
+       t=124ms opacity 0    animation hlkRise     class なし   ← 外した瞬間
+       t=431ms opacity 0.28 → 0.98 …                          ← 頭から再生
+     前回は「付けた瞬間」を疑って opacity:1 を足した。犯人は外した側だった。
+     **animation を一時的に差し替えて元に戻すと、元のアニメが再生される。**
+     反応そのものを消して根を絶つ（JS 側の hit() も削除した）。
+   =========================================================================== */
+
+/* --- 36-a. 永久ループを全部止める ------------------------------------------ */
+/* ★節35-e と同じ形で書くこと。`.hlk.live .hlk-mass>span` と短く書いたら
+   `.hlk.live .hlk-m1>span:nth-child(1)` の方が詳細度で勝ち、5本だけ
+   止まらずに残った（検査が「5本」と数えて止めた）。 */
+.hlk.live .hlk-side,.hlk.live .hlk-side>span,
+.hlk.live .hlk-pre,.hlk.live .hlk-par,.hlk.live .hlk-dot,.hlk.live .hlk-note,
+.hlk.live .hlk-m1>span:nth-child(1),.hlk.live .hlk-m1>span:nth-child(2),
+.hlk.live .hlk-m2>span:nth-child(1),.hlk.live .hlk-m2>span:nth-child(2),
+.hlk.live .hlk-m2>span:nth-child(3){
+  animation:none;opacity:1;transform:none;}
+.hcx.idle{animation:none;opacity:1;transform:none;}
+/* 背景の図形は出るだけ。回り続けない・浮き続けない */
+.hero-bg .c1{animation:bgIn 1.1s .10s both;}
+.hero-bg .c2{animation:bgIn 1.1s .18s both;}
+.hero-bg .t1{animation:bgIn 1.1s .24s both;}
+.hero-bg .t2{animation:bgIn 1.1s .30s both;}
+.hero-bg .d1{animation:bgIn 1.1s .36s both;}
+.hero-bg .l1{animation:bgIn 1.1s .42s both;}
+
+/* --- 36-b. 登場を詰める（3.7秒 → 1.6秒）------------------------------------
+   1文字ずつ順番に立ち上がるのを見せる時間が長いほど、読む前に待たされる。
+   間隔を 0.08秒 に詰め、尺も 0.74s → 0.50s。順番は変えない。 */
+.hlk-pre        {animation:hlkRise .50s cubic-bezier(.16,1,.3,1) .03s both;}
+.hlk-m1>span:nth-child(1){animation:hlkRise .50s cubic-bezier(.16,1,.3,1) .10s both;}
+.hlk-m1>span:nth-child(2){animation:hlkRise .50s cubic-bezier(.16,1,.3,1) .16s both;}
+.hlk-side       {animation:hlkRise .50s cubic-bezier(.16,1,.3,1) .22s both;}
+.hlk-par        {animation:hlkDrop .44s cubic-bezier(.16,1,.3,1) .28s both;}
+.hlk-m2>span:nth-child(1){animation:hlkRise .50s cubic-bezier(.16,1,.3,1) .30s both;}
+.hlk-m2>span:nth-child(2){animation:hlkRise .50s cubic-bezier(.16,1,.3,1) .36s both;}
+.hlk-m2>span:nth-child(3){animation:hlkRise .50s cubic-bezier(.16,1,.3,1) .42s both;}
+.hlk-dot        {animation:hlkDrop .40s cubic-bezier(.16,1,.3,1) .48s both;}
+.hlk-note>i     {animation:hlkRule .38s cubic-bezier(.16,1,.3,1) .54s both;}
+.hlk-note       {animation:hlkFade .42s linear .60s both;}
+.hero-lead      {animation:leadIn .60s cubic-bezier(.2,.8,.25,1) .95s both;}
+
+/* --- 36-c. キャラの登場をそろえる ------------------------------------------
+   4体が別々の軌道（走り込む・落ちる・跳ね出る・飛んでくる）で
+   2秒かけて入るのが「うるさい」の中心だった。回転と跳ね返りをやめ、
+   同じ動き・0.09秒ずつずらして入る。立ち位置は変えない。 */
+@keyframes hcxIn{from{opacity:0;transform:translateY(calc(var(--m) * .18));}
+  to{opacity:1;transform:none;}}
+.hcx-g,.hcx-r,.hcx-b,.hcx-y{animation:hcxIn .52s cubic-bezier(.2,.8,.25,1) both;}
+.hcx-g{animation-delay:.55s;}
+.hcx-r{animation-delay:.64s;}
+.hcx-b{animation-delay:.73s;}
+.hcx-y{animation-delay:.82s;}
+
+/* --- 36-d. 触れたときだけ反応する ------------------------------------------
+   待機の微動が無くなったので animation の取り合いも無い。
+   transition で当てる。ユーザーが起こした動きは「うるさい」に入らない。 */
+@media(hover:hover){
+  .hcx{transition:transform .22s cubic-bezier(.2,.8,.25,1);}
+  .hcx-g:hover,.hcx-r:hover,.hcx-b:hover,.hcx-y:hover{
+    transform:translateY(calc(var(--m) * -.05)) scale(1.05);}
+}
+@media (prefers-reduced-motion:reduce){
+  .hcx{transition:none;}
+  .hcx-g,.hcx-r,.hcx-b,.hcx-y{animation:none;opacity:1;transform:none;}
+}
 </style>
 </head>
 <body data-screen="screen-title">
@@ -5043,14 +5130,12 @@ function renderSharedBanner(code){
   const lock=document.querySelector('.hero-title.hlk');
   if(!hero||!lock)return;
   const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const fine  =matchMedia('(hover:hover) and (min-width:768px)').matches;
-  const q=s=>lock.querySelector(s);
 
   /* --- ① 登場 → 待機 -------------------------------------------------- */
   /* 印を外す。以降 opacity の土台は 1 で、animation を差し替えても消えない。
      登場アニメ自身が 0→1 を描くので、見え方は変わらない。 */
   lock.classList.remove('intro');
-  const HOLD=3700;                       /* 登場の総尺。CSS の遅延の合計に合わせる */
+  const HOLD=1600;                       /* 登場の総尺。CSS の遅延の合計に合わせる（節36で 3700→1600）*/
   if(reduce){ lock.classList.add('live'); }
   else{
     setTimeout(()=>{
@@ -5059,43 +5144,24 @@ function renderSharedBanner(code){
     },HOLD);
   }
 
-  /* --- ② 文字がキャラに反応する ---------------------------------------- */
-  /* 時刻は CSS の遅延 ＋ その動きの「当たる瞬間」に合わせてある。
-     ずれると、当たっていないのに文字が動く。 */
-  const hit=(sel,cls,at)=>{
-    const el=q(sel); if(!el)return;
-    setTimeout(()=>{
-      el.classList.add(cls);
-      setTimeout(()=>el.classList.remove(cls),460);
-    },at);
-  };
-  if(!reduce){
-    hit('.hlk-side','hit-nudge',                    1550+520);  /* 緑が着く   */
-    hit('.hlk-m1>span:nth-child(1)','hit-squash',   1950+500);  /* 赤が着地   */
-    hit('.hlk-m1>span:nth-child(2)','hit-lift',     2350+500);  /* 青が跳び出す */
-    hit('.hlk-m2>span:nth-child(3)','hit-nudge',    2650+520);  /* 黄が当たる */
-  }
+  /* --- ② 文字がキャラに反応する … やめた（2026-09-11・節36）-------------
+     着地の瞬間に隣の文字を一度だけ動かしていた（hit-squash / hit-lift /
+     hit-nudge を 460ms 付けて外す）。2つの理由で消す。
 
-  /* --- ③ 視差 ----------------------------------------------------------- */
-  if(reduce||!fine)return;
-  let tx=0,ty=0,cx=0,cy=0,sy=0,run=false;
-  const root=hero.style;
-  const tick=()=>{
-    cx+=(tx-cx)*.08; cy+=(ty-cy)*.08;          /* 追従を鈍らせる。指に吸い付かせない */
-    root.setProperty('--px',cx.toFixed(2));
-    root.setProperty('--py',cy.toFixed(2));
-    root.setProperty('--sy',sy.toFixed(1));
-    if(Math.abs(tx-cx)>.05||Math.abs(ty-cy)>.05){requestAnimationFrame(tick);}else{run=false;}
-  };
-  const kick=()=>{ if(!run){run=true;requestAnimationFrame(tick);} };
-  hero.addEventListener('pointermove',e=>{
-    const r=hero.getBoundingClientRect();     /* 測るのは動いたときだけ */
-    tx=((e.clientX-r.left)/r.width -.5)*2*16; /* ±16 */
-    ty=((e.clientY-r.top )/r.height-.5)*2*10; /* ±10 */
-    kick();
-  },{passive:true});
-  hero.addEventListener('pointerleave',()=>{tx=0;ty=0;kick();},{passive:true});
-  addEventListener('scroll',()=>{ sy=Math.min(scrollY,600); kick(); },{passive:true});
+     1. オーナー判断「アニメーションがうるさい」。
+     2. **クラスを外すと登場アニメが頭から再生され、文字が消えて出直す。**
+        animation が hitSquash → hlkRise に戻るため。遅延つき fill-mode:both
+        なので、遅延のあいだ from の opacity:0 を保持する。
+        「一度出た文字が消えて再表示される」の真因はこれだった。
+
+     教訓を残す: **animation を一時的に差し替えて元に戻してはいけない。**
+     元のアニメが再生される。一度きりの動きは、別の要素か transition で当てる。 */
+
+  /* --- ③ 視差 … やめた（2026-09-11・節36）------------------------------
+     マウスを動かすたびにヒーロー全体が ±16px / ±10px 追従していた。
+     指を動かしているあいだ画面が動き続けるので、
+     「うるさい」の一因になる。CSS 側の --px/--py/--sy は残るが、
+     誰も書かないので 0 のまま効かない。 */
 })();
 
 (function heroCast(){
