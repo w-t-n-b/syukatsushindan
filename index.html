@@ -2547,7 +2547,16 @@ body::after,body::before{content:none;}
 @keyframes hlkRule{from{transform:scaleY(0);}to{transform:scaleY(1);}}
 @keyframes hlkFade{from{opacity:0;}to{opacity:1;}}
 
-.hlk-pre,.hlk-side,.hlk-mass>span,.hlk-par,.hlk-dot,.hlk-note{opacity:0;}
+/* ★土台を opacity:0 にしない（2026-09-11）。
+   この1行のせいで、animation を差し替えるたびに文字が消えた。
+   .hcx / .hlk.live / 反応クラス と、同じ事故を3回踏んでいる。
+
+   **「出るまで隠す」を opacity の土台で持つと、animation を触る全員が
+     その土台を踏む。** 隠すのは「まだ始まっていないあいだ」だけでよいので、
+   組み文字そのものに印（.intro）を付けて、そこだけ隠す。
+   印は JS が登場の開始時に外す。JS が動かなければ最初から見えている。 */
+.hlk.intro .hlk-pre,.hlk.intro .hlk-side,.hlk.intro .hlk-mass>span,
+.hlk.intro .hlk-par,.hlk.intro .hlk-dot,.hlk.intro .hlk-note{opacity:0;}
 .hlk-pre        {animation:hlkRise .62s cubic-bezier(.16,1,.3,1) .05s both;}
 .hlk-side       {animation:hlkRise .70s cubic-bezier(.16,1,.3,1) .34s both;}
 .hlk-m1>span:nth-child(1){animation:hlkRise .74s cubic-bezier(.16,1,.3,1) .18s both;}
@@ -2757,10 +2766,16 @@ body::after,body::before{content:none;}
 /* 位置と大きさ。文字との関係は参考画像に合わせた。
      緑 … 「本当」の左に立つ      赤 … 「自」の上に座る
      青 … 「分」の手前にしゃがむ  黄 … 「知ろう」の右に寄りかかる */
-.hcx-g{height:calc(var(--m) * 1.00);left:calc(var(--m) * -0.62);bottom:calc(var(--m) * -0.02);}
-.hcx-r{height:calc(var(--m) * 0.90);left:calc(var(--m) *  0.72);bottom:calc(var(--m) *  0.90);}
-.hcx-b{height:calc(var(--m) * 0.74);left:calc(var(--m) *  1.92);bottom:calc(var(--m) * -0.05);}
-.hcx-y{height:calc(var(--m) * 0.80);left:calc(var(--m) *  5.30);bottom:calc(var(--m) *  0.02);}
+.hcx-g{height:calc(var(--m) * 1.20);left:calc(var(--m) * -0.74);bottom:calc(var(--m) * -0.03);}
+.hcx-r{height:calc(var(--m) * 1.06);left:calc(var(--m) *  0.66);bottom:calc(var(--m) *  0.88);}
+/* ★青は下へ沈める。大きくしたまま「分」に重ねると 62% 覆って字が潰れた。
+   体を下げると、重なる面積は減ったまま大きさは保てる。 */
+.hcx-b{height:calc(var(--m) * 0.86);left:calc(var(--m) *  1.84);bottom:calc(var(--m) * -0.16);}
+/* ★黄は文字の右の外側に置く。
+   大きくしたあと「う」の上に重ねたら 71%、その右へ寄せたら「。」を 94% 覆った。
+   「う」4.98〜5.93 と「。」5.94〜6.28 のあいだに、大きくした体の逃げ場は無い。
+   参考画像でも黄は文字列の右外にいて、内側へ寄りかかっている。 */
+.hcx-y{height:calc(var(--m) * 0.96);left:calc(var(--m) *  6.30);bottom:calc(var(--m) *  0.02);}
 
 /* --- 35-a. 登場 ------------------------------------------------------------
    ★4体に同じ動きを与えない。役が違う。
@@ -2850,6 +2865,13 @@ body::after,body::before{content:none;}
 @keyframes hitLift{0%{transform:translateY(0);}
   35%{transform:translateY(calc(var(--m) * -.05));}
   100%{transform:translateY(0);}}
+/* ★★ 3回目の同じ事故。animation を差し替えると、前の animation が
+   fill-mode:both で保っていた最終状態（opacity:1）が消える。
+   .hcx → .hlk.live → ここ、と同じ形で3度踏んだ。
+   **この組み文字で animation を当てる規則は、必ず opacity も書く。**
+   反応は登場の途中（2.0〜3.2秒）に走るので、ここが抜けていると
+   「一度出た文字が消えて、また出る」に見える（オーナー指摘）。 */
+.hlk .hit-squash,.hlk .hit-lift,.hlk .hit-nudge{opacity:1;}
 .hlk-mass>span.hit-squash{animation:hitSquash .42s cubic-bezier(.3,.7,.3,1) both;}
 .hlk-mass>span.hit-lift  {animation:hitLift   .40s cubic-bezier(.3,.7,.3,1) both;}
 .hlk-side.hit-nudge      {animation:hitNudgeR .40s cubic-bezier(.3,.7,.3,1) both;}
@@ -3007,7 +3029,7 @@ body::after,body::before{content:none;}
              読み上げは「会社に合わせる前に、本当の自分を知ろう。」と1文で通り、
              「自」「分」がバラバラに読まれることはない。
            ★大きさの差だけで組む。装飾は1つも足していない。 -->
-      <h1 class="hero-title hlk" aria-label="会社に合わせる前に、本当の自分を知ろう。">
+      <h1 class="hero-title hlk intro" aria-label="会社に合わせる前に、本当の自分を知ろう。">
         <span class="hlk-pre" aria-hidden="true">会社に合わせる前に、</span>
         <span class="hlk-row" aria-hidden="true"><span class="hlk-side">本当<span>の</span></span><span class="hlk-mass hlk-m1"><span>自</span><span>分</span></span><span class="hlk-par">を</span><span class="hlk-mass hlk-m2"><span>知</span><span>ろ</span><span>う</span></span><span class="hlk-dot">。</span><!--
      ★キャラは組み文字の中（.hlk-row）に置く。外の層に置くと、文字が
@@ -5021,6 +5043,9 @@ function renderSharedBanner(code){
   const q=s=>lock.querySelector(s);
 
   /* --- ① 登場 → 待機 -------------------------------------------------- */
+  /* 印を外す。以降 opacity の土台は 1 で、animation を差し替えても消えない。
+     登場アニメ自身が 0→1 を描くので、見え方は変わらない。 */
+  lock.classList.remove('intro');
   const HOLD=3700;                       /* 登場の総尺。CSS の遅延の合計に合わせる */
   if(reduce){ lock.classList.add('live'); }
   else{

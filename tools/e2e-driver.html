@@ -2310,7 +2310,11 @@ try{
          いまキャラは文字の前にいて、意図的に重なっている。
          代わりに見るのは「組み文字からはみ出して版面を壊していないこと」。 */
       const row=d.querySelector('.hlk-row').getBoundingClientRect();
-      const out=rects.filter(r=>r.left<row.left-row.width*0.22||r.right>row.right+row.width*0.10);
+      /* ★右の許容を 10% → 16% に広げた。黄は文字列の右の外に置いてある。
+       「う」に重ねると71%、「う」と「。」の間へ寄せると「。」を94%覆う。
+       大きくした体の逃げ場が文字の中に無いので、外に出すのが正しい。
+       左の 22% は緑が「本当」の左に立つぶん。 */
+    const out=rects.filter(r=>r.left<row.left-row.width*0.22||r.right>row.right+row.width*0.16);
       chk(out.length===0,
           T+'キャラが組み文字の版面から大きくはみ出さない: '+(out.length?out.length+'体':'すべて内側'));
 
@@ -2452,7 +2456,11 @@ try{
        どの文字も半分以上は残る。 */
   for(const [vw,vh] of [[1440,900],[1024,844],[768,1024],[390,844],[320,568]]){
     f.style.width=vw+'px'; f.style.height=vh+'px';
-    await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(1400);
+    await load('index.html'); w=f.contentWindow; d=f.contentDocument;
+    /* ★登場が終わるまで待つ。1.4秒で測ったら「最大0%」と出た——
+       キャラがまだ画面の外にいて、重なりようがなかった。
+       **検査は「出来上がった状態」を測る。途中を測ると必ず通る。** */
+    await sleep(4300);
     const T='('+vw+'x'+vh+') ';
     const worst=w.eval(`(()=>{
       const cs=[...document.querySelectorAll('.hcx')].map(e=>e.getBoundingClientRect());
