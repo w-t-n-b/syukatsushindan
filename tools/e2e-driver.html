@@ -2318,6 +2318,20 @@ try{
       chk(out.length===0,
           T+'キャラが組み文字の版面から大きくはみ出さない: '+(out.length?out.length+'体':'すべて内側'));
 
+      /* ★検査の穴（2026-09-09 に塞いだ）。
+         上は「組み文字に対して」はみ出していないかを見ている。
+         キャラは組み文字の左右の外に立つので、版面が画面いっぱいだと
+         組み文字に対しては正しい位置のまま、画面の外で体が欠ける。
+         実際 320/390/768px で緑の左が4〜11px、黄の右が5〜12px切れていた。
+         横スクロールも出ないので誰も気づかない。基準を2つ持つ。 */
+      const cut=rects.map((r,i)=>{
+        const k=(hcs[i].className||'').match(/hcx-\w/);
+        const L=Math.round(-r.left), R=Math.round(r.right-d.documentElement.clientWidth);
+        return (L>0||R>0) ? (k?k[0]:'?')+(L>0?' 左'+L:'')+(R>0?' 右'+R:'')+'px' : null;
+      }).filter(Boolean);
+      chk(cut.length===0,
+          T+'キャラが画面の外で欠けない: '+(cut.length?cut.join(' / '):'4体とも画面内'));
+
       // --- コントラスト実測（§7-1）。矩形ではなく字面の背後を測る ---
       /* ★色をハードコードするのをやめた（2026-09-09）。
          元は #cf9a24（からし）と #f2ece0 を直接書いていたが、これは
