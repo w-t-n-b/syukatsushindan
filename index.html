@@ -3028,6 +3028,7 @@ body::after,body::before{content:none;}
 /* --- 36-b. 登場を詰める（3.7秒 → 1.6秒）------------------------------------
    1文字ずつ順番に立ち上がるのを見せる時間が長いほど、読む前に待たされる。
    間隔を 0.08秒 に詰め、尺も 0.74s → 0.50s。順番は変えない。 */
+
 /* --- 36-e. 文字を欠けさせない ----------------------------------------------
    オーナー指摘「ここ最初欠けてる」。
    hlkRise は clip-path:inset(112% 0 -12% 0) → inset(-12% 0 -12% 0) で
@@ -3059,11 +3060,7 @@ body::after,body::before{content:none;}
    同じ動き・0.09秒ずつずらして入る。立ち位置は変えない。 */
 @keyframes hcxIn{from{opacity:0;transform:translateY(calc(var(--m) * .18));}
   to{opacity:1;transform:none;}}
-.hcx-g,.hcx-r,.hcx-b,.hcx-y{animation:hcxIn .52s cubic-bezier(.2,.8,.25,1) both;}
-.hcx-g{animation-delay:.55s;}
-.hcx-r{animation-delay:.64s;}
-.hcx-b{animation-delay:.73s;}
-.hcx-y{animation-delay:.82s;}
+.hcx-g,.hcx-r,.hcx-b,.hcx-y{animation:hcxIn .45s cubic-bezier(.2,.8,.25,1) both;}
 
 /* --- 36-d. 触れたときだけ反応する ------------------------------------------
    待機の微動が無くなったので animation の取り合いも無い。
@@ -3077,6 +3074,42 @@ body::after,body::before{content:none;}
   .hcx{transition:none;}
   .hcx-g,.hcx-r,.hcx-b,.hcx-y{animation:none;opacity:1;transform:none;}
 }
+
+/* ★この節は必ず一番うしろに置くこと。最初 36-e の直前に入れてしまい、
+   36-b / 36-c の宣言が後ろから勝って、遅延が古いままだった
+   （キャラ 0〜450ms / 説明文 950〜1550ms。順番の検査が捕まえた）。 */
+/* ===========================================================================
+   37. 出る順番を3つに分ける（2026-09-11・オーナー指示）
+   ---------------------------------------------------------------------------
+   「ざっくり 本当の自分を知ろう → キャラ → 説明文 の順に出したい。
+     今はキャラと説明文が一緒に出てきてる」
+
+   実際そうなっていた。重なっていた区間を実測で並べると:
+     組み文字   0.03 → 0.92秒
+     キャラ     0.55 → 1.34秒   ← 文字が出きる前に入り、
+     説明文     0.60 → 1.55秒   ← キャラと同時に出ていた
+   （説明文のうち FIND YOUR OWN WAY だけ 0.60秒に独立して動いていた。
+     .hlk-note は .hero-lead の子で、.hlk の中には無い。
+     ★そのため `.hlk.live .hlk-note` / `.hlk.intro .hlk-note` は
+       どの要素にも当たっていない死んだ規則だった。）
+
+   3つが重ならないように置き直す。前の組が終わってから次を始める。
+     組み文字  0.03 → 0.88秒   （最後は「。」0.48+0.40）
+     キャラ    0.90 → 1.56秒   （0.07秒ずつ・各0.45秒）
+     説明文    1.62 → 2.17秒   （FIND YOUR OWN WAY も含めて一度に）
+   総尺は 1.6秒 → 2.2秒に伸びる。順番を見せるための最小の伸び。
+   =========================================================================== */
+/* 組み文字が出きるのは 0.92秒（最後は「う」0.42+0.50。「。」ではない）。
+   0.90秒から始めたら 20ms 重なって、順番の検査が止めた。 */
+.hcx-g{animation-delay:.95s;}
+.hcx-r{animation-delay:1.02s;}
+.hcx-b{animation-delay:1.09s;}
+.hcx-y{animation-delay:1.16s;}
+/* 説明文は1枚の板として出す。中の FIND YOUR OWN WAY と縦罫を
+   別々に動かさない（別々だと、キャラと混ざって見える原因になる）。 */
+.hero-lead      {animation:leadIn .55s cubic-bezier(.2,.8,.25,1) 1.65s both;}
+.hlk-note       {animation:none;opacity:1;}
+.hlk-note>i     {animation:none;opacity:1;transform:none;}
 </style>
 </head>
 <body data-screen="screen-title">
@@ -5147,7 +5180,8 @@ function renderSharedBanner(code){
   /* 印を外す。以降 opacity の土台は 1 で、animation を差し替えても消えない。
      登場アニメ自身が 0→1 を描くので、見え方は変わらない。 */
   lock.classList.remove('intro');
-  const HOLD=1600;                       /* 登場の総尺。CSS の遅延の合計に合わせる（節36で 3700→1600）*/
+  const HOLD=2250;                       /* 登場の総尺。CSS の遅延の合計に合わせる
+                                            （節36で 3700→1600、節37で 1600→2250）*/
   if(reduce){ lock.classList.add('live'); }
   else{
     setTimeout(()=>{

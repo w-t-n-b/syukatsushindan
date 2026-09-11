@@ -193,6 +193,54 @@ try{
     chk(clipped.length===0,
         '登場の途中でも字が切られない（clip-path で欠けた別の字にならない）: '
         +(clipped.length?clipped.length+'回 '+clipped[0]:'0回'));
+
+    /* ★出る順番（2026-09-11・オーナー指示）。
+       「組み文字 → キャラ → 説明文」。以前はキャラと説明文が同時に出ていた。
+       時刻をCSSに書くだけだと、あとで誰かが遅延を触ると静かに崩れる。
+       **順番そのものを見る。** 各組が半分見えた時刻を比べ、
+       前の組が出きってから次が始まることを要求する。 */
+    const grp={
+      '組み文字':[...d.querySelectorAll('.hlk-pre,.hlk-side,.hlk-mass>span,.hlk-par,.hlk-dot')],
+      'キャラ'  :[...d.querySelectorAll('.hcx')],
+      '説明文'  :[d.querySelector('.hero-lead')].filter(Boolean),
+    };
+    /* ★iframe の load は画像を待つので、発火した時点では登場が終わっている。
+       上の記録ループが t=0 で全部 opacity 1 を見たのはそのため。
+       順番を測るには登場をやり直させる。animation を一度切って戻すと、
+       CSS に書いた遅延ぶんだけ改めて待つので、相対的な時刻表がそのまま出る。 */
+    /* ★測るのをやめて、時刻表そのものを読む（2026-09-11）。
+       最初は「登場をやり直させて opacity を追う」形で書いたが、2回とも
+       空振りした。1回目は .hlk.live / .hcx.idle が animation:none を当てた
+       ままで全部 0ms、2回目はやり直しが効かず全部 960ms。
+       **通っているのに何も測れていない検査**を2回作った。
+       出る順番は CSS の animation-delay / duration に書いてある。
+       読めば競合しないし、空振りもしない。待機の印だけ先に外す。 */
+    const lockEl=d.querySelector('.hlk');
+    const wasLive=lockEl.classList.contains('live');
+    lockEl.classList.remove('live');
+    const wasIdle=[...d.querySelectorAll('.hcx.idle')];
+    wasIdle.forEach(e=>e.classList.remove('idle'));
+    const ms=v=>parseFloat(v)*(/ms$/.test(v)?1:1000);
+    const span={};
+    for(const k in grp){
+      const t=grp[k].map(e=>{
+        const c=getComputedStyle(e);
+        if(c.animationName==='none')return null;
+        const d0=ms(c.animationDelay.split(',')[0]), du=ms(c.animationDuration.split(',')[0]);
+        return {s:d0, e:d0+du};
+      }).filter(Boolean);
+      span[k]=t.length?{start:Math.round(Math.min(...t.map(x=>x.s))),
+                        end:Math.round(Math.max(...t.map(x=>x.e)))}:null;
+    }
+    if(wasLive)lockEl.classList.add('live');
+    wasIdle.forEach(e=>e.classList.add('idle'));
+    const seq=['組み文字','キャラ','説明文'];
+    const shown=seq.map(k=>k+' '+(span[k]?span[k].start+'〜'+span[k].end+'ms':'動きなし')).join(' / ');
+    let bad=seq.find(k=>!span[k]) ? '時刻表が読めない組がある' : null;
+    for(let i=1;i<seq.length&&!bad;i++){
+      if(!(span[seq[i]].start>=span[seq[i-1]].end)) bad=seq[i]+' が '+seq[i-1]+' の途中で始まっている';
+    }
+    chk(!bad,'登場の順番が「組み文字 → キャラ → 説明文」で、重ならない: '+(bad?bad+' … '+shown:shown));
   }
 
   await sleep(1200);
