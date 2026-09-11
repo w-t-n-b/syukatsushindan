@@ -3028,14 +3028,26 @@ body::after,body::before{content:none;}
 /* --- 36-b. 登場を詰める（3.7秒 → 1.6秒）------------------------------------
    1文字ずつ順番に立ち上がるのを見せる時間が長いほど、読む前に待たされる。
    間隔を 0.08秒 に詰め、尺も 0.74s → 0.50s。順番は変えない。 */
-.hlk-pre        {animation:hlkRise .50s cubic-bezier(.16,1,.3,1) .03s both;}
-.hlk-m1>span:nth-child(1){animation:hlkRise .50s cubic-bezier(.16,1,.3,1) .10s both;}
-.hlk-m1>span:nth-child(2){animation:hlkRise .50s cubic-bezier(.16,1,.3,1) .16s both;}
-.hlk-side       {animation:hlkRise .50s cubic-bezier(.16,1,.3,1) .22s both;}
+/* --- 36-e. 文字を欠けさせない ----------------------------------------------
+   オーナー指摘「ここ最初欠けてる」。
+   hlkRise は clip-path:inset(112% 0 -12% 0) → inset(-12% 0 -12% 0) で
+   字面を下から舐めるように出していた。**途中の1文字ずつが別の字に見える。**
+   実測（登場を45%で止めた画面）:
+     自 → 日 ／ 分 → 刀 ／ 知 → 矢口 ／ ろ → つ ／ う → ノ
+   読める言葉が一瞬だけ別の言葉になる。見出しでやってはいけない。
+   横切りをやめ、ふわりと上がるだけにする。字は常に丸ごと出る。 */
+@keyframes hlkRiseWhole{
+  from{opacity:0;transform:translateY(.20em);}
+  to  {opacity:1;transform:none;}
+}
+.hlk-pre        {animation:hlkRiseWhole .50s cubic-bezier(.16,1,.3,1) .03s both;}
+.hlk-m1>span:nth-child(1){animation:hlkRiseWhole .50s cubic-bezier(.16,1,.3,1) .10s both;}
+.hlk-m1>span:nth-child(2){animation:hlkRiseWhole .50s cubic-bezier(.16,1,.3,1) .16s both;}
+.hlk-side       {animation:hlkRiseWhole .50s cubic-bezier(.16,1,.3,1) .22s both;}
 .hlk-par        {animation:hlkDrop .44s cubic-bezier(.16,1,.3,1) .28s both;}
-.hlk-m2>span:nth-child(1){animation:hlkRise .50s cubic-bezier(.16,1,.3,1) .30s both;}
-.hlk-m2>span:nth-child(2){animation:hlkRise .50s cubic-bezier(.16,1,.3,1) .36s both;}
-.hlk-m2>span:nth-child(3){animation:hlkRise .50s cubic-bezier(.16,1,.3,1) .42s both;}
+.hlk-m2>span:nth-child(1){animation:hlkRiseWhole .50s cubic-bezier(.16,1,.3,1) .30s both;}
+.hlk-m2>span:nth-child(2){animation:hlkRiseWhole .50s cubic-bezier(.16,1,.3,1) .36s both;}
+.hlk-m2>span:nth-child(3){animation:hlkRiseWhole .50s cubic-bezier(.16,1,.3,1) .42s both;}
 .hlk-dot        {animation:hlkDrop .40s cubic-bezier(.16,1,.3,1) .48s both;}
 .hlk-note>i     {animation:hlkRule .38s cubic-bezier(.16,1,.3,1) .54s both;}
 .hlk-note       {animation:hlkFade .42s linear .60s both;}

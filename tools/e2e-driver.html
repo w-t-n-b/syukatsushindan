@@ -166,7 +166,12 @@ try{
     const els=[...d.querySelectorAll(sel)];
     const name=e=>(String(e.className).match(/hcx-\w|hlk-[\w-]+|hero-[\w-]+/)||['?'])[0]
                  +((e.textContent||'').trim().slice(0,2)?'「'+(e.textContent||'').trim().slice(0,2)+'」':'');
-    const peak=els.map(()=>0), dips=[];
+    const peak=els.map(()=>0), dips=[], clipped=[];
+    /* ★字を切りながら出さない（2026-09-11・オーナー指摘「ここ最初欠けてる」）。
+       hlkRise は clip-path で字面を下から舐めて出していた。途中の1文字が
+       別の字に見える（自→日 / 分→刀 / 知→矢口 / ろ→つ / う→ノ）。
+       読める言葉が一瞬だけ別の言葉になるので、見出しでやってはいけない。 */
+    const glyphs=[...d.querySelectorAll('.hlk-pre,.hlk-side,.hlk-mass>span,.hlk-par,.hlk-dot')];
     const t0=w.performance.now();
     for(;;){
       const t=Math.round(w.performance.now()-t0);
@@ -175,12 +180,19 @@ try{
         if(o>peak[i]) peak[i]=o;
         else if(peak[i]-o>0.05 && peak[i]>0.3) dips.push(name(e)+' '+t+'ms '+peak[i].toFixed(2)+'→'+o.toFixed(2));
       });
+      glyphs.forEach(e=>{
+        const cp=getComputedStyle(e).clipPath;
+        if(cp&&cp!=='none'&&!/inset\(\s*-/.test(cp)) clipped.push(name(e)+' '+t+'ms '+cp);
+      });
       if(t>=2600) break;
       await sleep(40);
     }
     chk(dips.length===0,
         '一度出た文字やキャラが、その後に消えない（'+els.length+'要素を2.6秒ぶん実測）: '
         +(dips.length?dips.length+'回 '+dips.slice(0,3).join(' / '):'0回'));
+    chk(clipped.length===0,
+        '登場の途中でも字が切られない（clip-path で欠けた別の字にならない）: '
+        +(clipped.length?clipped.length+'回 '+clipped[0]:'0回'));
   }
 
   await sleep(1200);
