@@ -2218,22 +2218,23 @@ try{
     f.style.width=vw+'px'; f.style.height=vh+'px';
     await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(1200);
     const hero=d.querySelector('.hero');
-    const cast=d.querySelector('.hero-cast');
-    const hcs=[...d.querySelectorAll('.hc')];
+    /* ★2026-09-11。キャラを「背景に薄く浮かぶ影」から「文字の上に乗る主役」へ
+       移した（オーナー判断）。旧 .hero-cast / .hc はもう無い。
+       守る対象が変わったので、検査もそこへ移す。
+       旧: 影が薄いこと・字面の背後のコントラスト
+       新: 4体が組み文字の中にいること・**文字を覆いすぎないこと** */
+    const hcs=[...d.querySelectorAll('.hcx')];
     const T='('+vw+'x'+vh+') ';
 
     // --- 構造 ---
-    chk(!!cast,T+'.hero-cast がヒーローに挿入されている');
-    chk(!!cast&&cast.getAttribute('aria-hidden')==='true',T+'.hero-cast は aria-hidden="true"');
-    chk(!!cast&&cast.parentElement===hero&&cast.nextElementSibling===d.querySelector('.hero-inner'),
-        T+'.hero-cast は .hero 直下・.hero-inner の直前にある');
-    chk(hcs.length===want,T+'浮遊キャラは '+want+' 体: '+hcs.length+' 体 '
+    chk(!d.querySelector('.hero-cast'),T+'旧 .hero-cast は作られない（.hcx が引き継いだ）');
+    chk(hcs.length===4,T+'キャラは4体そろっている: '+hcs.length+' 体 '
         +hcs.map(e=>(e.src.match(/([a-d]\d)\.webp/)||[])[1]).join(','));
-    chk(hcs.every(e=>e.alt===''&&e.loading==='lazy'&&e.decoding==='async'),
-        T+'各 .hc は alt="" / loading=lazy / decoding=async');
-    chk(hcs.every(e=>getComputedStyle(e).pointerEvents==='none'||getComputedStyle(cast).pointerEvents==='none'),
-        T+'.hc は押せない（pointer-events:none）');
-    chk(hcs.every(e=>e.complete&&e.naturalWidth>0),T+'.hc の画像がすべて読み込めている');
+    chk(hcs.every(e=>e.closest('.hlk-row')),T+'4体とも組み文字（.hlk-row）の中にいる');
+    chk(hcs.every(e=>e.alt===''&&e.getAttribute('aria-hidden')==='true'),
+        T+'各 .hcx は alt="" / aria-hidden（読み上げは h1 の aria-label が担う）');
+    chk(hcs.every(e=>e.complete&&e.naturalWidth>0),T+'.hcx の画像がすべて読み込めている');
+    chk(hcs.every(e=>/\?v=/.test(e.getAttribute('src'))),T+'.hcx の src に ?v= が付いている');
     // ヒーローの高さはビューポートに依らずほぼ一定（判断②）
     const heroH=Math.round(hero.getBoundingClientRect().height);
     chk(getComputedStyle(hero).minHeight==='auto'||parseFloat(getComputedStyle(hero).minHeight)===0,
@@ -2304,10 +2305,14 @@ try{
           T+'どの .hc も復帰バナーの外形（影 6px 込み）に重ならない（1.4.11）: 余裕 '+gaps.join(' / ')+'px');
       cb.style.display=cbPrev;
       await sleep(60);
-      // 顔は見出しより上（§3-4 の不等式1）
-      const ttl=d.querySelector('.hero-title').getBoundingClientRect();
-      chk(rects.every(r=>r.top+30<=ttl.top),
-          T+'顔（上端から約30px）が見出しの上端より上にある: hc上端 '+rects.map(r=>Math.round(r.top)).join('/')+' / 見出し上端 '+Math.round(ttl.top));
+      /* ★旧「顔は見出しより上」（§3-4 の不等式1）は前提ごと無くなった。
+         薄い影が文字の背後にいた頃、顔だけは文字に重ねないための条件だった。
+         いまキャラは文字の前にいて、意図的に重なっている。
+         代わりに見るのは「組み文字からはみ出して版面を壊していないこと」。 */
+      const row=d.querySelector('.hlk-row').getBoundingClientRect();
+      const out=rects.filter(r=>r.left<row.left-row.width*0.22||r.right>row.right+row.width*0.10);
+      chk(out.length===0,
+          T+'キャラが組み文字の版面から大きくはみ出さない: '+(out.length?out.length+'体':'すべて内側'));
 
       // --- コントラスト実測（§7-1）。矩形ではなく字面の背後を測る ---
       /* ★色をハードコードするのをやめた（2026-09-09）。
@@ -2421,43 +2426,66 @@ try{
             'hcFloat の 0% / 100% がともに translateY(0)（抑制時にずれた位置で止まらない）: '
             +(a0?a0.style.transform:'なし'));
       }
-      chk(rm,'@media (prefers-reduced-motion:reduce) の .hc{animation:none} が実際にパースされている');
-      // 抑制されていない通常時は、実際に animation が走っている
-      const st=hcs[0]&&getComputedStyle(hcs[0]);
-      chk(!!st&&st.animationName==='hcFloat'&&parseFloat(st.animationDuration)>=11,
-          '通常時はゆらぎが動いている: '+(st&&st.animationName)+' '+(st&&st.animationDuration));
+      chk(rm,'@media (prefers-reduced-motion:reduce) の animation:none が実際にパースされている');
+      /* ★通常時は「登場のあと待機へ渡っている」ことを見る。
+         登場アニメのまま止まっていると、静止画に戻る。 */
+      await sleep(4200);
+      const idle=[...d.querySelectorAll('.hcx')].filter(e=>e.classList.contains('idle'));
+      chk(idle.length===4,'登場のあと4体とも待機の微動に渡っている: '+idle.length+' 体');
+      const st=idle[0]&&getComputedStyle(idle[0]);
+      chk(!!st&&/hcxIdle/.test(st.animationName)&&parseFloat(st.animationDuration)>=4,
+          '待機の微動が動いている: '+(st&&st.animationName)+' '+(st&&st.animationDuration));
+      chk(!!st&&parseFloat(st.opacity)===1,'待機に渡ってもキャラが消えない（opacity 1）: '+(st&&st.opacity));
+      const lockLive=d.querySelector('.hlk').classList.contains('live');
+      chk(lockLive,'文字も待機の微動に渡っている（.hlk.live）');
+      const m1=getComputedStyle(d.querySelector('.hlk-m1>span'));
+      chk(parseFloat(m1.opacity)===1,'待機に渡っても文字が消えない（opacity 1）: '+m1.opacity);
     }
   }
-  // 768px 以上で開いた窓を狭めたとき、奥の2体が残って手前の2体と重ならないこと。
-  // JS は読み込み時に1回だけ体数を決める（回転のたびに画像を追加取得しない）ので、
-  // 残った4枚のうち奥の2体は CSS で消す。重なると実効αが 1-(1-a)(1-b) まで上がり、
-  // 見出し2行目が AA を割る。
-  f.style.width='1024px'; f.style.height='844px';
-  await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(1200);
-  {
-    const all=[...d.querySelectorAll('.hc')];
-    chk(all.length===4,'リサイズ検査: 1024px では 4 体が挿入されている: '+all.length+' 体');
-    f.style.width='390px'; f.style.height='844px';
-    await sleep(400);
-    const vis=all.filter(e=>getComputedStyle(e).display!=='none');
-    chk(vis.length===2&&vis.every(e=>/hc-[14]\b/.test(e.className)),
-        '1024px→390px に狭めても出るのは手前の2体だけ（奥の2体は display:none）: '
-        +vis.map(e=>e.className.replace('hc ','')).join(',')||'なし');
-    if(vis.length===2){
-      vis.forEach(e=>{e.style.animation='none';});
-      const a=vis[0].getBoundingClientRect(),b=vis[1].getBoundingClientRect();
-      chk(!(a.left<b.right&&b.left<a.right&&a.top<b.bottom&&b.top<a.bottom),
-          '狭めたあとも .hc 同士の矩形が交差しない');
-      vis.forEach(e=>{e.style.animation='';});
-    }
+  /* ★旧「窓を狭めたら奥の2体を消す」検査は、前提ごと無くなった。
+     体数を2/4で切り替えていたのは、薄い影が重なると実効αが上がって
+     見出しが AA を割るためだった。いまは4体固定で、文字の前にいる。
+
+     代わりに守るのは**文字の可読性**である。キャラが文字を覆いすぎると、
+     何と書いてあるか読めなくなる。覆う量を測る。
+     ★閾値は実測から決めた。参考画像と同じ「手前にいる」見え方を保ちつつ、
+       どの文字も半分以上は残る。 */
+  for(const [vw,vh] of [[1440,900],[1024,844],[768,1024],[390,844],[320,568]]){
+    f.style.width=vw+'px'; f.style.height=vh+'px';
+    await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(1400);
+    const T='('+vw+'x'+vh+') ';
+    const worst=w.eval(`(()=>{
+      const cs=[...document.querySelectorAll('.hcx')].map(e=>e.getBoundingClientRect());
+      const letters=[['本当','.hlk-side'],['自','.hlk-m1>span:nth-child(1)'],
+        ['分','.hlk-m1>span:nth-child(2)'],['を','.hlk-par'],
+        ['知','.hlk-m2>span:nth-child(1)'],['ろ','.hlk-m2>span:nth-child(2)'],
+        ['う','.hlk-m2>span:nth-child(3)'],['。','.hlk-dot']];
+      let worst={n:'',p:0};
+      for(const [n,sel] of letters){
+        const e=document.querySelector(sel); if(!e) continue;
+        const r=e.getBoundingClientRect(); const area=r.width*r.height; if(!area) continue;
+        let cov=0;
+        for(const c of cs){
+          const ow=Math.max(0,Math.min(r.right,c.right)-Math.max(r.left,c.left));
+          const oh=Math.max(0,Math.min(r.bottom,c.bottom)-Math.max(r.top,c.top));
+          cov+=ow*oh;
+        }
+        const p=Math.round(cov/area*100);
+        if(p>worst.p) worst={n,p};
+      }
+      return JSON.stringify(worst);})()`);
+    const wv=JSON.parse(worst);
+    chk(wv.p<=55,T+'キャラが文字を覆いすぎない（どの文字も55%以下）: 最大 '+wv.n+' '+wv.p+'%');
   }
   f.style.width='390px'; f.style.height='844px';
 
   // 共有リンク（?ref=share）で来た人には浮遊キャラを出さない（§4 の状態表）
   await load('index.html?type=HALS&ref=share'); w=f.contentWindow; d=f.contentDocument; await sleep(900);
   chk(!!d.querySelector('.shared-banner'),'?ref=share で .shared-banner が出る');
-  chk(d.querySelectorAll('.hc').length===0||getComputedStyle(d.querySelector('.hero-cast')).display==='none',
-      '.shared-banner があるときは浮遊キャラを出さない（見えない絵を読まない）');
+  /* ★旧 .hero-cast を消したので、共有着地でも .hcx（組み文字の中のキャラ）は出る。
+     見出しの一部なので、出ないほうが不自然である。
+     ここで見るのは「余分な .hero-cast を作っていないこと」だけ。 */
+  chk(!d.querySelector('.hero-cast'),'?ref=share でも旧 .hero-cast は作られない');
 
   /* ---------- T. PC の版面（docs/design/conversion-structure-and-pc-grid.md）----------
      S-1 .hero-inner / .result-inner に 448px の柱
