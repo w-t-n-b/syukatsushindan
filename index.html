@@ -3110,7 +3110,43 @@ body::after,body::before{content:none;}
 .hero-lead      {animation:leadIn .55s cubic-bezier(.2,.8,.25,1) 1.65s both;}
 .hlk-note       {animation:none;opacity:1;}
 .hlk-note>i     {animation:none;opacity:1;transform:none;}
+/* ===========================================================================
+   38. 組み立て前の画面を見せない（2026-09-11・オーナー指摘）
+   ---------------------------------------------------------------------------
+   「リロードすると一瞬、下に存在しているはずの次へボタンなどが出てくる」。
+
+   実測（ページの最初のスクリプトより前に記録を仕込んで計測）:
+     206ms  docH=2447  カード0枚  次へ y=543 ★画面内  4つの軸 y=708 ★画面内
+     672ms  docH=6143  カード5枚  次へ y=2144        4つの軸 y=2309
+   **約0.47秒のあいだ、下にあるはずのものが画面の中に出ている。**
+
+   理由。Q1-5 は renderPage('lp') が組み立てる。これは DOMContentLoaded で、
+   巨大なインライン CSS と JS を読み終わるまで走らない。
+   一方ブラウザは head を読み終えた時点で body を描き始めるので、
+   **中身が空の #lq-list（高さ0）の上に、下の節が積み上がった絵**が出る。
+
+   ★「あとから伸びるぶんの高さを CSS で予約する」はやらない。
+     予約量は幅と文章の折り返しで変わるので、必ずどこかの幅でずれる。
+     見せなければよい。組み立てが終わるまで、ヒーローより下を描かない。
+
+   印は <head> のスクリプトが付ける。**HTML には書かない。**
+   書くと JS が無効なとき永久に隠れる。付ける側が JS なら、
+   JS が動かない環境では最初から全部見えている。
+   さらに 3秒で必ず外す保険も入れてある（組み立てが落ちても隠れ続けない）。 */
+html.boot #lp-quiz-sec,html.boot #axis-section,
+html.boot #type-section,html.boot .ftr{visibility:hidden;}
 </style>
+<script>
+/* 節38。組み立てが終わるまでヒーローより下を描かない。
+   ★ここは <head> でなければ意味がない。body に入ると、ブラウザが
+     先に body を描いてしまうので、隠す前の絵が一瞬出る。 */
+(function(){
+  var h=document.documentElement;
+  h.className=(h.className?h.className+' ':'')+'boot';
+  /* 保険。組み立てが落ちても隠れたままにしない */
+  setTimeout(function(){h.classList.remove('boot');},3000);
+})();
+</script>
 </head>
 <body data-screen="screen-title">
 
@@ -3830,6 +3866,8 @@ window.addEventListener('DOMContentLoaded',()=>{
   dropLegacyProgress();
   checkSavedProgress();
   renderPage('lp');    /* LP埋め込み（Q1-5）。Q1-5 が置かれる唯一の場所 */
+  /* 節38。ここまで来れば #lq-list に中身があり、下の節は正しい位置にいる */
+  document.documentElement.classList.remove('boot');
   renderPage('quiz');  /* 診断画面の先頭ページ（Q6-10）も先に描いておく */
   window.addEventListener('scroll',()=>document.getElementById('hdr').classList.toggle('sc',scrollY>10));
   document.addEventListener('click',e=>{

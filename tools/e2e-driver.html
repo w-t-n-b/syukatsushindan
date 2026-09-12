@@ -243,6 +243,36 @@ try{
     chk(!bad,'登場の順番が「組み文字 → キャラ → 説明文」で、重ならない: '+(bad?bad+' … '+shown:shown));
   }
 
+  /* ---------- A-0b. 組み立て前の画面を見せない（2026-09-11・節38）----------
+     オーナー指摘「リロードすると一瞬、下にあるはずの次へボタンが出てくる」。
+     Q1-5 は DOMContentLoaded で組み立てるが、ブラウザは head を読み終えた
+     時点で body を描き始める。中身が空の #lq-list（高さ0）の上に下の節が
+     積み上がった絵が 0.47秒ぶん出ていた（実測 次へ y=543 / 4つの軸 y=708）。 */
+  {
+    /* ★ソースを見る2件（HTML に印を書いていない／保険のタイマーがある）は
+       lint.mjs へ移した。ここで fetch('../index.html') を使ったら、
+       file:// では fetch が使えず e2e がまるごとタイムアウトした。
+       **検査の置き場所を間違えると、検査そのものが動かなくなる。**
+       ソースの字面は Node 側（lint）、画面の挙動はブラウザ側（e2e）。 */
+    chk(!d.documentElement.classList.contains('boot'),
+        '組み立てが終わったら boot の印は外れている');
+    /* 印を戻して、ヒーローより下が本当に描かれないことを見る */
+    d.documentElement.classList.add('boot');
+    const below=['#lp-quiz-sec','#axis-section','#type-section','.ftr'];
+    const shown=below.filter(sel=>{
+      const e=d.querySelector(sel);
+      return !e||getComputedStyle(e).visibility!=='hidden';
+    });
+    d.documentElement.classList.remove('boot');
+    chk(shown.length===0,
+        'boot のあいだ、ヒーローより下は描かれない: '+(shown.length?shown.join(' / ')+' が見えている':below.length+'つとも hidden'));
+    /* ヒーロー自身は隠さない。隠すと真っ白な画面になる */
+    d.documentElement.classList.add('boot');
+    const heroVis=getComputedStyle(d.querySelector('#screen-title .hero')).visibility;
+    d.documentElement.classList.remove('boot');
+    chk(heroVis!=='hidden','boot のあいだもヒーローは描かれる（真っ白にしない）: '+heroVis);
+  }
+
   await sleep(1200);
   chk(typeof w.showResult==='function' && typeof w.buildAgentBlock==='function','スクリプトが最後まで評価された（HTMLパース破壊なし）');
   chk(d.querySelectorAll('#type-overview .tc').length===16,'16タイプグリッドが生成された: '+d.querySelectorAll('#type-overview .tc').length);

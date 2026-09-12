@@ -28,8 +28,36 @@ const html = read('index.html');
   const ext = [...html.matchAll(/<script[^>]*\bsrc=["']([^"']+)["']/g)].map(m => m[1]);
   check(ext.length === 0, `外部JSの読み込みが0件（実際: ${ext.length}件${ext.length ? ' → ' + ext.join(', ') : ''}）`);
 
+  /* ★1つ → 2つに緩めた（2026-09-11・節38）。緩めた理由を書く。
+     組み立て前の画面を隠す印（html.boot）は <head> で付けないと意味がない。
+     body に入れると、ブラウザが先に body を描いてしまう。
+     そのため <head> に小さなスクリプトが1つ必要になった。
+
+     元の意図は「JS の置き場を1つに保つ（外部ライブラリを足さない）」。
+     数だけ 2 に緩めると、2つ目が第二の置き場に育つ。意図のほうを守る:
+       ・2つまで
+       ・head 側は 500 文字未満
+       ・head 側がやってよいのは boot の印だけ */
   const inline = html.match(/<script(?![^>]*\bsrc=)[^>]*>/g) || [];
-  check(inline.length === 1, `インライン<script>は1つ（実際: ${inline.length}）`);
+  check(inline.length <= 2, `インライン<script>は2つまで（実際: ${inline.length}）`);
+  if (inline.length === 2) {
+    const head = html.slice(0, html.indexOf('</head>'));
+    const m = head.match(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/);
+    check(!!m, 'インライン<script>が2つのとき、1つ目は <head> にある');
+    if (m) {
+      check(m[1].length < 500, `<head> のスクリプトは 500 文字未満（実際: ${m[1].length}）`);
+      check(/boot/.test(m[1]) && !/renderPage|showResult|fetch|addEventListener\('click'/.test(m[1]),
+        '<head> のスクリプトは boot の印だけを扱う（第二の置き場にしない）');
+      /* ★印を HTML に直接書かないこと。書くと JS が無効な環境で永久に隠れる。
+         付ける側が JS なら、JS が動かない環境では最初から全部見えている。 */
+      check(!/<html[^>]*\sclass=/.test(html),
+        'HTML の <html> に印を書いていない（JS が無効でも隠れ続けない）');
+      /* ★組み立てが落ちても隠れ続けないよう、必ず外す保険を持つこと */
+      /* ★[^)]* は使わない。setTimeout(function(){…}) の ")" で止まる */
+      check(/setTimeout\([\s\S]{0,80}classList\.remove\('boot'\)/.test(html),
+        'boot の印を外す保険（タイマー）がある（組み立てが落ちても隠れ続けない）');
+    }
+  }
 
   const styles = html.match(/<style[^>]*>/g) || [];
   check(styles.length === 1, `インライン<style>は1つ（実際: ${styles.length}）`);

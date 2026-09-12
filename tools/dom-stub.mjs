@@ -217,8 +217,13 @@ function build(){
 
 function load(htmlPath, search){
   const html = fs.readFileSync(htmlPath, 'utf8');
-  const m = html.match(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/);
-  if(!m) throw new Error('no inline script');
+  /* ★「最初の1つ」をやめた（2026-09-11・節38）。
+     <head> に小さな起動スクリプト（html.boot の印）が増えたため、
+     最初の1つを取ると本体ではなくそちらを拾い、TD が未定義になった。
+     本体は一番長いもの。数が増えても、ここは本体を指し続ける。 */
+  const all = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)];
+  if(!all.length) throw new Error('no inline script');
+  const m = all.reduce((a,b)=> b[1].length > a[1].length ? b : a);
   const code = m[1];
   const { document, byId, heroInner } = build();
   const store = new Map();
