@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- tools/gen-sitemap.mjs が生成する。直接編集しない（make sitemap） -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://w-t-n-b.github.io/syukatsushindan/</loc></url>
-  <url><loc>https://w-t-n-b.github.io/syukatsushindan/t/HALS.html</loc></url>
-  <url><loc>https://w-t-n-b.github.io/syukatsushindan/t/HALG.html</loc></url>
-  <url><loc>https://w-t-n-b.github.io/syukatsushindan/t/HAWS.html</loc></url>
-  <url><loc>https://w-t-n-b.github.io/syukatsushindan/t/HAWG.html</loc></url>
-  <url><loc>https://w-t-n-b.github.io/syukatsushindan/t/HBLS.html</loc></url>
-  <url><loc>https://w-t-n-b.github.io/syukatsushindan/t/HBLG.html</loc></url>
-  <url><loc>https://w-t-n-b.github.io/syukatsushindan/t/HBWS.html</loc></url>
-  <url><loc>https://w-t-n-b.github.io/syukatsushindan/t/HBWG.html</loc></url>
-  <url><loc>https://w-t-n-b.github.io/syukatsushindan/t/DALS.html</loc></url>
-  <url><loc>https://w-t-n-b.github.io/syukatsushindan/t/DALG.html</loc></url>
-  <url><loc>https://w-t-n-b.github.io/syukatsushindan/t/DAWS.html</loc></url>
-  <url><loc>https://w-t-n-b.github.io/syukatsushindan/t/DAWG.html</loc></url>
-  <url><loc>https://w-t-n-b.github.io/syukatsushindan/t/DBLS.html</loc></url>
-  <url><loc>https://w-t-n-b.github.io/syukatsushindan/t/DBLG.html</loc></url>
-  <url><loc>https://w-t-n-b.github.io/syukatsushindan/t/DBWS.html</loc></url>
-  <url><loc>https://w-t-n-b.github.io/syukatsushindan/t/DBWG.html</loc></url>
-  <url><loc>https://w-t-n-b.github.io/syukatsushindan/privacy.html</loc></url>
+  <url><loc>https://shuukatsu16type.com/</loc></url>
+  <url><loc>https://shuukatsu16type.com/t/HALS.html</loc></url>
+  <url><loc>https://shuukatsu16type.com/t/HALG.html</loc></url>
+  <url><loc>https://shuukatsu16type.com/t/HAWS.html</loc></url>
+  <url><loc>https://shuukatsu16type.com/t/HAWG.html</loc></url>
+  <url><loc>https://shuukatsu16type.com/t/HBLS.html</loc></url>
+  <url><loc>https://shuukatsu16type.com/t/HBLG.html</loc></url>
+  <url><loc>https://shuukatsu16type.com/t/HBWS.html</loc></url>
+  <url><loc>https://shuukatsu16type.com/t/HBWG.html</loc></url>
+  <url><loc>https://shuukatsu16type.com/t/DALS.html</loc></url>
+  <url><loc>https://shuukatsu16type.com/t/DALG.html</loc></url>
+  <url><loc>https://shuukatsu16type.com/t/DAWS.html</loc></url>
+  <url><loc>https://shuukatsu16type.com/t/DAWG.html</loc></url>
+  <url><loc>https://shuukatsu16type.com/t/DBLS.html</loc></url>
+  <url><loc>https://shuukatsu16type.com/t/DBLG.html</loc></url>
+  <url><loc>https://shuukatsu16type.com/t/DBWS.html</loc></url>
+  <url><loc>https://shuukatsu16type.com/t/DBWG.html</loc></url>
+  <url><loc>https://shuukatsu16type.com/privacy.html</loc></url>
 </urlset>

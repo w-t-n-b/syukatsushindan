@@ -239,7 +239,7 @@ function load(htmlPath, search){
       setItem: (k,v) => store.set(k, String(v)),
       removeItem: k => store.delete(k)
     },
-    location: { search: search||'', href: 'https://w-t-n-b.github.io/syukatsushindan/' + (search||''), reload(){}, replace(){} },
+    location: { search: search||'', href: 'https://shuukatsu16type.com/' + (search||''), reload(){}, replace(){} },
     navigator: { clipboard: { writeText: () => Promise.resolve() }, share: undefined },
     alert(){}, scrollY: 0, pageYOffset: 0,
     setTimeout: (fn, ms) => { timers.push(fn); return timers.length; },

@@ -8,4 +8,4 @@ Disallow: /tools/
 Disallow: /Makefile
 Disallow: /README.md
 
-Sitemap: https://w-t-n-b.github.io/syukatsushindan/sitemap.xml
+Sitemap: https://shuukatsu16type.com/sitemap.xml

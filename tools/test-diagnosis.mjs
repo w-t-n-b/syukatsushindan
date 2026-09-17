@@ -340,7 +340,7 @@ console.log('[test] シェアURL');
      16人が同じ default.png を配っていた（＝拡散が誰の結果かを1文字も伝えていない）。
      旧URLはもう配らないが、既に配られたものは生きている。踏んだときに他人の結果を
      出さない分岐（.shared-banner）は上の (4) と e2e が別途守っている。 */
-  check(T.shareUrl('HALS') === 'https://w-t-n-b.github.io/syukatsushindan/t/HALS.html',
+  check(T.shareUrl('HALS') === 'https://shuukatsu16type.com/t/HALS.html',
     `shareUrl('HALS') = ${T.shareUrl('HALS')}`);
   check(!T.shareUrl('HALS').includes('?type='),
     'shareUrl() に ?type= が無い（16枚の og:image を通る経路になっている）');
@@ -352,7 +352,7 @@ console.log('[test] シェアURL');
     check(urls.size === codes.length,
       `shareUrl() が16タイプで16通り（実際: ${urls.size}通り / ${codes.length}タイプ）`);
   }
-  check(T.topUrl() === 'https://w-t-n-b.github.io/syukatsushindan/',
+  check(T.topUrl() === 'https://shuukatsu16type.com/',
     `topUrl() = ${T.topUrl()}（?type= を含まない）`);
   let opened = '';
   T.open = u => { opened = u; };

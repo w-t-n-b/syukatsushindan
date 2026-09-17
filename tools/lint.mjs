@@ -720,6 +720,35 @@ console.log('[lint] 設定の集約');
       .filter(u => mine.test(u) && !u.startsWith(base[1]));
     check(others.length === 0,
       `自サイトを指す絶対URLは SITE_BASE 配下だけ（実際の取り残し: ${others.length}${others.length ? ' → ' + [...new Set(others)].slice(0,3).join(', ') : ''}）`);
+
+    /* ★index.html だけ見ていたのが間違いだった（2026-09-12）。
+       独自ドメインへ移す作業で分かった。手順書は「index.html の6箇所を
+       置換すれば足りる」と書いてあったが、実際はこれだけあった:
+         privacy.html 3 ／ tools/dom-stub.mjs 1 ／ tools/test-diagnosis.mjs 2
+         tools/e2e-driver.html 4 ／ images/ogp/_*.source.html 2
+       **OGP の版下はURLを画像に文字として焼く。** 直さないとカードに
+       旧ドメインが出続ける（make ogp ARGS=--with-default で作り直す）。
+       次に移すときに同じ取りこぼしをしないよう、リポジトリ全体を見る。 */
+    const host = base[1].replace(/^https:\/\//, '').replace(/\/$/, '');
+    const scan = ['privacy.html', 'characters.html', 'robots.txt', 'sitemap.xml',
+      'tools/dom-stub.mjs', 'tools/test-diagnosis.mjs', 'tools/e2e-driver.html',
+      'images/ogp/_default.source.html', 'images/ogp/_type.source.html',
+      't/HALG.html', 't/DBWS.html'];
+    const stale = [];
+    for (const f of scan) {
+      const full = path.join(ROOT, f);
+      if (!fs.existsSync(full)) continue;
+      const txt = fs.readFileSync(full, 'utf8');
+      /* 「自サイトらしいURL」で、いまの host を含まないものを取り残しとみなす */
+      for (const m of txt.matchAll(/(?:https:\/\/)?[a-z0-9.-]+\.(?:com|io|net|jp|org)\/[^\s"'<>)]*/gi)) {
+        const u = m[0];
+        if (u.includes(host)) continue;
+        if (!/syukatsushindan|\/t\/[A-Z]{4}\.html|\/images\/ogp\/|16type/i.test(u)) continue;
+        stale.push(f + ': ' + u);
+      }
+    }
+    check(stale.length === 0,
+      `旧ドメインの取り残しがリポジトリ全体で0件（${scan.length}ファイルを走査。実際: ${stale.length}${stale.length ? ' → ' + stale.slice(0,3).join(' / ') : ''}）`);
   }
   const ga = html.match(/const GA_ID='([^']*)'/);
   check(!!ga, 'GA_ID が定義されている');
@@ -920,7 +949,12 @@ console.log('[lint] 外部への通信先とポリシーの一致');
     for (const m of src.matchAll(/https?:\/\/([a-z0-9.-]+)/gi)) hosts.add(m[1].toLowerCase());
   }
   // 自サイト・リンク先として案内しているだけの参照先は通信を起こさないので除く
-  const SELF = /(^|\.)w-t-n-b\.github\.io$/;
+  /* ★自分のホストを直書きしていた（2026-09-12・ドメイン移行で発覚）。
+     移した瞬間、自分のサイトが「外部へ読み込む先」に化けて落ちた。
+     SITE_BASE から取る。www 付き・無しのどちらでも自分として数える。 */
+  const selfHost = (html.match(/const SITE_BASE='https:\/\/([^/']+)/) || [,''])[1]
+    .replace(/^www\./, '');
+  const SELF = new RegExp('(^|\\.)' + selfHost.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$');
   const LINK_ONLY = new Set([
     'policies.google.com', 'business.safety.google', 'tools.google.com',
     'developers.google.com', 'www.ppc.go.jp', 'twitter.com', 'x.com',

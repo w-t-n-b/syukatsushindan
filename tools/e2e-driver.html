@@ -324,7 +324,7 @@ try{
 
   // og:image が実在するか
   const ogi=d.querySelector('meta[property="og:image"]').content;
-  const r=await fetch(ogi.replace('https://w-t-n-b.github.io/syukatsushindan/',''));
+  const r=await fetch(ogi.replace('https://shuukatsu16type.com/',''));
   chk(r.ok,'og:image が取得できる ('+r.status+') '+ogi);
 
   // ---------- B. 20問通し × 16タイプ（実ブラウザ・実DOM） ----------
@@ -617,8 +617,8 @@ try{
   const SU=w.shareUrl('HALS');
   /* シェア先はタイプページ。ここが16通りの og:image を持つ（D-1）。
      以前は ?type=X&ref=share で、16人が同じ default.png を配っていた。 */
-  chk(SU==='https://w-t-n-b.github.io/syukatsushindan/t/HALS.html','shareUrl(): '+SU);
-  chk(w.topUrl()==='https://w-t-n-b.github.io/syukatsushindan/','topUrl(): '+w.topUrl());
+  chk(SU==='https://shuukatsu16type.com/t/HALS.html','shareUrl(): '+SU);
+  chk(w.topUrl()==='https://shuukatsu16type.com/','topUrl(): '+w.topUrl());
   let opened=null; w.open=(u)=>{opened=u;return null;};
   w.shareX();
   chk(decodeURIComponent(opened).indexOf(SU)>=0,'shareX のツイートURLにサイトURLが入る');
@@ -665,7 +665,7 @@ try{
   Object.defineProperty(w.navigator,'clipboard',{configurable:true,value:{writeText:t=>{copied=t;return Promise.resolve();}}});
   w.alert=()=>{};
   w.copyLink(); await sleep(80);
-  chk(copied==='https://w-t-n-b.github.io/syukatsushindan/','copyLink は診断トップを配る（?type= を含まない）: '+copied);
+  chk(copied==='https://shuukatsu16type.com/','copyLink は診断トップを配る（?type= を含まない）: '+copied);
   w.copyResult(); await sleep(80);
   chk(copied.indexOf('/t/DBWG.html')>=0,'copyResult に自分のタイプページURLが入る: '+copied.slice(-60));
   chk(copied.indexOf('?type=')<0,'copyResult に ?type= が無い（16枚の og:image を通る）');
