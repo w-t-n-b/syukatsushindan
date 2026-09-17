@@ -3135,6 +3135,61 @@ body::after,body::before{content:none;}
    さらに 3秒で必ず外す保険も入れてある（組み立てが落ちても隠れ続けない）。 */
 html.boot #lp-quiz-sec,html.boot #axis-section,
 html.boot #type-section,html.boot .ftr{visibility:hidden;}
+/* ===========================================================================
+   39. 本番（さっこくん版）の装飾を取り込む（2026-09-12・オーナー判断）
+   ---------------------------------------------------------------------------
+   独自ドメインの本番はさっこくん側のリポジトリから配信されていた。
+   こちらへ集約するにあたり、**本番で出ているものを消さない**というのが
+   オーナーの判断。本番にしか無かった装飾を、そのまま持ってくる。
+
+   ・節ごとの余白に薄いキャラを浮かべる（5箇所 × 6体 ＝ 30体）
+   ・節見出し・軸カード・タイプカード・結果パネルがスクロールで出てくる
+   ・回答の目盛を選ぶと一度だけ跳ねる
+   ・タイプカードに hover の浮き
+
+   ★今日の「アニメーションがうるさい（永久ループ17本を全部止めた）」とは
+     方針がぶつかる。ぶつかることは伝えたうえで、オーナーが本番維持を選んだ。
+     ただし本番のまま次の2つは持っている:
+       画面の外にいるあいだは animation-play-state:paused（IntersectionObserver）
+       タブが隠れたら全部 paused（visibilitychange）
+     見えていないものは動かさない、という作りにはなっている。
+   =========================================================================== */
+@keyframes quietFloat{0%,100%{translate:0 0;}50%{translate:5px -14px;}}
+@keyframes quietEnter{from{opacity:0;translate:0 12px;}to{opacity:1;translate:0 0;}}
+@keyframes quietAnswer{50%{scale:1.1;}to{scale:1;}}
+/* ★本番は isolation:isolate を付けていたが、外した。
+   「重ね合わせ文脈を作らない」検査に引っかかる。この検査は、
+   文脈の中に閉じ込められた position:fixed（FABのゲージ）が後続セクションの
+   下へ潜った事故から来ている。実際に一度起きている。
+   下に敷くだけなら position:relative と z-index で足りるので、要らない。 */
+.quiet-host{position:relative;}
+.quiet-host>.wrap,.quiet-host>.quiz-inner,.quiet-host>.pf-inner{position:relative;z-index:1;}
+.quiet-cast{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;}
+.quiet-character{position:absolute;width:130px;height:195px;object-fit:contain;opacity:.2;
+  animation:quietFloat 12s ease-in-out infinite;animation-play-state:paused;visibility:hidden;}
+.quiet-character:nth-child(1){rotate:-9deg;}
+.quiet-character:nth-child(2){rotate:6deg;animation-delay:-4s;animation-duration:15s;}
+.quiet-character:nth-child(3){rotate:11deg;animation-delay:-8s;animation-duration:17s;}
+.quiet-character:nth-child(4){rotate:-5deg;animation-delay:-2s;animation-duration:14s;}
+.quiet-character:nth-child(5){rotate:8deg;animation-delay:-9s;}
+.quiet-character:nth-child(6){rotate:-12deg;animation-delay:-5s;}
+.quiet-host.quiet-band{padding-top:200px!important;}
+.quiet-cast.is-in-view .quiet-character{animation-play-state:running;}
+.quiet-reveal{animation:quietEnter .7s cubic-bezier(.2,.7,.2,1) both;}
+.sdw.sel .sd{animation:quietAnswer .24s ease-out;}
+.tc{transition:transform .25s ease,box-shadow .25s ease;}
+.tc:hover{transform:translateY(-3px);}
+.quiet-paused *,.quiet-paused .hc{animation-play-state:paused!important;}
+@media(max-width:900px){
+  /* 狭い幅では読む列を削らない。節の既存の余白の中だけを使う */
+  .quiet-character{width:65px;height:78px;opacity:.13;}
+  .quiz-bg>.quiet-cast,.pf-wrap>.quiet-cast{display:none;}
+}
+@media(prefers-reduced-motion:reduce){
+  .quiet-character,.quiet-reveal,.sdw.sel .sd{animation:none!important;translate:none!important;opacity:1;}
+  .quiet-character{opacity:.12;}
+  .tc{transition:none;}
+}
 </style>
 <script>
 /* 節38。組み立てが終わるまでヒーローより下を描かない。
@@ -5272,6 +5327,77 @@ function renderSharedBanner(code){
     box.appendChild(im);
   }
   hero.insertBefore(box,inner);                            /* 装飾円の後・.hero-inner の前 */
+})();
+/* 節39。本番（さっこくん版）にあった装飾。オーナー判断で取り込む。
+   ★飾りだけ。スクロールを奪わない・操作を遅らせない・点数に触らない。 */
+(function quietMotion(){
+  if(typeof document.querySelectorAll!=='function'||typeof matchMedia!=='function')return;
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+  const placements=[['#lp-quiz-sec','a2','d2'],['#axis-section','b1','c2'],['#type-section','c3','b4'],['.quiz-bg','b3','d1'],['.pf-wrap','a1','b2']];
+  for(const [selector,left,right] of placements){
+    const host=document.querySelector(selector);if(!host)continue;
+    host.classList.add('quiet-host');
+    const cast=document.createElement('div');cast.className='quiet-cast';cast.setAttribute('aria-hidden','true');
+    for(const code of [left,right,'c4','d3','a4','b2']){
+      const img=new Image(130,195);img.className='quiet-character';img.alt='';img.loading='lazy';img.decoding='async';
+      img.src=cv('images/chars/sm/'+code+'.webp');cast.appendChild(img);
+    }
+    host.appendChild(cast);
+  }
+  /* 置き場所は「読む列の外側の余白」。余白が足りない幅では帯として上に置く */
+  const arrange=()=>{
+    document.querySelectorAll('.quiet-host').forEach(host=>{
+      const cast=host.querySelector('.quiet-cast'),content=host.querySelector('.wrap,.quiz-inner,.pf-inner');
+      if(!cast||!content)return;
+      const bounds=host.getBoundingClientRect(),body=content.getBoundingClientRect();
+      const gutter=Math.min(body.left-bounds.left,bounds.right-body.right)-20;
+      const band=gutter<90;
+      /* ★本番と1点だけ変える。本番は余白が足りない幅で「帯」に切り替え、
+         節の上に padding-top:200px を足してそこにキャラを並べる。
+         実測（本番 shuukatsu16type.com）:
+           390x844  Q1の上端 735px（カード全体が画面に入らない）
+           320x568  Q1の上端 779px（画面の外）
+         オーナーの明示指示「最初に開いた画面で質問文が見えているように」と
+         正面からぶつかる。**読む列を削らない**という本番自身のコメントとも
+         ぶつかっている。狭い幅では帯を作らず、飾りを出さない。
+         余白が実在する幅（PC）では本番と同じ見え方になる。 */
+      host.classList.remove('quiet-band');
+      cast.style.display=band?'none':'';
+      if(band)return;
+      cast.querySelectorAll('.quiet-character').forEach((img,i)=>{
+        const w=Math.min(115,gutter-16);
+        img.style.width=w+'px';img.style.height=(w*1.5)+'px';
+        img.style.left=(i%2?bounds.width-w-12:12)+'px';
+        img.style.top=Math.max(30,(host.offsetHeight-210)*i/6+30)+'px';
+        img.style.visibility='visible';
+      });
+    });
+  };
+  const schedule=()=>requestAnimationFrame(arrange);
+  if(typeof requestAnimationFrame==='function'){
+    schedule();window.addEventListener('resize',schedule,{passive:true});
+    if(typeof ResizeObserver==='function'){
+      const sizes=new ResizeObserver(schedule);document.querySelectorAll('.quiet-host').forEach(el=>sizes.observe(el));
+    }
+  }
+  if(typeof IntersectionObserver==='function'){
+    /* 画面の外にいるあいだは止める */
+    const floats=new IntersectionObserver(es=>es.forEach(e=>e.target.classList.toggle('is-in-view',e.isIntersecting)),{threshold:0});
+    document.querySelectorAll('.quiet-cast').forEach(el=>floats.observe(el));
+    const reveal=new IntersectionObserver(es=>es.forEach(e=>{
+      if(e.isIntersecting){if(!reduced.matches)e.target.classList.add('quiet-reveal');reveal.unobserve(e.target);}
+    }),{threshold:.1});
+    const seen=new WeakSet();
+    const watch=()=>document.querySelectorAll('.sec-title,.ax-card,.tc,.r-panel,.pf-field').forEach(el=>{if(!seen.has(el)){seen.add(el);reveal.observe(el);}});
+    const start=()=>{
+      watch();
+      const result=document.getElementById('screen-result');
+      if(result&&typeof MutationObserver==='function')new MutationObserver(watch).observe(result,{childList:true});
+    };
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+  }
+  /* タブが隠れたら全部止める */
+  document.addEventListener('visibilitychange',()=>document.documentElement.classList.toggle('quiet-paused',document.hidden));
 })();
 </script>
 </body>
