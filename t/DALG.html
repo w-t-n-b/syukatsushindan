@@ -74,14 +74,23 @@ a{color:var(--cat-ink);}
 .hero .wrap{position:relative;z-index:1;text-align:center;}
 .crumb{font-size:.72rem;color:#8792a8;margin-bottom:14px;}
 .crumb a{color:#c3cbdd;}
+/* ★文字色を --navy(#1b1b1f) から白へ（2026-09-12・オーナー指摘「見えづらい」）。
+   実測 #1b1b1f on #124296 = 1.84:1。AA の 4.5:1 の半分も無い。16ページ全部。
+   白にすると 9.35:1。地（--cat）は4系統とも濃いので、白なら全部 4.9:1 以上。
+   薄い枠線も外す。塗りつぶしの札に薄いグレーの縁は、にじんで見える。 */
 .pill{display:inline-block;font-family:var(--lat);font-size:.72rem;font-weight:700;
-  letter-spacing:2px;color:var(--navy);background:var(--cat);
-  border:1px solid var(--border);border-radius:3px;padding:4px 11px;
+  letter-spacing:2px;color:#fff;background:var(--cat);
+  border:0;border-radius:3px;padding:5px 12px;
   box-shadow:none;margin-bottom:12px;}
-.face{width:186px;height:279px;margin:0 auto 16px;background:#f7f6f3;
-  border:1px solid var(--border);border-radius:8px;overflow:hidden;
-  box-shadow:none;}
-.face img{width:100%;height:100%;object-fit:cover;object-position:50% 4%;}
+/* ★クリーム色の板をやめる（2026-09-12・オーナー指摘「透過されてない」）。
+   絵そのものは透過を持っている（webp の VP8X に ALPH フラグあり）。
+   透けていないように見えていたのは、この background:#f7f6f3 のせい。
+   ★あわせて cover → contain。絵は 480x640(0.75)、枠は 220x330(0.667) で、
+     cover だと**左右が切られていた**（板があったので気づけなかった）。
+     板が無くなれば余白は地と同じなので、contain で切らずに置ける。 */
+.face{width:186px;height:279px;margin:0 auto 16px;background:none;
+  border:0;border-radius:0;box-shadow:none;}
+.face img{width:100%;height:100%;object-fit:contain;object-position:50% 50%;}
 .code{font-family:var(--mincho);font-weight:400;font-size:1.6rem;letter-spacing:.3em;
   color:var(--cat);line-height:1;}
 h1{font-family:var(--mincho);font-weight:600;font-size:1.72rem;line-height:1.4;letter-spacing:.04em;

@@ -2806,6 +2806,40 @@ try{
     f.style.width='390px'; f.style.height='844px';
   }
 
+  /* ---------- タイプページ（t/*.html）を実際に開いて測る ----------
+     ★ここまで e2e はタイプページを一度もブラウザで開いていなかった。
+       lint が og:image とリンクの字面だけを見ていて、**画面を誰も見ていない**。
+       そのためオーナー指摘の2件が16ページぶん残っていた:
+         バッジ  #1b1b1f on #124296 = 1.84:1（AA 4.5:1 の半分も無い）
+         キャラ  透過の絵の後ろに background:#f7f6f3 の板が敷いてあった
+       4系統の代表を開いて、地と文字を実測する。 */
+  {
+    p('\n[type] タイプページ');
+    for(const code of ['HALG','HBLG','DALG','DBLG']){
+      await load('../t/'+code+'.html');
+      const td=f.contentDocument, tw=f.contentWindow;
+      const T='('+code+') ';
+      const pill=td.querySelector('.pill'), face=td.querySelector('.face');
+      if(!pill||!face){ chk(false,T+'.pill と .face がある'); continue; }
+      const pc=getComputedStyle(pill);
+      /* ★このファイルの ratio() は輝度を取る（色文字列ではない）。
+         色を渡したら NaN になり、4ページとも NG で出た。
+         局所的に ratio を色文字列で呼べる節が別にあるので取り違えやすい。 */
+      const toRGB=v=>(v.match(/\d+/g)||[0,0,0]).slice(0,3).map(Number);
+      const r=ratio(lum(...toRGB(pc.color)),lum(...toRGB(pc.backgroundColor)));
+      chk(r>=4.5,T+'系統バッジが地から読める（AA 4.5:1）: '+r.toFixed(2)+':1 '+pc.color+' on '+pc.backgroundColor);
+      /* 透過の絵の後ろに色を敷かない。敷くと「透過されていない」に見える */
+      const fbg=getComputedStyle(face).backgroundColor;
+      chk(/rgba\(0, 0, 0, 0\)|transparent/.test(fbg),
+          T+'キャラの後ろに板を敷かない（絵は透過を持っている）: '+fbg);
+      /* 枠に合わせて絵を切らない。480x640 を 220x330 に cover すると左右が切れる */
+      const im=face.querySelector('img');
+      chk(getComputedStyle(im).objectFit==='contain',
+          T+'キャラを枠に合わせて切らない（object-fit:contain）: '+getComputedStyle(im).objectFit);
+    }
+    await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(80);
+  }
+
   p('\n===== '+(fail===0?'ALL PASS':fail+' FAILURES')+' =====');
 }catch(e){p('EXCEPTION: '+(e&&e.stack||e));p('\n===== EXCEPTION =====');}
 document.title='DONE';
