@@ -703,8 +703,23 @@ console.log('[lint] 設定の集約');
   check(!!base, 'SITE_BASE が定義されている');
   if (base) {
     check(base[1].endsWith('/'), `SITE_BASE は末尾スラッシュ付き（${base[1]}）`);
-    const abs = [...html.matchAll(/https:\/\/w-t-n-b\.github\.io\/syukatsushindan\//g)].length;
+    /* ★ドメインを直書きしない（2026-09-12）。SITE_BASE から数える。
+       固定で書くと、独自ドメインへ移した瞬間に 0 箇所と数えて静かに通る。 */
+    const esc1 = base[1].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const abs = [...html.matchAll(new RegExp(esc1, 'g'))].length;
     ok(`絶対URLの直書きは ${abs} 箇所（<head>のOGP群 + SITE_BASE。移行時はここだけ置換する）`);
+    check(abs === 6, `絶対URLの直書きは6箇所ちょうど（<head>5 + SITE_BASE 1。実際: ${abs}）`);
+    /* 旧ドメインの取り残しを拾う。移行が中途半端だと OGP だけ古い先を指す。
+       ★「外部サービスを除外する」書き方にしたら、共有先（Twitter/LINE）と
+         掲載枠のダミー（example.com）を自サイト扱いして落ちた。
+         除外を数える形は、新しい外部先が増えるたびに落ちる。
+         **こちらのページを指しているURL**だけを見る形にする。 */
+    const mine = /\/t\/[A-Z]{4}\.html|\/images\/ogp\/|\/privacy\.html|syukatsushindan/;
+    const others = [...html.matchAll(/https:\/\/[a-z0-9.-]+\/[^"'\s)]*/gi)]
+      .map(m => m[0])
+      .filter(u => mine.test(u) && !u.startsWith(base[1]));
+    check(others.length === 0,
+      `自サイトを指す絶対URLは SITE_BASE 配下だけ（実際の取り残し: ${others.length}${others.length ? ' → ' + [...new Set(others)].slice(0,3).join(', ') : ''}）`);
   }
   const ga = html.match(/const GA_ID='([^']*)'/);
   check(!!ga, 'GA_ID が定義されている');

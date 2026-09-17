@@ -770,7 +770,21 @@ try{
     chk(/if\(!GA_ID\)return;/.test(w.eval('String(initGA)')),'GA_ID が空なら initGA は何もしない');
     chk(/if\(!GA_ID\)return;/.test(w.eval('String(track)')),'GA_ID が空なら track は送らない');
   }
-  chk(w.eval('SITE_BASE')==='https://w-t-n-b.github.io/syukatsushindan/','SITE_BASE');
+  /* ★ドメインを直書きしない（2026-09-12）。
+     独自ドメインへ移す作業が「index.html の1値を置換」で済むようにする。
+     ここで値を固定すると、移した瞬間に検査が落ちて、落ちた理由が
+     「壊れた」ではなく「検査が古い」になる。見たいのは値そのものではなく、
+     **JS の SITE_BASE と <head> の絶対URLが食い違っていないこと**。 */
+  {
+    const sb=w.eval('SITE_BASE');
+    const can=d.querySelector('link[rel="canonical"]');
+    const ogu=d.querySelector('meta[property="og:url"]');
+    chk(/^https:\/\/[^/]+\/.*\/$|^https:\/\/[^/]+\/$/.test(sb),'SITE_BASE は https で末尾スラッシュ付き: '+sb);
+    chk(!!can&&can.href===sb,'SITE_BASE と <link rel=canonical> が一致: '+(can&&can.href));
+    chk(!!ogu&&ogu.content===sb,'SITE_BASE と og:url が一致: '+(ogu&&ogu.content));
+    chk(w.eval('topUrl()')===sb,'topUrl() が SITE_BASE を返す');
+    chk(w.eval("shareUrl('HALG')")===sb+'t/HALG.html','shareUrl() が SITE_BASE から組まれる');
+  }
   chk(w.eval('AGENTS.length')===0,'出荷時の AGENTS は0件');
 
   // ---------- G-0. 副CTA・ドロワーの導線 ----------
