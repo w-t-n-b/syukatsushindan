@@ -3190,6 +3190,55 @@ html.boot #type-section,html.boot .ftr{visibility:hidden;}
   .quiet-character{opacity:.12;}
   .tc{transition:none;}
 }
+/* ===========================================================================
+   40. 結果画面のLINE導線（2026-09-24・オーナー指示）
+   ---------------------------------------------------------------------------
+   LINE公式アカウント「キャリアの窓口」への友だち追加。結果画面に2箇所。
+
+   ★置き場所は測って決める。決め打ちしない。
+     上（.line-cta-top）   … タイプ名・惹句・有名人を読んだ直後。シェアより前。
+                             結果を見た満足が一番高い瞬間で、最初に出す行動。
+     下（.line-cta-bottom）… 全パネルを読み終えたあと、「もう一度」の前。
+                             読み込んだ人ほど動機が強い、という逆の仮説。
+     どちらが効くかは track('line_click',{position}) が分ける。
+
+   ★色は #0b8043（濃いLINE緑）。lint の許可色に既に入っている。
+     本家の #06C755 は白地で 2.26:1 しか無く AA を満たさない。
+     濃い側なら 5.02:1。ブランドの識別は保てる。
+   ★面は塗らない。塗ると「押す場所＝赤」の規則と競合して、
+     画面の中で一番強い色が2つになる。枠と文字で立たせる。
+   =========================================================================== */
+.line-cta{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 16px;margin-bottom:12px;
+  background:var(--paper);
+  border:var(--bd) solid #0b8043;border-radius:6px;
+  box-shadow:3px 3px 0 rgba(11,128,67,.18);
+  text-decoration:none;color:var(--ink);
+  transition:transform .15s,box-shadow .15s;
+}
+.line-cta:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 rgba(11,128,67,.24);}
+.line-cta:active{transform:translate(3px,3px);box-shadow:0 0 0 rgba(11,128,67,.24);}
+.line-cta:focus-visible{outline:3px solid #0b8043;outline-offset:3px;}
+.line-cta-mark{
+  flex:0 0 auto;font-family:var(--lat);font-weight:800;font-size:.72rem;letter-spacing:.06em;
+  color:#ffffff;background:#0b8043;border-radius:4px;padding:6px 8px;line-height:1;
+}
+/* ★結果ヒーローは中央寄せなので、そのままだと文言が中央で折り返して
+   「受け／取る」のように割れる。読む列は左寄せにする。 */
+.line-cta-body{display:flex;flex-direction:column;gap:3px;min-width:0;text-align:left;}
+.line-cta-t{font-weight:700;font-size:.94rem;line-height:1.45;}
+.line-cta-s{font-size:.78rem;line-height:1.5;color:var(--mid);}
+.line-cta-arw{flex:0 0 auto;margin-left:auto;color:#0b8043;font-weight:700;}
+@media(max-width:480px){
+  .line-cta{padding:12px 13px;gap:10px;}
+  .line-cta-t{font-size:.9rem;}
+  .line-cta-s{font-size:.74rem;}
+}
+@media(prefers-reduced-motion:reduce){
+  .line-cta{transition:none;}
+  .line-cta:hover,.line-cta:active{transform:none;}
+}
 </style>
 <script>
 /* 節38。組み立てが終わるまでヒーローより下を描かない。
@@ -3509,6 +3558,10 @@ html.boot #type-section,html.boot .ftr{visibility:hidden;}
    この1行と、<head> の SITE BASE ブロック内の5箇所を書き換えれば全部追従する。
    末尾のスラッシュは必須。 */
 const SITE_BASE='https://shuukatsu16type.com/';
+/* LINE公式アカウント「キャリアの窓口」@234mdmvy の友だち追加URL。
+   ★直書きは1箇所だけ。増やすと、アカウントを変えたときに片方が残る。
+   空にすると導線ごと消える（GA_ID と同じ逃げ道）。 */
+const LINE_URL='https://line.me/R/ti/p/@234mdmvy';
 /* ★キャラクター画像の指紋。ファイル名（a1.webp …）は変わらないので、
    中身だけ差し替えるとブラウザは古い画像を出し続ける。実際にそれで
    「サイズがばらついて見える」という報告が上がった（画面の実測は揃っていたのに、
@@ -5016,6 +5069,7 @@ function showResult(_unusedSkipIntro=false,source='quiz'){
         <div class="rarity-row"><span class="rar-badge">20問・4軸による傾向の分類です</span></div>
         <div class="res-kws">${t.kw.map(k=>`<span class="res-kw">${k}</span>`).join('')}</div>
         <div class="famous-box"><div class="famous-text"><span>${TYPE_ARCHETYPE[code]}</span></div></div>
+        ${lineCta('top',code)}
         <div class="share-grid" style="margin-bottom:8px;">
           <button class="sh sh-x rpl" onclick="addRipple(event,this);shareX('hero')">𝕏 シェア</button>
           <button class="sh sh-ln rpl" onclick="addRipple(event,this);shareLINE('hero')">LINE 送信</button>
@@ -5036,8 +5090,9 @@ function showResult(_unusedSkipIntro=false,source='quiz'){
       ${compatSec(t.good,'good','相性の良いタイプ')}
       ${compatSec(t.bad,'bad','注意が必要なタイプ')}
       <div class="r-panel fade-in"><div class="r-ph always" style="cursor:default;"><div class="r-pt">結果をシェア</div></div><div class="r-pb always"><div class="share-grid"><button class="sh sh-x rpl" onclick="addRipple(event,this);shareX('panel')">𝕏 シェア</button><button class="sh sh-ln rpl" onclick="addRipple(event,this);shareLINE('panel')">LINE 送信</button><button class="sh sh-cp rpl" onclick="addRipple(event,this);copyResult('panel')">コピー</button></div></div></div>
-      ${buildAgentBlock('secondary',cat,code,source)}
-      <button class="retry-btn rpl" onclick="addRipple(event,this);clearSavedProgress();location.reload()">もう一度診断する →</button>
+        ${lineCta('bottom',code)}
+        ${buildAgentBlock('secondary',cat,code,source)}
+        <button class="retry-btn rpl" onclick="addRipple(event,this);clearSavedProgress();location.reload()">もう一度診断する →</button>
       <div style="height:50px;"></div>
     </div>
   </div>`;
@@ -5068,6 +5123,22 @@ function showResult(_unusedSkipIntro=false,source='quiz'){
      .shared-banner の分岐は消さないこと。
    ========================================================================= */
 function shareUrl(code){return SITE_BASE+'t/'+encodeURIComponent(code)+'.html';}
+/* 結果画面のLINE導線。pos は 'top'（結果を読んだ直後）/ 'bottom'（読み終わり）。
+   ★2箇所に置くのは、どちらが効くかを測るため。position で分かれて記録される。
+     片方に決め打ちすると、決め打ちが正しかったか永久に分からない。 */
+function lineCta(pos,code){
+  if(!LINE_URL)return '';
+  return '<a class="line-cta line-cta-'+pos+'" href="'+LINE_URL+'"'
+    +' target="_blank" rel="noopener noreferrer"'
+    +' onclick="track(\'line_click\',{position:\''+pos+'\',type_code:\''+code+'\'})">'
+    +'<span class="line-cta-mark" aria-hidden="true">LINE</span>'
+    +'<span class="line-cta-body">'
+    +'<span class="line-cta-t">あなたに合う職場の見分け方を受け取る</span>'
+    +'<span class="line-cta-s">'+(pos==='top'
+        ?'診断結果をもとに、就活の進め方をLINEでお届けします'
+        :'ここまで読んだあなたへ。続きはLINEでお届けします')+'</span>'
+    +'</span><span class="line-cta-arw" aria-hidden="true">\u2192</span></a>';
+}
 function topUrl(){return SITE_BASE;}
 
 /* クリップボードは HTTPS 以外・古い端末・権限拒否で失敗する。

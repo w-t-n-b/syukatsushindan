@@ -750,6 +750,23 @@ console.log('[lint] 設定の集約');
     check(stale.length === 0,
       `旧ドメインの取り残しがリポジトリ全体で0件（${scan.length}ファイルを走査。実際: ${stale.length}${stale.length ? ' → ' + stale.slice(0,3).join(' / ') : ''}）`);
   }
+  /* ★LINE の友だち追加URLも1箇所に集約する。増やすと、アカウントを
+     変えたときに片方が古いまま残る（ドメイン移行で実際に起きた）。 */
+  const line = html.match(/const LINE_URL='([^']*)'/);
+  check(!!line, 'LINE_URL が定義されている');
+  if (line && line[1]) {
+    check(/^https:\/\/(line\.me|lin\.ee)\//.test(line[1]),
+      `LINE_URL が LINE の公式ドメイン（実際: ${line[1]}）`);
+    /* ★「line.me を全部数える」ではダメ。結果のシェアが使う
+       https://line.me/R/msg/text/ を巻き込んで2件になった。別の機能なので、
+       **友だち追加の形**（/R/ti/p/ か lin.ee）だけを数える。 */
+    const lit = [...html.matchAll(/https:\/\/(?:line\.me\/R\/ti\/p\/|lin\.ee\/)[^'"\s)]*/g)].map(m => m[0]);
+    check(lit.length === 1,
+      `LINE の友だち追加URLの直書きは1箇所だけ（実際: ${lit.length}${lit.length > 1 ? ' → ' + lit.join(', ') : ''}）`);
+  }
+  check(/if\(!LINE_URL\)return ''/.test(html),
+    'LINE_URL が空なら導線を出さない分岐がある（GA_ID と同じ逃げ道）');
+
   const ga = html.match(/const GA_ID='([^']*)'/);
   check(!!ga, 'GA_ID が定義されている');
   // 空に戻せば外部送信が完全に止まる、という逃げ道は残し続ける。

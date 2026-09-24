@@ -668,6 +668,36 @@ try{
   chk(copied==='https://shuukatsu16type.com/','copyLink は診断トップを配る（?type= を含まない）: '+copied);
   w.copyResult(); await sleep(80);
   chk(copied.indexOf('/t/DBWG.html')>=0,'copyResult に自分のタイプページURLが入る: '+copied.slice(-60));
+
+  /* ---------- LINE導線（2026-09-24）----------
+     結果画面から LINE公式アカウントへ送る。掲載枠を持たず LINE に流す方針。
+     ★2箇所に置いて、どちらが効くかを track の position で測る。
+       置き場所を決め打ちすると、決め打ちが正しかったか分からない。 */
+  {
+    const ctas=[...d.querySelectorAll('.line-cta')];
+    chk(ctas.length===2,'結果画面に LINE導線が2つ（結果直後と読み終わり）: '+ctas.length+'個');
+    const pos=ctas.map(e=>(e.className.match(/line-cta-(top|bottom)/)||[])[1]);
+    chk(pos.indexOf('top')>=0&&pos.indexOf('bottom')>=0,'top と bottom が揃っている: '+pos.join(','));
+    const url=w.eval('LINE_URL');
+    chk(ctas.every(e=>e.getAttribute('href')===url),'href が LINE_URL と一致: '+url);
+    /* 別タブで開く先には必ず noopener。無いと開いた先から window.opener を触れる */
+    chk(ctas.every(e=>e.getAttribute('target')==='_blank'&&/noopener/.test(e.getAttribute('rel')||'')),
+        '別タブで開き、rel に noopener がある');
+    chk(ctas.every(e=>/track\('line_click'/.test(e.getAttribute('onclick')||'')),
+        '押下が line_click として記録される（position 付き）');
+    /* ★上のCTAはシェアより前。結果を読んだ満足が一番高い瞬間に、最初の行動として出す */
+    const top=d.querySelector('.line-cta-top'), sg=d.querySelector('.share-grid');
+    chk(!!top&&!!sg&&(top.compareDocumentPosition(sg)&Node.DOCUMENT_POSITION_FOLLOWING)!==0,
+        '結果直後のLINE導線がシェアボタンより前にある');
+    /* 色。LINE緑は lint の許可色だが、実画面で AA を満たすことは別に見る */
+    const toRGB=v=>(v.match(/\d+/g)||[0,0,0]).slice(0,3).map(Number);
+    const mk=getComputedStyle(top.querySelector('.line-cta-mark'));
+    const r1=ratio(lum(...toRGB(mk.color)),lum(...toRGB(mk.backgroundColor)));
+    chk(r1>=4.5,'LINEの章票が読める（AA 4.5:1）: '+r1.toFixed(2)+':1');
+    const bd=getComputedStyle(top);
+    const r2=ratio(lum(...toRGB(bd.color)),lum(...toRGB(bd.backgroundColor)));
+    chk(r2>=4.5,'LINE導線の本文が読める（AA 4.5:1）: '+r2.toFixed(2)+':1');
+  }
   chk(copied.indexOf('?type=')<0,'copyResult に ?type= が無い（16枚の og:image を通る）');
 
   // ---------- D. ref=share 分岐 ----------
