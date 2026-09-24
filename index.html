@@ -3285,6 +3285,53 @@ html.boot #type-section,html.boot .ftr{visibility:hidden;}
   #screen-result .r-panel>.r-ph{max-width:none;}
   .result-inner{max-width:448px;}
 }
+/* ===========================================================================
+   43. PCで結果ヒーローを2列に（2026-09-24・オーナー指摘）
+   ---------------------------------------------------------------------------
+   「縦が長いことが課題というより、幅が狭いことが課題。
+     内容そのままでPCにおいては、幅を広げて表示することはできないかしら」
+
+   節42で本文は 860px に広げたが、**ヒーローだけ 448px のまま**だった。
+   1440px の画面で絵も名前もボタンも 448px の柱に縦積みになり、
+   左右に 500px ずつ余っていた。狭く見える正体はここ。
+
+   実測（変更前・1440px）: ヒーロー 1106px のうち キャラの絵が 400px。
+   絵と文字を横に並べれば、同じ内容のまま幅を使い切り、縦も縮む。
+
+   ★スマホ（<1024px）は1列のまま。縦に積むほうが読みやすい幅なので触らない。
+   ★中身は1つも減らさない。並べ替えるだけ。
+   =========================================================================== */
+@media(min-width:1024px){
+  .result-inner{
+    /* ★828px。下のパネルと左右の端をそろえる。
+       .wrap は 860px で左右16pxの内側余白があるので、中身は 828px。
+       860 のままだと柱だけ16pxずつ外へ出て、左端が食い違う（実測 290 vs 306）。 */
+    max-width:828px;
+    display:grid;
+    grid-template-columns:360px minmax(0,1fr);
+    grid-auto-rows:min-content;
+    align-content:start;
+    column-gap:36px;
+    text-align:left;
+  }
+  /* 絵は左の列いっぱいに。縦は中身の高さに合わせる */
+  .result-inner>.char-frame{
+    grid-column:1;grid-row:1 / span 12;
+    align-self:start;margin:0;
+  }
+  /* 文字とボタンは右の列へ、上から順に */
+  .result-inner>:not(.char-frame){grid-column:2;}
+  .result-inner>.res-announce{margin-bottom:10px;justify-content:flex-start;}
+  /* ★.res-code は1列のとき margin-top:-26px で絵に食い込ませている。
+     2列では上にあるのが絵ではなく「CAREER TYPE RESULT」なので、
+     そのまま食い込むと重なって読めない（実際に重なった）。打ち消す。 */
+  .result-inner>.res-code{text-align:left;margin-top:0;}
+  .result-inner>.rarity-row,
+  .result-inner>.res-kws{justify-content:flex-start;}
+  /* シェアは3つ並びのまま。右の列（約460px）なら1つ150px前後に収まる */
+  .result-inner>.share-grid{margin-top:4px;}
+  .result-inner>.friend-card{text-align:center;}
+}
 </style>
 <script>
 /* 節38。組み立てが終わるまでヒーローより下を描かない。

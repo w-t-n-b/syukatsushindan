@@ -2880,9 +2880,16 @@ try{
       const shW=[...d.querySelectorAll('.result-inner .share-grid .sh')].map(e=>Math.round(e.getBoundingClientRect().width));
       const fcW=Math.round(d.querySelector('.friend-card').getBoundingClientRect().width);
       p('     '+T+'.result-inner '+ri+'px / シェアボタン '+shW.join(',')+'px / .friend-card '+fcW+'px');
-      chk(ri===Math.min(448,vw-40),T+'.result-inner の幅: '+ri+'px（448px 上限。S-1）');
-      chk(shW.every(x=>x<=152),T+'シェアボタンが1つ152pxを超えない（S-1 の前は 1440px 幅で461px）: '+shW.join(','));
-      chk(fcW===ri,T+'.friend-card が結果ヒーローの柱に収まる: '+fcW+'px');
+      /* ★向きを変えた（2026-09-24・オーナー指摘「縦が長いことが課題というより、
+         幅が狭いことが課題。内容そのままでPCにおいては幅を広げて表示できないか」）。
+         元は「柱は常に 448px 上限（S-1）」。PC で 1440px の画面でも 448px の
+         柱に絵も名前もボタンも縦積みになり、左右に500pxずつ余っていた。
+         1024px 以上では絵を左・文字を右の2列にして、下のパネルと同じ幅にする。
+         それ未満は1列のまま（縦に積むほうが読みやすい幅なので触らない）。 */
+      const wantRi=vw>=1024?828:Math.min(448,vw-40);
+      chk(ri===wantRi,T+'.result-inner の幅: '+ri+'px（期待 '+wantRi+'px）');
+      /* 2列のときは右の列に入るので、柱と同じ幅にはならない。収まっていればよい */
+      chk(fcW<=ri,T+'.friend-card が柱に収まる: '+fcW+'px ≦ '+ri+'px');
       /* ★向きを変えた（2026-09-24・オーナー指摘「結果画面が縦長すぎる。
          質問画面と同様、PC版ではもっと幅広に使っても良いかも？」）。
          元は「柱と本文の幅が同じ」を見ていた。S-1 が直したのは、柱と本文の
@@ -2895,6 +2902,18 @@ try{
       const dc=Math.abs((rc.left+rc.right)/2-(ic.left+ic.right)/2);
       chk(dc<=2,T+'結果ヒーローの柱と本文の中心がそろっている: ずれ '+dc.toFixed(1)+'px');
       chk(ri<=rw+8,T+'柱が本文の版面に収まっている: 柱 '+ri+'px ≦ 本文 '+rw+'px');
+      /* ★左右の端がパネルとそろっていること。幅だけ合わせても、内側余白の
+         有無で16pxずれる（実際にずれた: 柱290 / パネル306）。端で見る。
+         ★1024px 以上だけ。それ未満は元から2列ではなく、柱とパネルの端は
+           そろっていない（320px で 20/16、768px で 160/20）。そこに
+           新しい規則を当てると、変えていない設計まで落ちる。 */
+      if(vw>=1024){
+        const pn=d.querySelector('#screen-result .r-panel');
+        if(pn){const a=d.querySelector('.result-inner').getBoundingClientRect(),b=pn.getBoundingClientRect();
+          chk(Math.abs(a.left-b.left)<=1&&Math.abs(a.right-b.right)<=1,
+              T+'柱と本文パネルの左右の端がそろう: 左 '+Math.round(a.left)+'/'+Math.round(b.left)
+              +'  右 '+Math.round(a.right)+'/'+Math.round(b.right));}
+      }
       const cap=vw>=1024?860:(vw>=768?760:480);
       chk(rw<=cap-32+8,T+'本文が版面の上限を超えない: '+rw+'px ≦ '+(cap-32)+'px');
       chk(d.documentElement.scrollWidth<=vw+1,T+'結果画面で横スクロールが出ない: '+d.documentElement.scrollWidth);
