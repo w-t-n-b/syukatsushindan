@@ -311,6 +311,33 @@ try{
   await sleep(1200);
   chk(typeof w.showResult==='function' && typeof w.buildAgentBlock==='function','スクリプトが最後まで評価された（HTMLパース破壊なし）');
   chk(d.querySelectorAll('#type-overview .tc').length===16,'16タイプグリッドが生成された: '+d.querySelectorAll('#type-overview .tc').length);
+
+  /* ---------- 横に並ぶキャラの大きさ（2026-09-24・オーナー指示）----------
+     「横並びになる時と結果画面での単体表示で見せ方を変えて」。
+     素材は『胴体で揃える』で焼いてあり（gen-chars.py の MANUAL_EXTRA、
+     a2:1.39 / a4:1.33 / c4:1.55）、この3体だけ描かれている範囲が大きい。
+       実測のインク高: 13体 393〜398 ／ a2 555 / a4 556 / c4 629（1.60倍）
+     横に並ぶ場所では CSS で縮めて、画面上の大きさをそろえる。
+     ★素材は焼き直さない。焼き直すと結果画面の単体表示まで変わる。
+     ★getBoundingClientRect は変形後の値を返す。倍率を二重に数えるので
+       offsetWidth/Height（レイアウト値）で測ること。実際に一度間違えた。 */
+  {
+    const INK={a1:398,a2:555,a3:398,a4:556,b1:395,b2:396,b3:394,b4:393,
+               c1:397,c2:396,c3:395,c4:629,d1:396,d2:393,d3:394,d4:396};
+    const imgs=[...d.querySelectorAll('#type-overview .tc>img[data-c]')];
+    chk(imgs.length===16,'16タイプ一覧のキャラに data-c が付いている: '+imgs.length+'体');
+    const hs=imgs.map(im=>{
+      const k=parseFloat((getComputedStyle(im).transform.match(/matrix\(([-\d.]+)/)||[,1])[1])||1;
+      const fit=Math.min(im.offsetWidth/480,im.offsetHeight/640);
+      return Math.round(INK[im.dataset.c]*fit*k);
+    });
+    const lo=Math.min(...hs), hi=Math.max(...hs);
+    chk(hi/lo<=1.06,'横に並ぶキャラの大きさがそろう: '+lo+'〜'+hi+'px（'+(hi/lo).toFixed(2)+'倍）');
+    /* 単体表示（結果画面）は素材のまま。縮めていないこと */
+    const res=d.querySelector('.res-char');
+    if(res)chk(getComputedStyle(res).transform==='none',
+      '結果画面の単体表示は素材のまま（縮めない）: '+getComputedStyle(res).transform);
+  }
   chk(d.body.dataset.screen==='screen-title','body[data-screen]=screen-title');
   chk(d.querySelectorAll('.hero-stats,.hstat,#stat-count').length===0,'ヒーローの3連統計カードは削除された');
   chk(/20問・約3分/.test(d.querySelector('.hero-sub').textContent),'「20問・約3分」はサブコピーに残っている');

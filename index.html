@@ -3332,6 +3332,33 @@ html.boot #type-section,html.boot .ftr{visibility:hidden;}
   .result-inner>.share-grid{margin-top:4px;}
   .result-inner>.friend-card{text-align:center;}
 }
+/* ===========================================================================
+   44. 横に並ぶときだけ、全体の大きさで揃える（2026-09-24・オーナー指示）
+   ---------------------------------------------------------------------------
+   「横並びになる時と結果画面での単体表示で見せ方を変えて」
+
+   素材は「胴体で揃える」で焼いてある（gen-chars.py の MANUAL_EXTRA、
+   a2:1.39 / a4:1.33 / c4:1.55。オーナーの過去判断）。
+   その結果この3体だけ**描かれている範囲が 1.39〜1.58倍**になる（実測）。
+       13体      インク高 393〜398
+       a2 555 / a4 556 / c4 629
+
+   ★両立はしない。素材の頭身が違うので、胴体を揃えれば全体がばらつき、
+     全体を揃えれば胴体がばらつく。**場所で使い分ける。**
+       横に並ぶ  … 差が直接見えるので、全体の大きさで揃える（ここ）
+       単体で出す … 比べる相手がいないので、素材のまま（胴体で揃える）
+
+   ★素材は焼き直さない。焼き直すと単体表示まで変わってしまう。
+     見せ方だけ CSS で変える。倍率は実測したインク高の比。
+   =========================================================================== */
+.tc>img[data-c="a2"],.compat-cbox>img[data-c="a2"],.quiet-character[data-c="a2"],
+.tc>img[data-c="a4"],.compat-cbox>img[data-c="a4"],.quiet-character[data-c="a4"],
+.tc>img[data-c="c4"],.compat-cbox>img[data-c="c4"],.quiet-character[data-c="c4"]{
+  transform-origin:50% 100%;   /* 足元を固定して縮める。床が揃う */
+}
+.tc>img[data-c="a2"],.compat-cbox>img[data-c="a2"],.quiet-character[data-c="a2"]{transform:scale(.714);}
+.tc>img[data-c="a4"],.compat-cbox>img[data-c="a4"],.quiet-character[data-c="a4"]{transform:scale(.712);}
+.tc>img[data-c="c4"],.compat-cbox>img[data-c="c4"],.quiet-character[data-c="c4"]{transform:scale(.630);}
 </style>
 <script>
 /* 節38。組み立てが終わるまでヒーローより下を描かない。
@@ -4113,7 +4140,7 @@ function buildTypeOverview(){
          開けない（WCAG 2.1.1 Level A）。<button> にすれば Enter / Space の
          両方が効き、読み上げにも「ボタン」として渡る。
          中身（画像・コード・名前）はそのまま入れられる。 */
-      h+=`<button type="button" class="tc" data-code="${code}" aria-label="${esc(code)} ${esc(t.name)} のタイプ紹介を開く" onclick="openTypePeek('${code}',this)"><div class="tc-sil" style="background-image:url('images/chars/sm/${codeImg(code)}.webp');"></div><img src="${cv('images/chars/'+codeImg(code)+'.webp')}" alt=""><div class="tc-code" style="color:${col};">${code}</div><div class="tc-name">${t.name}</div></button>`;
+      h+=`<button type="button" class="tc" data-code="${code}" aria-label="${esc(code)} ${esc(t.name)} のタイプ紹介を開く" onclick="openTypePeek('${code}',this)"><div class="tc-sil" style="background-image:url('images/chars/sm/${codeImg(code)}.webp');"></div><img src="${cv('images/chars/'+codeImg(code)+'.webp')}" data-c="${codeImg(code)}" alt=""><div class="tc-code" style="color:${col};">${code}</div><div class="tc-name">${t.name}</div></button>`;
     });
     h+=`</div></div></div>`;
   });
@@ -5033,7 +5060,7 @@ function toggleAcc(head){
 /* 結果画面の相性キャラは非対話にした。従来はここから scores を捏造して
    結果全文を出していた（C-6）。診断済みの人に「20問で確かめる →」を出すのは
    不整合なので、結果画面にはタイプ紹介の展開先を作らない（UI仕様 §11 A-3）。 */
-function cImg(code,sz=54){return `<img src="${cv('images/chars/sm/'+codeImg(code)+'.webp')}" alt="" style="width:${sz}px;height:${sz}px;object-fit:contain;">`;}
+function cImg(code,sz=54){return `<img src="${cv('images/chars/sm/'+codeImg(code)+'.webp')}" data-c="${codeImg(code)}" alt="" style="width:${sz}px;height:${sz}px;object-fit:contain;">`;}
 
 /* =========================================================================
    C-6 タイプ紹介（.type-peek）
@@ -5614,6 +5641,7 @@ addEventListener('popstate',()=>{
     const cast=document.createElement('div');cast.className='quiet-cast';cast.setAttribute('aria-hidden','true');
     for(const code of [left,right,'c4','d3','a4','b2']){
       const img=new Image(130,195);img.className='quiet-character';img.alt='';img.loading='lazy';img.decoding='async';
+      img.dataset.c=code;
       img.src=cv('images/chars/sm/'+code+'.webp');cast.appendChild(img);
     }
     host.appendChild(cast);
