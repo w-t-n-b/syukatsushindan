@@ -4082,6 +4082,11 @@ function buildTypeOverview(){
              復元すると別のスケールの値が混ざったまま集計される。
    利用者に「前回の途中から続ける」を見せて、実は別の重みで足す方が害が大きい。 */
 const SAVE_KEY='cq_p3';
+/* 出し終えた結果を残す鍵。進行中の保存（SAVE_KEY）とは別に持つ。
+   ★同じ鍵に入れると「前回の途中から続ける」が出てしまう。
+   ★これが無いと、結果画面でリロードしたとき ?type= からコードだけを見て
+     スコアを ±5 で作り直すことになり、診断スコアの％が本物と変わる。 */
+const RESULT_KEY='cq_r1';
 const LEGACY_SAVE_KEYS=['cq_p','cq_p2'];
 function saveProgress(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({curQ,scores,ans}));}catch(e){}}
 function clearSavedProgress(){try{localStorage.removeItem(SAVE_KEY);}catch(e){}}
@@ -4135,6 +4140,46 @@ function addRipple(e,el){
   el.appendChild(d);setTimeout(()=>d.remove(),600);
 }
 
+/* ===========================================================================
+   画面ごとのURL（2026-09-24・オーナー指示「各ページを分けてほしい」）
+   ---------------------------------------------------------------------------
+   これまで全画面が同じ URL だった（履歴APIは一切使っていなかった）。
+   そのため**結果画面でリロードするとトップに戻る**（オーナー指摘）。
+
+   ★パス（/q/2 など）にはしない。GitHub Pages は静的配信で、そんなファイルは
+     無いのでリロードが 404 になる。クエリなら同じ index.html が返る。
+   ★ハッシュ（#q2）にもしない。GA4 は既定でハッシュの変化を page_view と
+     数えない。クエリなら別ページとして数えられ、既にある ?type= とも揃う。
+
+     /                  トップ・LP（Q1-5）
+     /?q=2 /?q=3 /?q=4  診断（Q6-10 / Q11-15 / Q16-20）
+     /?step=profile     属性入力
+     /?type=HALG        結果（共有リンクと同じ形）
+
+   ページ番号は画面の見え方に合わせる（LPが1、診断が2-4）。
+   内部の curPage は 1-3 なので +1 してある。
+   =========================================================================== */
+const QUERY_KEYS=['q','step','type','ref'];
+function currentRoute(){
+  const p=new URLSearchParams(location.search);
+  return {q:p.get('q'),step:p.get('step'),type:p.get('type'),ref:p.get('ref')};
+}
+/* URLを書き換える。replace=true は履歴を増やさない（起動時の整え用）。 */
+function setRoute(obj,replace){
+  if(typeof history!=='object'||typeof history.pushState!=='function')return;
+  const p=new URLSearchParams(location.search);
+  QUERY_KEYS.forEach(k=>p.delete(k));
+  Object.keys(obj||{}).forEach(k=>{if(obj[k]!=null&&obj[k]!=='')p.set(k,obj[k]);});
+  const qs=p.toString();
+  const url=location.pathname+(qs?'?'+qs:'')+location.hash;
+  if(url===location.pathname+location.search+location.hash)return;
+  try{history[replace?'replaceState':'pushState']({},'',url);}catch(e){}
+  /* GA4 は SPA の遷移を自動では数えない。URLが変わったら自分で送る。 */
+  if(typeof gtag==='function'&&GA_ID){
+    try{gtag('event','page_view',{page_location:location.href,page_title:document.title});}catch(e){}
+  }
+}
+
 function toScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   const sc=document.getElementById(id);
@@ -4144,7 +4189,7 @@ function toScreen(id){
   setTimeout(()=>sc.classList.remove('page-in'),400);
   window.scrollTo({top:0,behavior:'smooth'});
 }
-function gotoTop(){toScreen('screen-title');}
+function gotoTop(){toScreen('screen-title');setRoute({});}
 
 /* 16タイプ一覧へスクロールする。cat を渡すとそのカテゴリの見出しへ。
    副CTA「16タイプを見る」とドロワーの系統ボタン4つが呼ぶ。
@@ -4194,10 +4239,11 @@ function continueOrStart(entry){
 
 /* 診断画面の指定ページを表示する。ページ0は LP のものなので、
    下限は QUIZ_FIRST_PAGE でクランプする（診断画面に Q1-5 を出さない）。 */
-function goToQuizPage(p){
+function goToQuizPage(p,noPush){
   curPage=Math.max(QUIZ_FIRST_PAGE,Math.min(PAGE_COUNT-1,p));
   renderPage('quiz');
   toScreen('screen-quiz');
+  if(!noPush)setRoute({q:curPage+1});   /* 画面の見え方は 2-4（LPが1） */
 }
 
 /* LPの質問カードまで送る（画面遷移ではなくスクロール）。
@@ -4552,6 +4598,7 @@ function nextPage(){
   }
   curPage++;
   renderPage('quiz');
+  setRoute({q:curPage+1});       /* ページが変わればURLも変わる（見え方2-4） */
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -4561,6 +4608,7 @@ function goBack(){
   if(curPage<=QUIZ_FIRST_PAGE)return;
   curPage--;
   renderPage('quiz');
+  setRoute({q:curPage+1});
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -4758,6 +4806,7 @@ function showProfile(){
   const w=document.getElementById('pf-warn');
   if(w){w.textContent='';w.classList.remove('on');}
   toScreen('screen-profile');
+  setRoute({step:'profile'});
   track('profile_view',{});
 }
 /* 「結果を見る →」。disabled は使わない（押せないボタンは理由を説明できない）。
@@ -5153,6 +5202,10 @@ function showResult(_unusedSkipIntro=false,source='quiz'){
   track('result_view',{type_code:code,source:source});
   observeAgentImpressions();
   setTimeout(()=>{const el=document.getElementById('res-code-el');if(el)countUpCode(el,code);},600);
+  /* 結果にも自分のURLを持たせる。共有リンク（?type=）と同じ形にそろえる。
+     共有リンクから来た場合（source==='shared'）は既にURLがそれなので積まない。 */
+  if(source!=='shared')setRoute({type:code});
+  try{localStorage.setItem(RESULT_KEY,JSON.stringify({code,scores,ans,profile}));}catch(e){}
   clearSavedProgress();
 }
 
@@ -5357,23 +5410,74 @@ function renderSharedBanner(code){
   updateCtas();
 }
 
-(function(){
-  const p=new URLSearchParams(location.search),tp=p.get('type'),ref=p.get('ref');
-  if(!tp)return;
-  const code=tp.toUpperCase();
-  if(!TD[code])return;
-  if(ref==='share'){
-    track('shared_landing',{type_code:code});
-    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>renderSharedBanner(code));
-    else renderSharedBanner(code);
-    return;                                   /* 結果画面は出さず LP のまま */
+/* URL から画面を復元する（2026-09-24）。
+   ★ここは DOMContentLoaded より前に走る（?type= の既存の作りに合わせる）。
+     画面の組み立てが要るものは DOMContentLoaded を待つ。 */
+function restoreFromRoute(){
+  const r=currentRoute();
+
+  /* --- 結果 --- */
+  if(r.type){
+    const code=r.type.toUpperCase();
+    if(!TD[code])return false;
+    if(r.ref==='share'){
+      track('shared_landing',{type_code:code});
+      const go=()=>renderSharedBanner(code);
+      if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);
+      else go();
+      return true;                            /* 結果画面は出さず LP のまま */
+    }
+    /* ★自分で出した結果なら、保存してある本物のスコアで復元する。
+       無い（他人の共有リンク）ときだけ、コードから ±5 で作り直す。
+       作り直しだと診断スコアの％が本物と変わるので、優先順位を間違えない。 */
+    let restored=false;
+    try{
+      const d=JSON.parse(localStorage.getItem(RESULT_KEY)||'null');
+      if(d&&d.code===code&&d.scores){
+        Object.keys(d.scores).forEach(k=>{scores[k]=d.scores[k];});
+        if(Array.isArray(d.ans))ans=d.ans;
+        if(d.profile)profile=d.profile;
+        restored=true;
+      }
+    }catch(e){}
+    if(!restored){
+      scores[1]=code[0]==='H'?5:-5;
+      scores[2]=code[1]==='A'?5:-5;
+      scores[3]=code[2]==='L'?5:-5;
+      scores[4]=code[3]==='S'?5:-5;
+    }
+    showResult(true,restored?'reload':'shared');
+    return true;
   }
-  scores[1]=code[0]==='H'?5:-5;
-  scores[2]=code[1]==='A'?5:-5;
-  scores[3]=code[2]==='L'?5:-5;
-  scores[4]=code[3]==='S'?5:-5;
-  showResult(true,'shared');
-})();
+
+  /* --- 診断ページ / 属性入力。どちらも回答の復元が要る --- */
+  if(r.q||r.step==='profile'){
+    let ok=false;
+    try{
+      const d=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');
+      if(d&&Array.isArray(d.ans)){ans=d.ans;if(d.scores)scores=d.scores;if(d.curQ)curQ=d.curQ;ok=true;}
+    }catch(e){}
+    const go=()=>{
+      if(!ok){setRoute({},true);return;}      /* 回答が無いならトップのまま。URLも戻す */
+      if(r.step==='profile'){showProfile();return;}
+      const n=parseInt(r.q,10);
+      if(!(n>=2&&n<=PAGE_COUNT)){setRoute({},true);return;}
+      goToQuizPage(n-1,true);                 /* 見え方2-4 → 内部 curPage 1-3 */
+    };
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);
+    else go();
+    return ok;
+  }
+  return false;
+}
+restoreFromRoute();
+
+/* 戻る・進むでも画面が追従する。URLが正なので、そこから組み直す。 */
+addEventListener('popstate',()=>{
+  const r=currentRoute();
+  if(!r.q&&!r.step&&!r.type){toScreen('screen-title');return;}
+  restoreFromRoute();
+});
 
 /* ヒーローの浮遊キャラ（装飾）。docs/design/hero-floating-characters.md §6-1
    ★ ?type= / ?ref=share の IIFE より後に置くこと（.shared-banner の判定のため）。

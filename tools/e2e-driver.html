@@ -273,6 +273,41 @@ try{
     chk(heroVis!=='hidden','boot のあいだもヒーローは描かれる（真っ白にしない）: '+heroVis);
   }
 
+  /* ---------- A-0c. 画面ごとのURL（2026-09-24・オーナー指示）----------
+     「結果ページでリロードしたらホーム画面に戻ってしまった。
+       各ページを分けてほしい」。以前は全画面が同じURLだった。
+     ★見るのは「URLが変わること」ではなく**URLから戻せること**。
+       URLだけ変えて復元できないと、リロードで落ちる元の状態に戻る。 */
+  {
+    const step=async(fn)=>{await fn();await sleep(500);};
+    await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(400);
+    chk(!w.location.search,'トップはクエリ無し: '+(w.location.search||'(なし)'));
+    /* LPの5問 → 診断へ */
+    [...d.querySelectorAll('#lq-list .q-card')].forEach(c=>{const b=c.querySelectorAll('.sdw')[1];if(b)b.click();});
+    await step(()=>w.lqContinue());
+    chk(w.location.search==='?q=2','LPから進むと ?q=2: '+w.location.search);
+    /* ページを進めるとURLも進む */
+    [...d.querySelectorAll('#q-list .q-card')].forEach(c=>{const b=c.querySelectorAll('.sdw')[1];if(b)b.click();});
+    await step(()=>w.nextPage());
+    chk(w.location.search==='?q=3','次のページで ?q=3: '+w.location.search);
+    await step(()=>w.goBack());
+    chk(w.location.search==='?q=2','戻ると ?q=2 に戻る: '+w.location.search);
+
+    /* ★本題。?q=3 を直接開いて、その画面が出ること（＝リロードで戻れる） */
+    await load('index.html?q=3'); w=f.contentWindow; d=f.contentDocument; await sleep(700);
+    chk(d.body.dataset.screen==='screen-quiz',
+        '?q=3 を直接開くと診断画面が出る（回答が保存されている場合）: '+d.body.dataset.screen);
+    chk(w.eval('curPage')===2,'?q=3 は内部の3ページ目（curPage=2）: '+w.eval('curPage'));
+
+    /* 回答が無い状態で ?q=3 を開いたら、トップに落としてURLも戻す */
+    await load('index.html'); w=f.contentWindow; d=f.contentDocument; await sleep(200);
+    w.localStorage.removeItem('cq_p3');
+    await load('index.html?q=3'); w=f.contentWindow; d=f.contentDocument; await sleep(700);
+    chk(d.body.dataset.screen==='screen-title',
+        '回答が無いのに ?q=3 を開いたらトップに落ちる: '+d.body.dataset.screen);
+    chk(!w.location.search,'そのときURLもトップに戻す: '+(w.location.search||'(なし)'));
+  }
+
   await sleep(1200);
   chk(typeof w.showResult==='function' && typeof w.buildAgentBlock==='function','スクリプトが最後まで評価された（HTMLパース破壊なし）');
   chk(d.querySelectorAll('#type-overview .tc').length===16,'16タイプグリッドが生成された: '+d.querySelectorAll('#type-overview .tc').length);
