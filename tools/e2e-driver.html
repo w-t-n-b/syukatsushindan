@@ -2848,9 +2848,20 @@ try{
       chk(ri===Math.min(448,vw-40),T+'.result-inner の幅: '+ri+'px（448px 上限。S-1）');
       chk(shW.every(x=>x<=152),T+'シェアボタンが1つ152pxを超えない（S-1 の前は 1440px 幅で461px）: '+shW.join(','));
       chk(fcW===ri,T+'.friend-card が結果ヒーローの柱に収まる: '+fcW+'px');
-      /* 直下の .wrap と幅がずれていないこと（S-1 が直した「3倍のずれ」） */
-      const rw=Math.round(d.querySelector('#screen-result .wrap').getBoundingClientRect().width)-32;
-      chk(Math.abs(rw-ri)<=8,T+'結果ヒーローと本文の内容幅がそろっている: '+ri+'px / '+rw+'px');
+      /* ★向きを変えた（2026-09-24・オーナー指摘「結果画面が縦長すぎる。
+         質問画面と同様、PC版ではもっと幅広に使っても良いかも？」）。
+         元は「柱と本文の幅が同じ」を見ていた。S-1 が直したのは、柱と本文の
+         **中心がずれて**見えた問題（3倍のずれ）であって、幅が同じである
+         必要は無い。PC では本文だけ広げ、絵と名前とボタンは柱に留める。
+         いま見るのは「中心がそろい、柱が本文に収まり、版面を超えない」。 */
+      const wrapEl=d.querySelector('#screen-result .wrap');
+      const rw=Math.round(wrapEl.getBoundingClientRect().width)-32;
+      const rc=wrapEl.getBoundingClientRect(), ic=d.querySelector('.result-inner').getBoundingClientRect();
+      const dc=Math.abs((rc.left+rc.right)/2-(ic.left+ic.right)/2);
+      chk(dc<=2,T+'結果ヒーローの柱と本文の中心がそろっている: ずれ '+dc.toFixed(1)+'px');
+      chk(ri<=rw+8,T+'柱が本文の版面に収まっている: 柱 '+ri+'px ≦ 本文 '+rw+'px');
+      const cap=vw>=1024?860:(vw>=768?760:480);
+      chk(rw<=cap-32+8,T+'本文が版面の上限を超えない: '+rw+'px ≦ '+(cap-32)+'px');
       chk(d.documentElement.scrollWidth<=vw+1,T+'結果画面で横スクロールが出ない: '+d.documentElement.scrollWidth);
 
       /* T-2（結果本文側）。1.04:1 は16タイプ一覧だけの問題ではなかった。
