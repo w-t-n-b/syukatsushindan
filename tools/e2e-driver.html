@@ -1223,7 +1223,26 @@ try{
     chk(!d.getElementById('q-next').disabled,'「次へ」は disabled にしない');
     // 残りを埋めれば進める
     for(const pos of [6,8,9]) w.pick(dot(d,'q',pos,2));
-    chk(d.getElementById('q-remain').textContent==='5問すべて回答済み','そろったことを出す: '+d.getElementById('q-remain').textContent);
+    /* ★向きが反転した（2026-09-24・オーナー判断）。そろったあとに伝える情報は
+       無く、すぐ下に「次へ」がある。状態の報告より押す場所のほうが強い。
+       いま見るのは逆で、**そろったら残数表示が消えること**。 */
+
+    /* ★送り先が固定ヘッダーの下に潜らない（2026-09-24・オーナー指摘）。
+       「5問目を回答したあと、次へが押せないところまで下がってしまう」。
+       実測: scrollIntoView({block:'start'}) で次へが 上:0 下:61 に来て、
+       高さ60px の position:fixed ヘッダーにほぼ全体が隠れていた。
+       **画面内には居るので「画面内か」を見る検査では捕まらない。**
+       ヘッダーの下端より下にあることを見る。 */
+    {const hdr=d.getElementById('hdr');
+     const hb=hdr?hdr.getBoundingClientRect().bottom:0;
+     for(const id of ['q-next','lq-nav']){
+       const el=d.getElementById(id); if(!el)continue;
+       const sm=parseFloat(getComputedStyle(el).scrollMarginTop)||0;
+       chk(sm>=hb,'#'+id+' の scroll-margin-top がヘッダーの高さ以上: '+sm+'px ≧ '+Math.round(hb)+'px');
+     }}
+    {const rm=d.getElementById('q-remain');
+     chk(rm.textContent===''&&getComputedStyle(rm).display==='none',
+         'そろったら残数表示が消える: ['+rm.textContent+'] display='+getComputedStyle(rm).display);}
     d.getElementById('q-next').click(); await sleep(150);
     chk(w.eval('curPage')===2,'5問そろえば次のページへ進む');
 

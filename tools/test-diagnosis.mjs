@@ -416,8 +416,13 @@ console.log('[test] 1画面5問・診断画面は3ページ（Q6 から始まる
 
   // 5問そろえば進める
   [8, 9].forEach(pos => answerQuiz(T, pos, 2));
-  check(T.__byId.get('q-remain').textContent === '5問すべて回答済み',
-    `そろったことを出す: ${T.__byId.get('q-remain').textContent}`);
+  /* ★向きが反転した（2026-09-24・オーナー判断）。
+     元は「そろったことを出す」ことを見ていたが、そろったあとに伝える情報は無く、
+     すぐ下に「次へ」がある。状態の報告より押す場所のほうが強い。
+     いま見るのは逆で、**そろったら残数表示が消えること**。 */
+  check(T.__byId.get('q-remain').textContent === '' &&
+        T.__byId.get('q-remain').style.display === 'none',
+    `そろったら残数表示を消す: [${T.__byId.get('q-remain').textContent}] display=${T.__byId.get('q-remain').style.display}`);
   T.nextPage();
   check(T.__eval('curPage') === 2, '5問そろえば次のページへ進む');
   check(T.__positions('q').join(',') === '10,11,12,13,14', `次のページは出題位置 10-14: ${T.__positions('q').join(',')}`);
@@ -435,7 +440,9 @@ console.log('[test] 1画面5問・診断画面は3ページ（Q6 から始まる
     `戻っても回答が消えない: ${T.__eval('JSON.stringify(scores)')}`);
   check(T.document.querySelectorAll('#q-list .sdw.sel').length === 5,
     '戻ったページの5問が選択済みの状態で表示される');
-  check(T.__byId.get('q-remain').textContent === '5問すべて回答済み', '戻ったページの残数表示も正しい');
+  check(T.__byId.get('q-remain').textContent === '' &&
+        T.__byId.get('q-remain').style.display === 'none',
+        '戻ったページも、そろっていれば残数表示は消えている');
   // 先頭ページでさらに戻ろうとしても LP へは落ちない
   T.goBack();
   check(T.__eval('curPage') === 1 && T.__byId.get('screen-quiz').classList.contains('active'),

@@ -3239,6 +3239,22 @@ html.boot #type-section,html.boot .ftr{visibility:hidden;}
   .line-cta{transition:none;}
   .line-cta:hover,.line-cta:active{transform:none;}
 }
+/* ===========================================================================
+   41. 送り先がヘッダーの下に潜らない（2026-09-24・オーナー指摘）
+   ---------------------------------------------------------------------------
+   「5問目を回答したあと、次へが押せないところまで下がってしまう」
+
+   実測（390x844 / 1440x900 とも）:
+     scrollIntoView({block:'start'}) で #lq-nav が上端に来る
+     → 次へボタン  上:0px 下:61px
+     ヘッダーは position:fixed / 高さ60px / z-index:1000
+     → **ボタンのほぼ全体がヘッダーの下に隠れる。**
+       画面内には居るので、検査（画面内かどうか）では捕まらなかった。
+
+   scrollIntoView の送り先に scroll-margin-top を持たせる。
+   ヘッダー60px + 余白。JS を触らずに、送り先の側で吸収する。
+   =========================================================================== */
+.q-card,#lq-nav,#q-next,.lq-foot,#lq-list,#q-list{scroll-margin-top:76px;}
 </style>
 <script>
 /* 節38。組み立てが終わるまでヒーローより下を描かない。
@@ -4297,11 +4313,14 @@ function updateRemain(tg){
   const n=unansweredIn(facePage(tg));
   el.classList.remove('warn');
   el.classList.toggle('done',n===0);
-  el.textContent=n===0?`${PAGE_SIZE}問すべて回答済み`:`あと${n}問`;
+  /* ★「5問すべて回答済み」は出さない（2026-09-24・オーナー判断）。
+     残数は「あと何問か」を知るためのもので、そろったあとに伝える情報が無い。
+     すぐ下に「次へ」があるので、状態の報告より押す場所のほうが強い。 */
+  el.textContent=n===0?'':`あと${n}問`;
   /* LP面は平常時いっさい出さない（オーナー判断）。ここに出るのは
      requireComplete() の警告文だけで、それは向こうで display を戻す。
      診断画面（#q-remain）は残数が唯一の進行の手がかりなので常時出す。 */
-  el.style.display=(tg==='lp')?'none':'';
+  el.style.display=(tg==='lp'||n===0)?'none':'';
 }
 
 /* 1問ぶんのカード。LP と診断画面で同一の HTML を吐く。 */
@@ -4634,7 +4653,10 @@ function yearChoices(stance,now){
 }
 
 const PF_STANCE=[{v:'shinsotsu',t:'新卒（就活中）'},{v:'chuto',t:'中途（社会人）'}];
-const PF_SEX=[{v:'f',t:'女性'},{v:'m',t:'男性'},{v:'o',t:'その他'},{v:'n',t:'答えない'}];
+/* ★「答えない」は外した（2026-09-24・オーナー判断）。
+   この設問自体が「任意」なので、答えたくない人は何も選ばなければよい。
+   「選ばない自由」をわざわざ選択肢にすると、選択肢が1つ増えるぶん迷いが増える。 */
+const PF_SEX=[{v:'f',t:'女性'},{v:'m',t:'男性'},{v:'o',t:'その他'}];
 /* 業界の語彙は IND_NAMES を正とする。
    別の言い方を作ると、同じものを2つの言葉で呼ぶことになる（wording-audit P-5）。
    ★職種の粒度は暫定。提携先が何で絞るかを聞いてから確定する。
